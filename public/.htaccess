@@ -1,0 +1,10 @@
+Options -MultiViews
+RewriteEngine On
+
+# Establecer la base del proyecto
+RewriteBase /Proyecto%202/public/
+
+# Si el archivo o directorio no existe, redirige a index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L] 
