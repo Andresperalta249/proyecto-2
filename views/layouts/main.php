@@ -221,6 +221,21 @@ if (!isset($content)) {
         <?php endif; ?>
     <?php endif; ?>
     
+    <!-- Bootstrap Modal Genérico -->
+    <div class="modal fade" id="mainModal" tabindex="-1" aria-labelledby="mainModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="mainModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- El contenido se cargará aquí vía AJAX -->
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts principales al final para asegurar disponibilidad -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -352,13 +367,5 @@ if (!isset($content)) {
             return false;
         };
     </script>
-    <!-- Modal Genérico para Contenido Dinámico -->
-    <div class="modal fade" id="modal-generico" tabindex="-1" aria-labelledby="modal-generico-label" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <!-- El contenido se cargará aquí -->
-        </div>
-      </div>
-    </div>
 </body>
 </html> 

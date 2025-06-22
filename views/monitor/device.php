@@ -159,8 +159,8 @@ $configuraciones = isset($configuraciones) ? $configuraciones : [];
 
 <!-- Scripts -->
 <script type="module">
-    // Configuración global
-    window.BASE_URL = '<?= BASE_URL ?>';
+    // Configuración específica del monitor
+    window.MONITOR_BASE_URL = '<?= BASE_URL ?>';
     window.dispositivoId = '<?= $dispositivo['id_dispositivo'] ?>';
     window.iconoMascota = '<?= $dispositivo['icono_mascota'] ?? '🐾' ?>';
     window.tipoMascota = '<?= strtolower($tipoMascota) ?>';

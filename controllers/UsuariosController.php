@@ -7,11 +7,13 @@ class UsuariosController extends Controller {
 
     private $usuarioModel;
     private $rolModel;
+    private $logModel;
 
     public function __construct() {
         parent::__construct();
         $this->usuarioModel = new UsuarioModel();
         $this->rolModel = new Rol();
+        $this->logModel = $this->loadModel('Log');
     }
 
     public function indexAction() {
@@ -87,19 +89,46 @@ class UsuariosController extends Controller {
     }
 
     public function cargarFormularioAction($id = null) {
+        error_log("[DEBUG] cargarFormularioAction llamado con ID: " . var_export($id, true));
+        
         $permisoRequerido = $id ? 'editar_usuarios' : 'crear_usuarios';
         if (!verificarPermiso($permisoRequerido)) {
+            error_log("[ERROR] Sin permiso para $permisoRequerido");
+            
+            // Verificar si el archivo modal_error existe
+            $modalErrorPath = ROOT_PATH . '/views/partials/modal_error.php';
+            error_log("[DEBUG] Buscando archivo modal_error en: $modalErrorPath");
+            error_log("[DEBUG] ¿Existe modal_error.php? " . (file_exists($modalErrorPath) ? 'SÍ' : 'NO'));
+            
+            if (!file_exists($modalErrorPath)) {
+                error_log("[WARNING] modal_error.php no existe, enviando mensaje directo");
+                echo '<div class="alert alert-danger">No tienes permiso para realizar esta acción.</div>';
+                return;
+            }
+            
             $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.']);
             return;
         }
 
-        $usuario = $id ? $this->usuarioModel->find($id) : null;
-        $roles = $this->rolModel->getAll();
+        $usuario = null;
+        if ($id) {
+            $usuario = $this->usuarioModel->find($id);
+            error_log("[DEBUG] Usuario encontrado: " . ($usuario ? 'SÍ' : 'NO'));
+            if ($usuario) {
+                error_log("[DEBUG] Datos del usuario: " . print_r($usuario, true));
+            }
+        }
         
-        $this->view->render('usuarios/form', [
+        $roles = $this->rolModel->getAll();
+        error_log("[DEBUG] Roles obtenidos: " . count($roles) . " roles");
+        
+        $viewData = [
             'usuario' => $usuario,
             'roles' => $roles
-        ], false);
+        ];
+        error_log("[DEBUG] Datos que se pasan a la vista: " . print_r($viewData, true));
+        
+        $this->view->render('usuarios/form', $viewData, false);
     }
 
     public function guardarAction() {

@@ -143,7 +143,8 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
     <script>
-    const BASE_URL = window.location.pathname.split('/dashboard')[0] + '/dashboard/';
+    // Usar la configuración global BASE_URL en lugar de redeclarar
+    const DASHBOARD_BASE_URL = window.location.pathname.split('/dashboard')[0] + '/dashboard/';
     let especiesChart, usuariosChart;
     function initCharts() {
         const especiesCtx = document.getElementById('especiesChart').getContext('2d');
@@ -164,7 +165,7 @@
     }
     async function updateKPIs() {
         try {
-            const response = await fetch(BASE_URL + 'getKPIData');
+            const response = await fetch(DASHBOARD_BASE_URL + 'getKPIData');
             if (!response.ok) throw new Error('Error al obtener KPIs');
             const result = await response.json();
             if (!result.success) throw new Error(result.error || 'Error en KPIs');
@@ -180,7 +181,7 @@
     }
     async function updateEspeciesChart() {
         try {
-            const response = await fetch(BASE_URL + 'getDistribucionEspecies');
+            const response = await fetch(DASHBOARD_BASE_URL + 'getDistribucionEspecies');
             if (!response.ok) throw new Error('Error al obtener especies');
             const result = await response.json();
             if (!result.success) throw new Error(result.error || 'Error en especies');
@@ -199,7 +200,7 @@
     async function updateUsuariosChart() {
         try {
             const dias = parseInt(document.getElementById('rangoDias').value, 10);
-            const response = await fetch(`${BASE_URL}getHistorialUsuarios?dias=${dias}`);
+            const response = await fetch(`${DASHBOARD_BASE_URL}getHistorialUsuarios?dias=${dias}`);
             if (!response.ok) throw new Error('Error al obtener usuarios');
             const result = await response.json();
             if (!result.success) throw new Error(result.error || 'Error en usuarios');

@@ -387,11 +387,21 @@ class DispositivosController extends Controller {
             ]);
             return;
         }
-        $mascotas = $this->mascotaModel->getMascotasSinDispositivos($propietario_id);
-        $this->jsonResponse([
-            'success' => true,
-            'data' => $mascotas
-        ]);
+        
+        try {
+            // Obtener mascotas del usuario específico que no tengan dispositivo asignado
+            $mascotas = $this->mascotaModel->getMascotasSinDispositivos($propietario_id);
+            $this->jsonResponse([
+                'success' => true,
+                'data' => $mascotas
+            ]);
+        } catch (Exception $e) {
+            error_log('Error al obtener mascotas sin dispositivo: ' . $e->getMessage());
+            $this->jsonResponse([
+                'success' => false,
+                'error' => 'Error al cargar las mascotas'
+            ]);
+        }
     }
 
     public function obtenerDispositivosDisponiblesAction() {
@@ -694,7 +704,7 @@ class DispositivosController extends Controller {
                 return;
             }
             
-            $dispositivo = $this->dispositivoModel->getById($id);
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
             if (!$dispositivo) {
                 $this->jsonResponse(['error' => 'Dispositivo no encontrado'], 404);
                 return;
@@ -704,25 +714,23 @@ class DispositivosController extends Controller {
         // Cargar usuarios si tiene permisos para ver todos
         if (verificarPermiso('ver_todos_dispositivos')) {
             $userModel = new UsuarioModel();
-            $usuarios = $userModel->obtenerUsuariosPaginados(0, 1000, ''); // Obtener todos los usuarios
+            $usuarios = $userModel->getAll();
         }
 
         // Cargar mascotas
         $mascotas = $this->mascotaModel->findAll();
 
         // Renderizar el formulario
-        $this->view->setLayout(null);
-        $this->view->setData([
+        $this->view->render('dispositivos/form', [
             'dispositivo' => $dispositivo,
             'usuarios' => $usuarios,
             'mascotas' => $mascotas
-        ]);
-        $this->view->render('dispositivos/form');
+        ], false);
     }
 
     public function cargarFormularioAction($id = null) {
         if (!verificarPermiso('crear_dispositivos') && !verificarPermiso('editar_dispositivos')) {
-            $this->jsonResponse(['error' => 'No tienes permisos para esta acción'], 403);
+            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.']);
             return;
         }
 
@@ -733,13 +741,13 @@ class DispositivosController extends Controller {
         // Cargar datos del dispositivo si es edición
         if ($id) {
             if (!verificarPermiso('editar_dispositivos')) {
-                $this->jsonResponse(['error' => 'No tienes permisos para editar dispositivos'], 403);
+                $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para editar dispositivos.']);
                 return;
             }
             
-            $dispositivo = $this->dispositivoModel->getById($id);
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
             if (!$dispositivo) {
-                $this->jsonResponse(['error' => 'Dispositivo no encontrado'], 404);
+                $this->view->render('partials/modal_error', ['mensaje' => 'Dispositivo no encontrado.']);
                 return;
             }
         }
@@ -747,20 +755,127 @@ class DispositivosController extends Controller {
         // Cargar usuarios si tiene permisos para ver todos
         if (verificarPermiso('ver_todos_dispositivos')) {
             $userModel = new UsuarioModel();
-            $usuarios = $userModel->obtenerUsuariosPaginados(0, 1000, ''); // Obtener todos los usuarios
+            $usuarios = $userModel->getAll();
         }
 
-        // Cargar mascotas
-        $mascotas = $this->mascotaModel->findAll();
+        // Cargar mascotas - SIEMPRE cargar todas las mascotas disponibles
+        // La mascota NO es obligatoria, así que el usuario puede crear un dispositivo sin mascota
+        try {
+            $mascotas = $this->mascotaModel->findAll();
+        } catch (Exception $e) {
+            error_log('Error al cargar mascotas: ' . $e->getMessage());
+            $mascotas = []; // Array vacío si hay error, no es crítico
+        }
 
         // Renderizar el formulario
-        $this->view->setLayout(null);
-        $this->view->setData([
+        $this->view->render('dispositivos/form', [
             'dispositivo' => $dispositivo,
             'usuarios' => $usuarios,
             'mascotas' => $mascotas
-        ]);
-        $this->view->render('dispositivos/form');
+        ], false);
+    }
+
+    public function guardarAction() {
+        if (!$this->isPostRequest()) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        }
+
+        $id = $_POST['id_dispositivo'] ?? null;
+        $permiso = $id ? 'editar_dispositivos' : 'crear_dispositivos';
+        if (!verificarPermiso($permiso)) {
+            return $this->jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
+        }
+
+        // Log de datos recibidos para debugging
+        error_log('DispositivosController::guardarAction - Datos recibidos: ' . print_r($_POST, true));
+
+        // Validar campos requeridos
+        if (empty($_POST['nombre']) || empty($_POST['mac']) || empty($_POST['estado'])) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Los campos nombre, MAC y estado son obligatorios.'], 400);
+        }
+
+        // Recoger los datos del formulario
+        $data = [
+            'nombre' => trim($_POST['nombre']),
+            'mac' => trim($_POST['mac']),
+            'estado' => $_POST['estado']
+        ];
+
+        // Manejar campos opcionales
+        if (!empty($_POST['usuario_id'])) {
+            $data['usuario_id'] = $_POST['usuario_id'];
+        } elseif (!$id) {
+            // Solo asignar usuario por defecto al crear
+            $data['usuario_id'] = $_SESSION['user_id'];
+        }
+
+        // mascota_id puede ser NULL cuando no hay mascota asignada
+        $data['mascota_id'] = !empty($_POST['mascota_id']) ? (int)$_POST['mascota_id'] : null;
+
+        // Validar formato de MAC
+        if (!preg_match('/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/', $data['mac'])) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Formato de MAC inválido'], 400);
+        }
+
+        // Validar unicidad de MAC
+        if ($this->dispositivoModel->existeMac($data['mac'], $id)) {
+            return $this->jsonResponse(['success' => false, 'message' => 'La dirección MAC ya está registrada'], 400);
+        }
+
+        try {
+            error_log('DispositivosController::guardarAction - Datos a guardar: ' . print_r($data, true));
+            
+            if ($id) {
+                // Actualizar dispositivo existente
+                $resultado = $this->dispositivoModel->updateDispositivo($id, $data);
+                $message = 'Dispositivo actualizado correctamente.';
+                error_log('Resultado de updateDispositivo: ' . ($resultado ? 'éxito' : 'fallo'));
+            } else {
+                // Crear nuevo dispositivo
+                $resultado = $this->dispositivoModel->createDispositivo($data);
+                $message = 'Dispositivo creado correctamente.';
+                error_log('Resultado de createDispositivo: ' . ($resultado ? 'éxito' : 'fallo'));
+            }
+
+            if ($resultado) {
+                // Log de éxito
+                $this->logModel->crearLog($_SESSION['user_id'], ($id ? 'Actualización' : 'Creación') . ' de dispositivo: ' . $data['nombre']);
+                $this->jsonResponse(['success' => true, 'message' => $message]);
+            } else {
+                $error = $this->dispositivoModel->getLastError();
+                error_log('Error al guardar dispositivo: ' . $error);
+                $this->jsonResponse(['success' => false, 'message' => 'Error al guardar el dispositivo: ' . $error], 500);
+            }
+        } catch (Exception $e) {
+            error_log('Excepción en DispositivosController::guardarAction - ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Ocurrió un error al guardar el dispositivo: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function toggleEstadoAction() {
+        if (!verificarPermiso('editar_dispositivos')) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Acción no permitida.'], 403);
+        }
+
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $estado_str = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_STRING);
+
+        if ($id === false || $estado_str === null) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Datos incompletos.'], 400);
+        }
+
+        // Convertir el estado del switch ('true'/'false') al estado de la BD ('activo'/'inactivo')
+        $nuevo_estado = ($estado_str === 'true') ? 'activo' : 'inactivo';
+
+        try {
+            if ($this->dispositivoModel->updateDispositivo($id, ['estado' => $nuevo_estado])) {
+                $this->jsonResponse(['status' => 'success', 'message' => 'Estado actualizado con éxito.']);
+            } else {
+                $this->jsonResponse(['status' => 'error', 'message' => 'No se pudo actualizar el estado.'], 500);
+            }
+        } catch (Exception $e) {
+            $this->jsonResponse(['status' => 'error', 'message' => 'Error al actualizar el estado.'], 500);
+        }
     }
 
     public function eliminarAction() {
@@ -782,7 +897,7 @@ class DispositivosController extends Controller {
 
         try {
             // Verificar que el dispositivo existe
-            $dispositivo = $this->dispositivoModel->getById($id);
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
             if (!$dispositivo) {
                 $this->jsonResponse(['success' => false, 'message' => 'Dispositivo no encontrado'], 404);
                 return;
@@ -798,7 +913,7 @@ class DispositivosController extends Controller {
             }
 
             // Eliminar el dispositivo
-            $success = $this->dispositivoModel->delete($id);
+            $success = $this->dispositivoModel->delete($id, 'id_dispositivo');
             if ($success) {
                 $this->logModel->crearLog($user_id, 'Eliminación de dispositivo: ' . $dispositivo['nombre']);
                 $this->jsonResponse(['success' => true, 'message' => 'Dispositivo eliminado correctamente']);

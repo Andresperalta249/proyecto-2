@@ -9,9 +9,25 @@ class Rol extends Model {
     }
 
     public function getAll() {
+        error_log("[DEBUG Rol::getAll] Obteniendo todos los roles");
+        error_log("[DEBUG Rol::getAll] Tabla: {$this->table}");
+        
         $sql = "SELECT r.*, (SELECT COUNT(*) FROM usuarios u WHERE u.rol_id = r.id_rol) as usuarios_count 
                 FROM {$this->table} r ORDER BY r.id_rol ASC";
-        return $this->query($sql);
+        
+        error_log("[DEBUG Rol::getAll] SQL: $sql");
+        
+        try {
+            $result = $this->query($sql);
+            error_log("[DEBUG Rol::getAll] Roles obtenidos: " . count($result));
+            if (!empty($result)) {
+                error_log("[DEBUG Rol::getAll] Primer rol: " . print_r($result[0], true));
+            }
+            return $result;
+        } catch (Exception $e) {
+            error_log("[ERROR Rol::getAll] Error al obtener roles: " . $e->getMessage());
+            return [];
+        }
     }
     
     public function getById($id) {

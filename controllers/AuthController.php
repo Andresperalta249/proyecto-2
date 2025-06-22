@@ -8,117 +8,61 @@ if (!function_exists('validatePassword')) {
 
 class AuthController extends Controller {
     private $usuarioModel;
+    private $logModel;
     protected $requireAuth = false; // No requiere autenticación
 
     public function __construct() {
         parent::__construct();
-        $this->usuarioModel = new UsuarioModel();
+        $this->usuarioModel = $this->loadModel('UsuarioModel');
+        $this->logModel = $this->loadModel('Log');
+    }
+
+    private function isLoggedIn() {
+        return isset($_SESSION['user_id']);
     }
 
     public function loginAction() {
-        $logFile = __DIR__ . '/../logs/error.log'; // Asegurar que la ruta es correcta
-        file_put_contents($logFile, "\n[DEBUG LOGIN - " . date('Y-m-d H:i:s') . "] METODO loginAction() INICIADO\n", FILE_APPEND);
-
-        // --- Depuración adicional: Volcado de $_SERVER --- //
-        file_put_contents($logFile, "[DEBUG LOGIN] Contenido de _SERVER:\n" . print_r($_SERVER, true) . "\n", FILE_APPEND);
-        // --- Fin de depuración adicional --- //
-
-        // Si ya está autenticado, redirigir al dashboard
-        if (isset($_SESSION['user_id'])) {
-            file_put_contents($logFile, "[DEBUG LOGIN] Sesión de usuario activa detectada. Redirigiendo a dashboard.\n", FILE_APPEND);
-            header('Location: ' . BASE_URL . 'dashboard');
+        if ($this->isLoggedIn()) {
+            $paginaInicial = obtenerPaginaInicial();
+            header('Location: ' . $paginaInicial);
             exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = '';
-            $password = '';
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+        
+        if ($this->isPostRequest()) {
+            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $password = $_POST['password'];
 
-            // Detectar si la petición es JSON
-            $contentType = isset($_SERVER['CONTENT_TYPE']) ? trim($_SERVER['CONTENT_TYPE']) : '';
-
-            if (strpos($contentType, 'application/json') !== false) {
-                // Si es JSON, leer el cuerpo de la petición
-                $input = file_get_contents('php://input');
-                $data = json_decode($input, true);
-                $email = $this->sanitizeInput($data['email'] ?? '');
-                $password = $data['password'] ?? '';
-            } else {
-                // Si es un formulario POST normal
-                $email = $this->sanitizeInput($_POST['email'] ?? '');
-                $password = $_POST['password'] ?? '';
-            }
-
-            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-
-            $logFile = __DIR__ . '/../logs/error.log'; // Ruta correcta al log del proyecto
-
-            // --- Depuración adicional para $isAjax --- //
-            file_put_contents($logFile, "[DEBUG LOGIN] \$isAjax: " . ($isAjax ? 'TRUE' : 'FALSE') . "\n", FILE_APPEND);
-            // --- Fin de depuración adicional --- //
-
-            try {
-                $usuario = $this->usuarioModel->getUsuarioByEmail($email);
-
-                // --- Inicio de depuración detallada --- //
-                file_put_contents($logFile, "\n[DEBUG LOGIN - " . date('Y-m-d H:i:s') . "] --- INICIO DE INTENTO DE LOGIN ---\n", FILE_APPEND);
-                file_put_contents($logFile, "[DEBUG LOGIN] Email de intento de acceso: " . $email . "\n", FILE_APPEND);
-                file_put_contents($logFile, "[DEBUG LOGIN] Contraseña PLANA recibida: '" . $password . "'\n", FILE_APPEND);
-                
-                if ($usuario) {
-                    file_put_contents($logFile, "[DEBUG LOGIN] Usuario encontrado en BD. ID: " . $usuario['id_usuario'] . ", Rol: " . $usuario['rol_id'] . "\n", FILE_APPEND);
-                    file_put_contents($logFile, "[DEBUG LOGIN] Hash de contraseña ALMACENADO en BD: '" . $usuario['password'] . "'\n", FILE_APPEND);
-                    
-                    $passwordMatch = password_verify($password, $usuario['password']);
-                    file_put_contents($logFile, "[DEBUG LOGIN] Resultado de password_verify(): " . ($passwordMatch ? 'TRUE' : 'FALSE') . " (Contraseña coincide: " . ($passwordMatch ? 'Sí' : 'No') . ")\n", FILE_APPEND);
-                } else {
-                    file_put_contents($logFile, "[DEBUG LOGIN] Usuario NO encontrado en BD para el email: " . $email . "\n", FILE_APPEND);
-                }
-                file_put_contents($logFile, "[DEBUG LOGIN - " . date('Y-m-d H:i:s') . "] --- FIN DE INTENTO DE LOGIN ---\n\n", FILE_APPEND);
-                // --- Fin de depuración detallada --- //
-
-                if ($usuario && password_verify($password, $usuario['password'])) {
+            if ($usuario = $this->usuarioModel->getUsuarioByEmail($email)) {
+                if (password_verify($password, $usuario['password'])) {
+                    session_regenerate_id(true);
                     $_SESSION['user_id'] = $usuario['id_usuario'];
-                    $_SESSION['user_name'] = $usuario['nombre'];
-                    $_SESSION['user_role'] = $usuario['rol_id'];
+                    $_SESSION['user_nombre'] = $usuario['nombre'];
+                    $_SESSION['user_rol_id'] = $usuario['rol_id'];
+                    $_SESSION['permissions'] = $this->usuarioModel->getPermisosDeUsuario($usuario['id_usuario']);
 
-                    // Cargar permisos del usuario en la sesión para optimizar consultas
-                    $permisos = obtenerPermisosUsuario($usuario['id_usuario']);
-                    $_SESSION['permissions'] = $permisos;
+                    // Usar el método correcto para registrar el acceso
+                    $this->usuarioModel->registrarUltimoAcceso($usuario['id_usuario']);
 
-                    $this->usuarioModel->registrarInicioSesion($usuario['id_usuario']);
+                    // Determinar página inicial según permisos
+                    $paginaInicial = obtenerPaginaInicial();
 
                     if ($isAjax) {
-                        $this->jsonResponse([
-                            'success' => true,
-                            'message' => 'Inicio de sesión exitoso.',
-                            'redirect' => BASE_URL . 'dashboard',
-                            'user' => [
-                                'id' => $usuario['id_usuario'],
-                                'nombre' => $usuario['nombre'],
-                                'email' => $usuario['email'],
-                                'rol_id' => $usuario['rol_id']
-                            ]
-                        ]);
-                    } else {
-                        $this->redirect('dashboard');
+                        return $this->jsonResponse(['success' => true, 'redirect' => $paginaInicial]);
                     }
-                } else {
-                    throw new Exception('Credenciales inválidas');
-                }
-            } catch (Exception $e) {
-                if ($isAjax) {
-                    $this->jsonResponse([
-                        'success' => false,
-                        'message' => $e->getMessage()
-                    ], 401); // 401 Unauthorized para credenciales inválidas
-                } else {
-                    $this->view->setData('loginError', $e->getMessage());
+                    header('Location: ' . $paginaInicial);
+                    exit;
                 }
             }
+
+            if ($isAjax) {
+                return $this->jsonResponse(['success' => false, 'message' => 'Credenciales incorrectas'], 401);
+            }
+            $this->view->setData('error', 'Credenciales incorrectas');
         }
 
-        $this->view->setTitle('Iniciar Sesión');
+        $this->view->setLayout('auth');
         $this->view->render('auth/login');
     }
 
@@ -252,12 +196,8 @@ class AuthController extends Controller {
     }
 
     public function logoutAction() {
-        session_start();
-        session_unset();
         session_destroy();
-        // Redirigir a la página de login
-        header('Location: ' . BASE_URL . 'auth/login');
-        exit;
+        redirect('/login');
     }
 
     public function testdbAction() {
@@ -383,6 +323,10 @@ class AuthController extends Controller {
 
     protected function render($view, $data = []) {
         $this->view->render($view, $data);
+    }
+
+    private function isPostRequest() {
+        return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 }
 ?> 

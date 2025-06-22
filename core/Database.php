@@ -4,9 +4,17 @@ class Database {
     private $connection;
 
     private function __construct() {
+        error_log("[DEBUG Database::__construct] Iniciando conexión a la base de datos");
+        error_log("[DEBUG Database::__construct] Host: " . DB_HOST);
+        error_log("[DEBUG Database::__construct] Database: " . DB_NAME);
+        error_log("[DEBUG Database::__construct] User: " . DB_USER);
+        
         try {
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8";
+            error_log("[DEBUG Database::__construct] DSN: $dsn");
+            
             $this->connection = new PDO(
-                "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8",
+                $dsn,
                 DB_USER,
                 DB_PASS,
                 [
@@ -15,9 +23,16 @@ class Database {
                     PDO::ATTR_EMULATE_PREPARES => false
                 ]
             );
-            error_log("Conexión a la base de datos establecida correctamente");
+            error_log("[DEBUG Database::__construct] Conexión a la base de datos establecida correctamente");
+            
+            // Probar la conexión
+            $testQuery = $this->connection->query("SELECT 1");
+            $testResult = $testQuery->fetch();
+            error_log("[DEBUG Database::__construct] Prueba de conexión exitosa: " . print_r($testResult, true));
         } catch (PDOException $e) {
-            error_log("Error de conexión a la base de datos: " . $e->getMessage());
+            error_log("[ERROR Database::__construct] Error de conexión a la base de datos: " . $e->getMessage());
+            error_log("[ERROR Database::__construct] Código de error: " . $e->getCode());
+            error_log("[ERROR Database::__construct] Stack trace: " . $e->getTraceAsString());
             throw new Exception("Error de conexión a la base de datos");
         }
     }

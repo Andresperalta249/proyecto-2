@@ -67,21 +67,43 @@ class MascotasController extends Controller {
             return;
         }
 
-        $mascota = $id ? $this->mascotaModel->find($id, 'id_mascota') : null;
-        
-        if ($id && !verificarPermiso('ver_todos_mascotas') && $mascota && $mascota['usuario_id'] != $_SESSION['user_id']) {
-             $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para editar esta mascota.']);
-            return;
+        $mascota = null;
+        if ($id) {
+            try {
+                $mascota = $this->mascotaModel->findById($id);
+                if (!$mascota) {
+                    $this->view->render('partials/modal_error', ['mensaje' => 'Mascota no encontrada.']);
+                    return;
+                }
+                
+                // Verificar permisos para editar esta mascota específica
+                if (!verificarPermiso('ver_todas_mascotas') && $mascota['usuario_id'] != $_SESSION['user_id']) {
+                    $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para editar esta mascota.']);
+                    return;
+                }
+            } catch (Exception $e) {
+                error_log('Error al cargar mascota: ' . $e->getMessage());
+                $this->view->render('partials/modal_error', ['mensaje' => 'Error al cargar los datos de la mascota.']);
+                return;
+            }
         }
         
-        $usuarioModel = $this->loadModel('UsuarioModel');
-        $usuarios = $usuarioModel->getAll();
+        try {
+            $usuarioModel = $this->loadModel('UsuarioModel');
+            $usuarios = $usuarioModel->getAll();
 
-        $this->view->render('mascotas/form', [
-            'mascota' => $mascota,
-            'usuarios' => $usuarios,
-            'esAdmin' => verificarPermiso('ver_todos_mascotas')
-        ], false);
+            // Determinar si puede asignar propietario: necesita AMBOS permisos
+            $puedeAsignarPropietario = verificarPermiso('ver_todas_mascotas') && verificarPermiso('crear_mascotas');
+            
+            $this->view->render('mascotas/form', [
+                'mascota' => $mascota,
+                'usuarios' => $usuarios,
+                'puedeAsignarPropietario' => $puedeAsignarPropietario
+            ], false);
+        } catch (Exception $e) {
+            error_log('Error en cargarFormularioAction: ' . $e->getMessage());
+            $this->view->render('partials/modal_error', ['mensaje' => 'Error al cargar el formulario.']);
+        }
     }
 
     public function guardarAction() {
@@ -95,27 +117,42 @@ class MascotasController extends Controller {
             return $this->jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
         }
     
+        // Recoger los datos correctos del formulario
         $data = [
             'nombre' => trim($_POST['nombre']),
             'especie' => trim($_POST['especie']),
-            'raza' => trim($_POST['raza']),
-            'fecha_nacimiento' => empty($_POST['fecha_nacimiento']) ? null : $_POST['fecha_nacimiento'],
+            'tamano' => trim($_POST['tamano']),
             'genero' => $_POST['genero'],
-            'activo' => isset($_POST['activo']) ? 1 : 0
+            'fecha_nacimiento' => empty($_POST['fecha_nacimiento']) ? null : $_POST['fecha_nacimiento'],
         ];
     
-        if (verificarPermiso('ver_todos_mascotas')) {
+        // Asignar propietario: necesita AMBOS permisos ver_todas_mascotas Y crear_mascotas
+        $puedeAsignarPropietario = verificarPermiso('ver_todas_mascotas') && verificarPermiso('crear_mascotas');
+        
+        if ($puedeAsignarPropietario) {
+            // Si puede asignar propietario, es obligatorio que lo especifique
+            if (empty($_POST['usuario_id'])) {
+                return $this->jsonResponse([
+                    'success' => false, 
+                    'message' => 'El campo propietario es obligatorio cuando se tienen permisos para asignar propietarios.'
+                ], 400);
+            }
             $data['usuario_id'] = $_POST['usuario_id'];
-        } else {
+        } elseif (!$id) { 
+            // Si no puede asignar propietario, se asigna a sí mismo al crear
             $data['usuario_id'] = $_SESSION['user_id'];
         }
     
         try {
             if ($id) {
-                $this->mascotaModel->update($id, $data, 'id_mascota');
+                // Usamos el método específico del modelo que filtra campos
+                $this->mascotaModel->updateMascota($id, $data);
                 $message = 'Mascota actualizada correctamente.';
             } else {
-                $this->mascotaModel->create($data);
+                // Añadimos el estado por defecto al crear
+                $data['estado'] = 'activo';
+                // Usamos el método específico del modelo que filtra campos
+                $this->mascotaModel->createMascota($data);
                 $message = 'Mascota creada correctamente.';
             }
             $this->jsonResponse(['success' => true, 'message' => $message]);
@@ -126,28 +163,35 @@ class MascotasController extends Controller {
     }
 
     public function toggleEstadoAction() {
-        if (!$this->isPostRequest() || !verificarPermiso('editar_mascotas')) {
-            return $this->jsonResponse(['success' => false, 'message' => 'Acción no permitida'], 403);
+        if (!verificarPermiso('editar_mascotas')) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Acción no permitida.'], 403);
         }
-    
+
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    
-        if ($id === false || !$estado || !in_array($estado, ['activo', 'inactivo'])) {
-            return $this->jsonResponse(['success' => false, 'message' => 'Datos inválidos'], 400);
+        $estado_str = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_STRING); // 'true' o 'false'
+
+        if ($id === false || $estado_str === null) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Datos incompletos.'], 400);
         }
-    
-        try {
-            // El nombre de la columna en la BD es 'estado', no 'activo'
-            $result = $this->mascotaModel->update($id, ['estado' => $estado], 'id_mascota');
-            if ($result) {
-                $this->jsonResponse(['success' => true, 'message' => 'Estado actualizado.']);
+
+        // Convertir el estado del switch ('true'/'false') directamente al estado de la BD ('activo'/'inactivo')
+        $nuevo_estado = ($estado_str === 'true') ? 'activo' : 'inactivo';
+
+        // Intentamos actualizar. Si la BD ya tiene ese estado, rowCount() será 0 y el modelo devolverá false.
+        // En ese caso, no es un error, simplemente no había nada que cambiar.
+        if ($this->mascotaModel->updateMascota($id, ['estado' => $nuevo_estado])) {
+            $this->jsonResponse(['status' => 'success', 'message' => 'Estado actualizado con éxito.']);
+        } else {
+            // Verificamos si realmente hubo un error o si simplemente no hubo cambios.
+            // Para ello, leemos el estado actual de la mascota.
+            $mascota_actual = $this->mascotaModel->findById($id);
+            if ($mascota_actual && $mascota_actual['estado'] === $nuevo_estado) {
+                // No hubo error, el estado ya era el correcto.
+                $this->jsonResponse(['status' => 'success', 'message' => 'El estado ya estaba actualizado.']);
             } else {
-                $this->jsonResponse(['success' => false, 'message' => 'No se pudo actualizar el estado'], 500);
+                // Hubo un error real al intentar actualizar.
+                $this->jsonResponse(['status' => 'error', 'message' => 'No se pudo actualizar el estado.'], 500);
             }
-        } catch (Exception $e) {
-             error_log('Error en MascotasController::toggleEstadoAction - ' . $e->getMessage());
-             $this->jsonResponse(['success' => false, 'message' => 'Ocurrió un error interno.'], 500);
         }
     }
 
@@ -694,6 +738,40 @@ class MascotasController extends Controller {
             }
         }
         return $data;
+    }
+
+    public function listarAction()
+    {
+        // Verificar permisos si es necesario
+        if (!verificarPermiso('ver_mascotas')) {
+            $this->jsonResponse(['error' => 'Acceso no autorizado'], 403);
+            return;
+        }
+
+        $puedeVerTodos = verificarPermiso('ver_todas_mascotas');
+        $usuarioId = $puedeVerTodos ? null : $_SESSION['user_id'];
+        
+        $conditions = [];
+        if (!$puedeVerTodos) {
+            $conditions['usuario_id'] = $usuarioId;
+        }
+
+        $mascotas = $this->mascotaModel->findAll($conditions);
+
+        // Formatear los datos para DataTables
+        $data = [];
+        foreach ($mascotas as $mascota) {
+            $rowData = $mascota;
+            // Formatear la fecha, manejando valores nulos o inválidos
+            if (!empty($mascota['fecha_nacimiento']) && $mascota['fecha_nacimiento'] !== '0000-00-00') {
+                $rowData['fecha_nacimiento'] = date('d/m/Y', strtotime($mascota['fecha_nacimiento']));
+            } else {
+                $rowData['fecha_nacimiento'] = '-';
+            }
+            $data[] = $rowData;
+        }
+
+        $this->jsonResponse(['data' => $data]);
     }
 }
 ?> 

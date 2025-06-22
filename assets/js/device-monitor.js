@@ -195,7 +195,7 @@ async function cargarDatosIniciales() {
             throw new Error('ID de dispositivo no definido');
         }
 
-        const response = await fetch(`${window.BASE_URL}monitor/getDatos/${window.dispositivoId}`);
+                        const response = await fetch(`${window.MONITOR_BASE_URL}monitor/getDatos/${window.dispositivoId}`);
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }
@@ -265,7 +265,7 @@ function configurarEventos() {
 // Carga de datos por rango de tiempo
 async function cargarDatosPorRango(horas) {
     try {
-        const response = await fetch(`${window.BASE_URL}monitor/getUltimosDatos/${window.dispositivoId}?horas=${horas}`);
+                    const response = await fetch(`${window.MONITOR_BASE_URL}monitor/getUltimosDatos/${window.dispositivoId}?horas=${horas}`);
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }

@@ -16,13 +16,42 @@ class Model {
     }
 
     protected function query($sql, $params = []) {
+        error_log("[DEBUG Model::query] Ejecutando consulta SQL");
+        error_log("[DEBUG Model::query] SQL: " . $sql);
+        error_log("[DEBUG Model::query] Params: " . print_r($params, true));
+        
         try {
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $connection = $this->db->getConnection();
+            error_log("[DEBUG Model::query] Conexión obtenida: " . ($connection ? 'SÍ' : 'NO'));
+            
+            $stmt = $connection->prepare($sql);
+            error_log("[DEBUG Model::query] Statement preparado: " . ($stmt ? 'SÍ' : 'NO'));
+            
+            if (!$stmt) {
+                $errorInfo = $connection->errorInfo();
+                error_log("[ERROR Model::query] Error al preparar statement: " . print_r($errorInfo, true));
+                throw new PDOException("Error al preparar statement: " . $errorInfo[2]);
+            }
+            
+            $executeResult = $stmt->execute($params);
+            error_log("[DEBUG Model::query] Execute result: " . ($executeResult ? 'SÍ' : 'NO'));
+            
+            if (!$executeResult) {
+                $errorInfo = $stmt->errorInfo();
+                error_log("[ERROR Model::query] Error al ejecutar statement: " . print_r($errorInfo, true));
+                throw new PDOException("Error al ejecutar statement: " . $errorInfo[2]);
+            }
+            
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("[DEBUG Model::query] Registros obtenidos: " . count($result));
+            
+            return $result;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
-            error_log("Error en la consulta SQL: " . $e->getMessage() . "\nSQL: " . $sql . "\nParams: " . print_r($params, true));
+            error_log("[ERROR Model::query] Error en la consulta SQL: " . $e->getMessage());
+            error_log("[ERROR Model::query] SQL: " . $sql);
+            error_log("[ERROR Model::query] Params: " . print_r($params, true));
+            error_log("[ERROR Model::query] Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }
@@ -30,8 +59,26 @@ class Model {
     public function find($id, $idField = null) {
         $idField = $idField ?? $this->primaryKey;
         $sql = "SELECT * FROM {$this->table} WHERE `$idField` = :idValue";
-        $result = $this->query($sql, [":idValue" => $id]);
-        return $result ? $result[0] : null;
+        $params = [":idValue" => $id];
+        
+        error_log("[DEBUG Model::find] Ejecutando consulta");
+        error_log("[DEBUG Model::find] Tabla: {$this->table}");
+        error_log("[DEBUG Model::find] ID Field: $idField");
+        error_log("[DEBUG Model::find] SQL: $sql");
+        error_log("[DEBUG Model::find] Params: " . print_r($params, true));
+        
+        try {
+            $result = $this->query($sql, $params);
+            error_log("[DEBUG Model::find] Resultado de query: " . (is_array($result) ? count($result) . ' registros' : 'null/false'));
+            if ($result && count($result) > 0) {
+                error_log("[DEBUG Model::find] Primer registro: " . print_r($result[0], true));
+            }
+            return $result ? $result[0] : null;
+        } catch (Exception $e) {
+            error_log("[ERROR Model::find] Error en find: " . $e->getMessage());
+            error_log("[ERROR Model::find] Stack trace: " . $e->getTraceAsString());
+            return null;
+        }
     }
 
     public function create($data) {
@@ -82,7 +129,9 @@ class Model {
 
         try {
             $stmt = $this->db->getConnection()->prepare($sql);
-            return $stmt->execute($params);
+            $stmt->execute($params);
+            // Devolver true solo si se afectó al menos una fila
+            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             error_log("Error al actualizar registro: " . $e->getMessage());
             throw $e;

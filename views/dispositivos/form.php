@@ -3,9 +3,9 @@ $dispositivo = $dispositivo ?? null;
 $isEdit = isset($dispositivo);
 ?>
 
-<form id="formDispositivo" method="POST" action="<?= APP_URL ?>/dispositivos/<?= $isEdit ? 'update' : 'create' ?>">
+<form id="formDispositivo" method="POST" action="<?= BASE_URL ?>dispositivos/<?= $isEdit ? 'guardar' : 'guardar' ?>">
     <?php if ($isEdit): ?>
-        <input type="hidden" name="id" value="<?= $dispositivo['id_dispositivo'] ?>">
+        <input type="hidden" name="id_dispositivo" value="<?= $dispositivo['id_dispositivo'] ?>">
     <?php endif; ?>
     
     <div class="row">
@@ -38,7 +38,6 @@ $isEdit = isset($dispositivo);
                 <select class="form-select" id="estado" name="estado" required>
                     <option value="activo" <?= ($dispositivo['estado'] ?? '') === 'activo' ? 'selected' : '' ?>>Activo</option>
                     <option value="inactivo" <?= ($dispositivo['estado'] ?? '') === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
-                    <option value="mantenimiento" <?= ($dispositivo['estado'] ?? '') === 'mantenimiento' ? 'selected' : '' ?>>Mantenimiento</option>
                 </select>
             </div>
         </div>
@@ -67,15 +66,9 @@ $isEdit = isset($dispositivo);
                 <label for="mascota_id" class="form-label">Mascota Asignada</label>
                 <select class="form-select" id="mascota_id" name="mascota_id">
                     <option value="">Sin asignar</option>
-                    <?php if (isset($mascotas) && is_array($mascotas)): ?>
-                        <?php foreach ($mascotas as $mascota): ?>
-                            <option value="<?= $mascota['id_mascota'] ?>" 
-                                    <?= ($dispositivo['mascota_id'] ?? '') == $mascota['id_mascota'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($mascota['nombre']) ?> (<?= htmlspecialchars($mascota['especie']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <!-- Las mascotas se cargarán dinámicamente según el usuario seleccionado -->
                 </select>
+                <div class="form-text">Selecciona primero un usuario para ver sus mascotas</div>
             </div>
         </div>
     </div>
@@ -110,12 +103,21 @@ $(document).ready(function() {
         
         if (usuarioId) {
             // Cargar mascotas del usuario seleccionado
-            $.get('<?= APP_URL ?>/mascotas/obtenerMascotasUsuario/' + usuarioId, function(response) {
-                if (response.success) {
+            $.ajax({
+                url: '<?= BASE_URL ?>dispositivos/obtenerMascotasSinDispositivo/' + usuarioId,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        mascotaSelect.empty().append('<option value="">Sin asignar</option>');
+                        response.data.forEach(function(mascota) {
+                            mascotaSelect.append(`<option value="${mascota.id_mascota}">${mascota.nombre} (${mascota.especie})</option>`);
+                        });
+                    } else {
+                        mascotaSelect.empty().append('<option value="">Sin asignar</option>');
+                    }
+                },
+                error: function() {
                     mascotaSelect.empty().append('<option value="">Sin asignar</option>');
-                    response.data.forEach(function(mascota) {
-                        mascotaSelect.append(`<option value="${mascota.id_mascota}">${mascota.nombre} (${mascota.especie})</option>`);
-                    });
                 }
             });
         } else {
@@ -123,5 +125,18 @@ $(document).ready(function() {
             mascotaSelect.empty().append('<option value="">Sin asignar</option>');
         }
     });
+    
+    // Cargar mascotas al inicializar si hay un usuario seleccionado
+    const usuarioIdInicial = $('#usuario_id').val();
+    if (usuarioIdInicial) {
+        $('#usuario_id').trigger('change');
+        
+        // Si estamos editando y hay una mascota asignada, seleccionarla después de cargar las opciones
+        <?php if (isset($dispositivo) && $dispositivo && $dispositivo['mascota_id']): ?>
+        setTimeout(function() {
+            $('#mascota_id').val('<?= $dispositivo['mascota_id'] ?>');
+        }, 500);
+        <?php endif; ?>
+    }
 });
 </script> 

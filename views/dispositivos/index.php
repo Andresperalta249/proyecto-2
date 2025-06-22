@@ -60,8 +60,13 @@ $subtitulo = "Administración de dispositivos IoT para monitoreo de mascotas.";
      data-user-id="<?php echo $_SESSION['user_id'] ?? '0'; ?>">
 </div>
 
+<script>
+// Definir APP_URL globalmente para compatibilidad
+window.APP_URL = '<?= rtrim(BASE_URL, '/') ?>';
+</script>
+
 <!-- Incluir modales adicionales -->
 <?php include 'views/dispositivos/modals.php'; ?>
 
 <!-- Inclusión del script JS centralizado para la página de dispositivos -->
-<script src="<?= APP_URL ?>/assets/js/dispositivos.js"></script> 
+<script src="<?= BASE_URL ?>assets/js/dispositivos.js"></script> 

@@ -53,7 +53,7 @@ $(document).ready(function() {
         "processing": true,
         "serverSide": true,
         "ajax": {
-            "url": `${APP_URL}/dispositivos/obtenerDispositivos`,
+            "url": "/proyecto-2/dispositivos/obtenerDispositivos",
             "type": "POST"
         },
         "columns": [
@@ -71,18 +71,7 @@ $(document).ready(function() {
             },
             { 
                 "data": "estado",
-                "render": function(data, type, row) {
-                    let badgeClass = 'bg-secondary';
-                    let text = 'Desconocido';
-                    
-                    switch(data) {
-                        case 'activo': badgeClass = 'bg-success'; text = 'Activo'; break;
-                        case 'inactivo': badgeClass = 'bg-danger'; text = 'Inactivo'; break;
-                        case 'mantenimiento': badgeClass = 'bg-warning'; text = 'Mantenimiento'; break;
-                    }
-                    
-                    return `<span class="badge ${badgeClass}">${text}</span>`;
-                }
+                "render": function() { return ''; } // El switch se crea en createdRow
             },
             { "data": "mascota" },
             { 
@@ -102,8 +91,20 @@ $(document).ready(function() {
                 "width": "100px"
             }
         ],
+        "createdRow": function(row, data) {
+            // Columna de Estado (índice 5)
+            const estadoCell = $('td', row).eq(5);
+            const switchContainer = $('<div>').addClass('form-check form-switch');
+            const switchInput = $('<input>').attr({
+                type: 'checkbox',
+                class: 'form-check-input',
+                id: `switch-dispositivo-${data.id}`,
+                checked: data.estado === 'activo'
+            });
+            estadoCell.html(switchContainer.append(switchInput));
+        },
         "language": {
-            "url": `${APP_URL}/assets/js/i18n/Spanish.json`
+            "url": "/proyecto-2/assets/js/i18n/Spanish.json"
         },
         "responsive": false,
         "autoWidth": false,
@@ -139,18 +140,42 @@ $(document).ready(function() {
             .catch(error => Swal.fire('Error', error.toString(), 'error'));
     }
 
+    // Listener para el switch de estado
+    $('#tablaDispositivos tbody').on('change', '.form-check-input', function() {
+        const id = this.id.split('-')[2]; // switch-dispositivo-{id}
+        const estado = this.checked;
+
+        $.ajax({
+            url: '/proyecto-2/dispositivos/toggleEstado',
+            type: 'POST',
+            data: { id, estado },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({ icon: 'success', title: 'Éxito', text: response.message, timer: 1500, showConfirmButton: false });
+                    tablaDispositivos.ajax.reload(null, false);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                }
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo comunicar con el servidor.' });
+            }
+        });
+    });
+
     // Verificar que los elementos existen antes de agregar event listeners
     const btnNuevoDispositivo = document.getElementById('btnNuevoDispositivo');
 
     if (btnNuevoDispositivo) {
         btnNuevoDispositivo.addEventListener('click', () => {
-            loadFormInModal(`${APP_URL}/dispositivos/cargarFormulario`);
+            loadFormInModal('/proyecto-2/dispositivos/cargarFormulario');
         });
     }
 
     $('#tablaDispositivos tbody').on('click', '.btn-editar', function() {
         const id = $(this).data('id');
-        loadFormInModal(`${APP_URL}/dispositivos/cargarFormulario/${id}`);
+        loadFormInModal(`/proyecto-2/dispositivos/cargarFormulario/${id}`);
     });
 
     // Eliminar dispositivo
@@ -169,7 +194,7 @@ $(document).ready(function() {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`${APP_URL}/dispositivos/eliminar`, {
+                fetch('/proyecto-2/dispositivos/eliminar', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `id=${id}`

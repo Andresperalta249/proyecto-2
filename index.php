@@ -53,10 +53,12 @@ try {
 
     error_log("Ruta solicitada: " . $path);
 
-    // Si no hay ruta, redirigir al dashboard o login
+    // Si no hay ruta, redirigir según permisos o login
     if ($path == '/' || $path == '') {
         if (isset($_SESSION['user_id'])) {
-            header('Location: ' . APP_URL . '/dashboard');
+            // Determinar la página inicial según permisos
+            $paginaInicial = obtenerPaginaInicial();
+            header('Location: ' . $paginaInicial);
         } else {
             header('Location: ' . APP_URL . '/auth/login');
         }
@@ -67,11 +69,19 @@ try {
     $segments = explode('/', trim($path, '/'));
 
     // Determinar el controlador y la acción
-    $controller = !empty($segments[0]) ? $segments[0] : 'dashboard';
-    $action = !empty($segments[1]) ? $segments[1] : 'index';
+    $controller = $segments[0] ?? 'auth';
+    $action = $segments[1] ?? 'index';
     $params = array_slice($segments, 2);
 
+    // --- Regla de enrutamiento especial para /login ---
+    // Si se solicita /login directamente, se mapea a auth/login.
+    if ($controller === 'login' && count($segments) === 1) {
+        $controller = 'auth';
+        $action = 'login';
+    }
+
     error_log("Controlador: $controller, Acción: $action");
+    error_log("Parámetros: " . print_r($params, true));
 
     // Verificar autenticación para rutas protegidas
     $public_routes = ['auth', 'api'];

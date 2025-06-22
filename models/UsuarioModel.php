@@ -9,6 +9,30 @@ class UsuarioModel extends Model {
 
     public function __construct() {
         parent::__construct();
+        
+        // Logs de depuración para verificar la configuración del modelo
+        error_log("[DEBUG UsuarioModel::__construct] Inicializando UsuarioModel");
+        error_log("[DEBUG UsuarioModel::__construct] Tabla: {$this->table}");
+        error_log("[DEBUG UsuarioModel::__construct] Primary Key: {$this->primaryKey}");
+        
+        // Verificar si la tabla existe y tiene datos
+        try {
+            $sql = "SELECT COUNT(*) as count FROM {$this->table}";
+            $result = $this->query($sql);
+            $count = $result[0]['count'] ?? 0;
+            error_log("[DEBUG UsuarioModel::__construct] Registros en tabla usuarios: $count");
+        } catch (Exception $e) {
+            error_log("[ERROR UsuarioModel::__construct] Error al contar usuarios: " . $e->getMessage());
+        }
+        
+        // Verificar estructura de la tabla
+        try {
+            $sql = "DESCRIBE {$this->table}";
+            $structure = $this->query($sql);
+            error_log("[DEBUG UsuarioModel::__construct] Estructura de tabla usuarios: " . print_r($structure, true));
+        } catch (Exception $e) {
+            error_log("[ERROR UsuarioModel::__construct] Error al obtener estructura: " . $e->getMessage());
+        }
     }
 
     /**
@@ -140,8 +164,21 @@ class UsuarioModel extends Model {
      * @return array|null Los datos del usuario o null si no se encuentra.
      */
     public function find($id, $idField = null) {
-        // Llama al find del padre, especificando la clave primaria de este modelo.
-        return parent::find($id, 'id_usuario');
+        error_log("[DEBUG UsuarioModel::find] Buscando usuario con ID: " . var_export($id, true));
+        error_log("[DEBUG UsuarioModel::find] Tabla: {$this->table}, PrimaryKey: {$this->primaryKey}");
+        
+        try {
+            $result = parent::find($id, 'id_usuario');
+            error_log("[DEBUG UsuarioModel::find] Resultado: " . ($result ? 'ENCONTRADO' : 'NO ENCONTRADO'));
+            if ($result) {
+                error_log("[DEBUG UsuarioModel::find] Datos: " . print_r($result, true));
+            }
+            return $result;
+        } catch (Exception $e) {
+            error_log("[ERROR UsuarioModel::find] Excepción: " . $e->getMessage());
+            error_log("[ERROR UsuarioModel::find] Stack trace: " . $e->getTraceAsString());
+            return null;
+        }
     }
 
     /**
@@ -379,13 +416,8 @@ class UsuarioModel extends Model {
      * @return bool True si se actualizó, false si no.
      */
     public function cambiarEstado($id, $estado) {
-        try {
-            $sql = "UPDATE {$this->table} SET estado = :estado WHERE id_usuario = :id";
-            return $this->query($sql, [':estado' => $estado, ':id' => $id]);
-        } catch (Exception $e) {
-            error_log("Error en cambiarEstado: " . $e->getMessage());
-            return false;
-        }
+        $estado_valido = $estado === 'activo' ? 'activo' : 'inactivo';
+        return $this->update($id, ['estado' => $estado_valido], 'id_usuario');
     }
 
     public function getLastError()
@@ -413,5 +445,31 @@ class UsuarioModel extends Model {
     public function getUsuarioById($id)
     {
         return $this->find($id, 'id_usuario');
+    }
+
+    public function getPermisosDeUsuario($usuario_id) {
+        $sql = "SELECT p.nombre 
+                FROM usuarios u
+                JOIN roles_permisos rp ON u.rol_id = rp.rol_id
+                JOIN permisos p ON rp.permiso_id = p.id_permiso
+                WHERE u.id_usuario = ? AND p.estado = 'activo'";
+        
+        try {
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$usuario_id]);
+            // Devolver un array plano con los códigos de los permisos
+            return $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+        } catch (PDOException $e) {
+            error_log("Error al obtener permisos: " . $e->getMessage());
+            return []; // Devolver un array vacío en caso de error
+        }
+    }
+
+    public function registrarUltimoAcceso($usuario_id) {
+        // Este método actualiza la columna 'ultimo_acceso' en la tabla 'usuarios'
+        $data = [
+            'ultimo_acceso' => date('Y-m-d H:i:s')
+        ];
+        return $this->update($usuario_id, $data, 'id_usuario');
     }
 } 

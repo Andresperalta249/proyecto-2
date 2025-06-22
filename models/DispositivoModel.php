@@ -2,6 +2,7 @@
 class DispositivoModel {
     private $db;
     private $table = 'dispositivos';
+    private $lastError;
 
     public function __construct() {
         $this->db = Database::getInstance();
@@ -221,6 +222,18 @@ class DispositivoModel {
 
     public function createDispositivo($data) {
         try {
+            // Validar campos requeridos
+            if (empty($data['nombre']) || empty($data['mac']) || empty($data['estado'])) {
+                error_log("Error en DispositivoModel::createDispositivo: Campos requeridos faltantes");
+                $this->lastError = "Los campos nombre, mac y estado son requeridos";
+                return false;
+            }
+            
+            // Asignar valores por defecto para campos opcionales
+            $usuario_id = isset($data['usuario_id']) && !empty($data['usuario_id']) ? $data['usuario_id'] : null;
+            // mascota_id puede ser NULL cuando no hay mascota asignada
+            $mascota_id = isset($data['mascota_id']) && !empty($data['mascota_id']) ? (int)$data['mascota_id'] : null;
+            
             $query = "INSERT INTO {$this->table} (nombre, mac, estado, usuario_id, mascota_id, creado_en) 
                      VALUES (:nombre, :mac, :estado, :usuario_id, :mascota_id, NOW())";
             
@@ -228,10 +241,19 @@ class DispositivoModel {
             $stmt->bindParam(':nombre', $data['nombre']);
             $stmt->bindParam(':mac', $data['mac']);
             $stmt->bindParam(':estado', $data['estado']);
-            $stmt->bindParam(':usuario_id', $data['usuario_id']);
-            $stmt->bindParam(':mascota_id', $data['mascota_id']);
+            $stmt->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+            $stmt->bindParam(':mascota_id', $mascota_id, PDO::PARAM_INT);
             
-            return $stmt->execute();
+            $result = $stmt->execute();
+            
+            if (!$result) {
+                error_log("Error en DispositivoModel::createDispositivo: " . print_r($stmt->errorInfo(), true));
+                $this->lastError = implode(', ', $stmt->errorInfo());
+                return false;
+            }
+            
+            error_log("Dispositivo creado exitosamente: " . $data['nombre']);
+            return $result;
         } catch (PDOException $e) {
             error_log("Error en DispositivoModel::createDispositivo: " . $e->getMessage());
             $this->lastError = $e->getMessage();
@@ -241,24 +263,56 @@ class DispositivoModel {
 
     public function updateDispositivo($id, $data) {
         try {
-            $query = "UPDATE {$this->table} SET 
-                     nombre = :nombre, 
-                     mac = :mac, 
-                     estado = :estado, 
-                     usuario_id = :usuario_id, 
-                     mascota_id = :mascota_id, 
-                     actualizado_en = NOW() 
-                     WHERE id_dispositivo = :id";
+            // Construir consulta dinámicamente basada en los campos proporcionados
+            $setParts = [];
+            $params = [':id' => $id];
+            
+            if (isset($data['nombre'])) {
+                $setParts[] = "nombre = :nombre";
+                $params[':nombre'] = $data['nombre'];
+            }
+            
+            if (isset($data['mac'])) {
+                $setParts[] = "mac = :mac";
+                $params[':mac'] = $data['mac'];
+            }
+            
+            if (isset($data['estado'])) {
+                $setParts[] = "estado = :estado";
+                $params[':estado'] = $data['estado'];
+            }
+            
+            if (isset($data['usuario_id'])) {
+                $setParts[] = "usuario_id = :usuario_id";
+                $params[':usuario_id'] = $data['usuario_id'];
+            }
+            
+            if (isset($data['mascota_id'])) {
+                $setParts[] = "mascota_id = :mascota_id";
+                // mascota_id puede ser NULL cuando no hay mascota asignada
+                $params[':mascota_id'] = !empty($data['mascota_id']) ? (int)$data['mascota_id'] : null;
+            }
+            
+            // No actualizar fecha ya que no existe columna actualizado_en
+            // $setParts[] = "actualizado_en = NOW()";
+            
+            if (empty($setParts)) {
+                error_log("Error en DispositivoModel::updateDispositivo: No hay campos para actualizar");
+                return false;
+            }
+            
+            $query = "UPDATE {$this->table} SET " . implode(', ', $setParts) . " WHERE id_dispositivo = :id";
             
             $stmt = $this->db->getConnection()->prepare($query);
-            $stmt->bindParam(':nombre', $data['nombre']);
-            $stmt->bindParam(':mac', $data['mac']);
-            $stmt->bindParam(':estado', $data['estado']);
-            $stmt->bindParam(':usuario_id', $data['usuario_id']);
-            $stmt->bindParam(':mascota_id', $data['mascota_id']);
-            $stmt->bindParam(':id', $id);
+            $result = $stmt->execute($params);
             
-            return $stmt->execute();
+            if (!$result) {
+                error_log("Error en DispositivoModel::updateDispositivo: " . print_r($stmt->errorInfo(), true));
+                $this->lastError = implode(', ', $stmt->errorInfo());
+                return false;
+            }
+            
+            return $result;
         } catch (PDOException $e) {
             error_log("Error en DispositivoModel::updateDispositivo: " . $e->getMessage());
             $this->lastError = $e->getMessage();

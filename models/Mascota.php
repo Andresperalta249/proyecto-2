@@ -89,7 +89,7 @@ class Mascota extends Model {
                 FROM {$this->table} m 
                 WHERE m.usuario_id = :usuario_id
                 AND NOT EXISTS (
-                    SELECT 1 FROM dispositivos d WHERE d.mascota_id = m.id_mascota
+                    SELECT 1 FROM dispositivos d WHERE d.mascota_id = m.id_mascota AND d.mascota_id IS NOT NULL
                 )";
         return $this->query($sql, [':usuario_id' => $usuario_id]);
     }

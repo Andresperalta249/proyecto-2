@@ -1,4 +1,4 @@
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Obtener configuración desde el DOM
     const configElement = document.getElementById('mascotas-config');
     if (!configElement) {
@@ -49,61 +49,60 @@ $(document).ready(function() {
         return;
     }
 
-    const tablaMascotas = $('#tablaMascotas').DataTable({
-        "processing": true,
-        "serverSide": true,
-        "ajax": {
-            "url": `${APP_URL}/mascotas/obtenerMascotas`,
-            "type": "POST"
+    // Obtenemos la instancia del modal UNA SOLA VEZ
+    const mainModalEl = document.getElementById('mainModal');
+    const mainModal = new bootstrap.Modal(mainModalEl);
+    
+    const tablaMascotas = new DataTable('#tablaMascotas', {
+        responsive: true,
+        ajax: {
+            url: `${configElement.dataset.baseUrl || window.location.origin + '/proyecto-2/'}mascotas/listar`,
+            dataSrc: 'data'
         },
-        "columns": [
-            { "data": "id" },
-            { "data": "nombre" },
-            { "data": "especie" },
-            { "data": "propietario" },
-            { 
-                "data": "estado",
-                "render": function(data, type, row) {
-                    const isChecked = data === 'activo';
-                    const canToggle = PERMISOS.editar;
-                    
-                    return `
-                        <div class="form-check form-switch d-flex justify-content-center">
-                            <input class="form-check-input switch-estado" type="checkbox" 
-                                   role="switch"
-                                   data-id="${row.id}" 
-                                   ${isChecked ? 'checked' : ''} 
-                                   ${canToggle ? '' : 'disabled'}
-                                   title="${canToggle ? 'Cambiar estado' : 'No tienes permiso'}">
-                        </div>
-                    `;
-                },
-                "className": "text-center",
-                "orderable": false
+        columns: [
+            { data: 'id_mascota' },
+            { data: 'nombre' },
+            { data: 'especie' },
+            { data: 'fecha_nacimiento' },
+            { data: 'propietario_nombre' },
+            {
+                data: 'estado',
+                render: function() { return ''; } // El switch se crea en createdRow
             },
-            { "data": "dispositivo_estado" },
-            { 
-                "data": "id",
-                "render": function(data, type, row) {
-                    let botones = '';
-                    // El chequeo de permisos se hace ahora en el controlador
-                    botones += `<button class="btn btn-sm btn-info btn-editar" data-id="${data}" title="Editar"><i class="fas fa-edit"></i></button>`;
-                    botones += ` <button class="btn btn-sm btn-danger btn-eliminar" data-id="${data}" title="Eliminar"><i class="fas fa-trash-alt"></i></button>`;
-                    return botones;
-                },
-                "orderable": false,
-                "searchable": false,
-                "width": "100px"
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function(data, type, row) {
+                    // Volvemos a usar data-attributes y clases para los listeners
+                    return `
+                        <button class="btn btn-sm btn-info btn-ver" data-id="${row.id_mascota}" title="Ver"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-primary btn-editar" data-id="${row.id_mascota}" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger btn-eliminar" data-id="${row.id_mascota}" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    `;
+                }
             }
         ],
-        "language": {
-            "url": `${APP_URL}/assets/js/i18n/Spanish.json`
+        createdRow: function(row, data) {
+            // Columna de Estado (índice 5)
+            const estadoCell = $('td', row).eq(5);
+            const switchContainer = $('<div>').addClass('form-check form-switch');
+            const switchInput = $('<input>').attr({
+                type: 'checkbox',
+                class: 'form-check-input',
+                id: `switch-${data.id_mascota}`,
+                checked: data.estado === 'activo'
+            });
+            estadoCell.html(switchContainer.append(switchInput));
         },
-        "responsive": false,
-        "autoWidth": false,
-        "ordering": true,
-        "lengthChange": false,
-        "dom": 'ftip'
+        language: {
+            url: `${configElement.dataset.baseUrl || window.location.origin + '/proyecto-2/'}assets/js/i18n/Spanish.json`
+        },
+        pageLength: 5,
+        lengthMenu: [5, 10, 25, 50],
+        ordering: true,
+        dom: 'frtip',
+        buttons: []
     });
 
     // --- MANEJO DE EVENTOS ---
@@ -118,129 +117,161 @@ $(document).ready(function() {
         }, 250);
     });
 
-    // Cambiar estado de mascota con switch
-    $('#tablaMascotas tbody').on('change', '.switch-estado', function() {
-        if (!PERMISOS.editar) return;
+    // Listener para el switch de estado
+    $('#tablaMascotas tbody').on('change', '.form-check-input', function() {
+        const id = this.id.split('-')[1];
+        const estado = this.checked;
 
-        const id = $(this).data('id');
-        const nuevoEstado = this.checked ? 'activo' : 'inactivo';
-
-        fetch(`${APP_URL}/mascotas/toggleEstado`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: `id=${id}&estado=${nuevoEstado}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // No es necesario mostrar un popup en cada cambio de estado exitoso
-                // Simplemente se puede recargar la tabla para ver el cambio reflejado,
-                // aunque el cambio visual del switch ya es una confirmación.
-                // tablaMascotas.ajax.reload(null, false);
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                $(this).prop('checked', !this.checked); // Revertir si falla
+        $.ajax({
+            url: `${configElement.dataset.baseUrl || window.location.origin + '/proyecto-2/'}mascotas/toggleEstado`,
+            type: 'POST',
+            data: { id, estado },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({ icon: 'success', title: 'Éxito', text: response.message, timer: 1500, showConfirmButton: false });
+                    tablaMascotas.ajax.reload(null, false);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                }
+            },
+            error: function() {
+                Swal.fire({ icon: 'error', title: 'Error de Conexión', text: 'No se pudo comunicar con el servidor.' });
             }
-        })
-        .catch(() => {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación.' });
-            $(this).prop('checked', !this.checked);
         });
     });
 
-    // --- GESTIÓN DE MODALES (Crear y Editar) ---
-    const modalElement = document.getElementById('modalMascota');
-    const modal = new bootstrap.Modal(modalElement);
-    const modalContent = modalElement.querySelector('.modal-content');
-
-    function loadFormInModal(url) {
-        fetch(url)
-            .then(response => response.ok ? response.text() : Promise.reject('Error al cargar el formulario.'))
-            .then(html => {
-                modalContent.innerHTML = html;
-                modal.show();
-            })
-            .catch(error => Swal.fire('Error', error.toString(), 'error'));
-    }
-
-    // Verificar que los elementos existen antes de agregar event listeners
-    const btnNuevaMascota = document.getElementById('btnNuevaMascota');
-    const btnNuevaMascotaFlotante = document.getElementById('btnNuevaMascotaFlotante');
-
-    if (btnNuevaMascota) {
-        btnNuevaMascota.addEventListener('click', () => {
-            loadFormInModal(`${APP_URL}/mascotas/cargarFormulario`);
-        });
-    }
-
-    if (btnNuevaMascotaFlotante) {
-        btnNuevaMascotaFlotante.addEventListener('click', () => {
-            loadFormInModal(`${APP_URL}/mascotas/cargarFormulario`);
-        });
-    }
-
+    // Listeners para los botones de acción
+    $('#tablaMascotas tbody').on('click', '.btn-ver', function() {
+        editarMascota($(this).data('id'));
+    });
     $('#tablaMascotas tbody').on('click', '.btn-editar', function() {
-        const id = $(this).data('id');
-        loadFormInModal(`${APP_URL}/mascotas/cargarFormulario/${id}`);
+        editarMascota($(this).data('id'));
     });
-
-    modalElement.addEventListener('submit', function(e) {
-        if (e.target && e.target.id === 'formMascota') {
-            e.preventDefault();
-            const form = e.target;
-            const formData = new FormData(form);
-            
-            fetch(form.action, { method: 'POST', body: formData })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        modal.hide();
-                        tablaMascotas.ajax.reload(null, false);
-                        Swal.fire({ icon: 'success', title: 'Éxito', text: data.message, timer: 2000, showConfirmButton: false });
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Error', html: data.message || 'Ocurrió un error.' });
-                    }
-                })
-                .catch(() => Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error'));
-        }
-    });
-    
-    // Eliminar Mascota
     $('#tablaMascotas tbody').on('click', '.btn-eliminar', function() {
-        if (!PERMISOS.eliminar) return;
+        eliminarMascota($(this).data('id'));
+    });
 
-        const id = $(this).data('id');
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esta acción!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, ¡eliminar!',
-            cancelButtonText: 'Cancelar'
-        }).then(result => {
-            if (result.isConfirmed) {
-                fetch(`${APP_URL}/mascotas/eliminar/${id}`, { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            tablaMascotas.ajax.reload(null, false);
-                            Swal.fire('¡Eliminado!', data.message, 'success');
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    })
-                    .catch(() => Swal.fire('Error', 'No se pudo comunicar con el servidor.', 'error'));
+    // Listener para guardar el formulario del modal
+    $(document).on('submit', '#formMascota', function(e) {
+        e.preventDefault();
+        
+        // Validación especial para el campo propietario si está presente
+        const propietarioField = $(this).find('#usuario_id');
+        if (propietarioField.length && propietarioField.attr('required') && !propietarioField.val()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campo Obligatorio',
+                text: 'Debe seleccionar un propietario para la mascota.',
+                confirmButtonText: 'Entendido'
+            });
+            propietarioField.focus();
+            return false;
+        }
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: new FormData(this),
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    mainModal.hide(); // Usamos la instancia para cerrar el modal
+                    Swal.fire('Éxito', response.message, 'success');
+                    tablaMascotas.ajax.reload();
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function() {
+                 Swal.fire('Error', 'No se pudo guardar la mascota.', 'error');
             }
         });
     });
 
-    // Función para inicializar plugins como Select2 dentro del modal
-    function initializeModalPlugins() {
-        if ($(modalElement).find('.select2').length) {
-            $(modalElement).find('.select2').select2({
-                dropdownParent: $(modalElement)
-            });
+    // Hacemos las funciones globales para que sean accesibles desde el HTML
+    window.editarMascota = function(id) {
+        const baseUrl = configElement.dataset.baseUrl || window.location.origin + '/proyecto-2/';
+        const url = `${baseUrl}mascotas/cargarFormulario/${id || ''}`;
+        const modalTitle = id ? 'Editar Mascota' : 'Nueva Mascota';
+        
+        // Actualizar título del modal
+        $('#mainModalLabel').text(modalTitle);
+        
+        // Mostrar loading en el modal
+        $('#mainModal .modal-body').html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Cargando...</p></div>');
+        mainModal.show();
+        
+        // Cargar contenido con AJAX mejorado
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                $('#mainModal .modal-body').html(response);
+                // Inicializar cualquier plugin necesario
+                initializeModalPlugins();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading form:', error);
+                mainModal.hide();
+                Swal.fire('Error', 'No se pudo cargar el formulario.', 'error');
+            }
+        });
+    }
+
+    window.eliminarMascota = function(id) {
+        Swal.fire({
+            title: '¿Estás seguro?', text: "No podrás revertir esto.", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, ¡elimínalo!', cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const baseUrl = configElement.dataset.baseUrl || window.location.origin + '/proyecto-2/';
+                $.ajax({
+                    url: `${baseUrl}mascotas/eliminar/${id}`,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire('¡Eliminado!', response.message, 'success');
+                            tablaMascotas.ajax.reload();
+                        } else {
+                            Swal.fire('Error', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Ocurrió un error de red.', 'error');
+                    }
+                });
+            }
+        });
+    }
+});
+
+// Función para inicializar plugins como Select2 dentro del modal
+function initializeModalPlugins() {
+    const modalElement = $('#mainModal');
+    
+    // Inicializar Select2 si existe
+    if (modalElement.find('.select2').length) {
+        modalElement.find('.select2').select2({
+            dropdownParent: modalElement
+        });
+    }
+    
+    // Manejar mostrar/ocultar el campo propietario según permisos
+    const propietarioField = modalElement.find('#usuario_id').closest('.mb-3');
+    const puedeAsignarPropietario = modalElement.find('[data-puede-asignar-propietario]').data('puede-asignar-propietario');
+    
+    if (propietarioField.length) {
+        if (puedeAsignarPropietario) {
+            propietarioField.show();
+            modalElement.find('#usuario_id').attr('required', true);
+        } else {
+            propietarioField.hide();
+            modalElement.find('#usuario_id').removeAttr('required');
         }
     }
-}); 
+} 

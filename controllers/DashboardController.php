@@ -22,6 +22,14 @@ class DashboardController extends Controller {
     }
 
     public function indexAction() {
+        // Verificar permisos para ver dashboard
+        if (!verificarPermiso('ver_dashboard')) {
+            error_log("[DEBUG] Usuario sin permiso ver_dashboard, redirigiendo a monitor");
+            // Redirigir a monitor si no tiene permisos de dashboard
+            header('Location: /proyecto-2/monitor');
+            exit;
+        }
+
         $this->view->setLayout('main');
         $this->view->setData('titulo', 'Dashboard');
         $this->view->setData('subtitulo', 'Resumen general del sistema.');
@@ -44,6 +52,12 @@ class DashboardController extends Controller {
     }
 
     public function getKPIDataAction() {
+        // Verificar permisos para ver dashboard
+        if (!verificarPermiso('ver_dashboard')) {
+            $this->sendJsonError('No tienes permiso para ver el dashboard', 403);
+            return;
+        }
+
         try {
             $userModel = new User();
             if (!$this->dispositivoModel || !$this->mascotaModel) {
@@ -107,6 +121,12 @@ class DashboardController extends Controller {
     }
 
     public function getDistribucionEspeciesAction() {
+        // Verificar permisos para ver dashboard
+        if (!verificarPermiso('ver_dashboard')) {
+            $this->sendJsonError('No tienes permiso para ver el dashboard', 403);
+            return;
+        }
+
         try {
             $distribucion = $this->mascotaModel->getDistribucionEspecies();
             if ($distribucion === false) {
@@ -120,6 +140,12 @@ class DashboardController extends Controller {
     }
 
     public function getHistorialUsuariosAction() {
+        // Verificar permisos para ver dashboard
+        if (!verificarPermiso('ver_dashboard')) {
+            $this->sendJsonError('No tienes permiso para ver el dashboard', 403);
+            return;
+        }
+
         try {
             $dias = isset($_GET['dias']) ? (int)$_GET['dias'] : 7;
             $dias = max(1, min($dias, 30)); // Limitar entre 1 y 30 días

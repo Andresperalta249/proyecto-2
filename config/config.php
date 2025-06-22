@@ -121,29 +121,51 @@ if (!defined('BASE_URL')) {
  * @return bool True si el usuario tiene el permiso, False en caso contrario
  */
 function verificarPermiso($permiso_codigo) {
+    error_log("[DEBUG verificarPermiso] Verificando permiso: '$permiso_codigo'");
+    error_log("[DEBUG verificarPermiso] Usuario en sesión: " . ($_SESSION['user_id'] ?? 'NO'));
+    error_log("[DEBUG verificarPermiso] Permisos en sesión: " . (isset($_SESSION['permissions']) ? 'SÍ' : 'NO'));
+    
     if (!isset($_SESSION['user_id'])) {
+        error_log("[DEBUG verificarPermiso] FALLO: No hay user_id en sesión");
         return false;
     }
-    // Validar solo por permisos en sesión
-    if (isset($_SESSION['permissions']) && is_array($_SESSION['permissions'])) {
-        return in_array($permiso_codigo, $_SESSION['permissions']);
-    }
-    // Fallback: si no hay permisos en sesión, consultar BD (caso de compatibilidad)
-    try {
-        $db = Database::getInstance();
-        $sql = "SELECT COUNT(*) as tiene_permiso 
-                FROM usuarios u 
-                JOIN roles r ON u.rol_id = r.id_rol 
-                JOIN roles_permisos rp ON r.id_rol = rp.rol_id 
-                JOIN permisos p ON rp.permiso_id = p.id_permiso 
-                WHERE u.id_usuario = ? AND p.codigo = ? AND p.estado = 'activo'";
-        $stmt = $db->getConnection()->prepare($sql);
-        $stmt->execute([$_SESSION['user_id'], $permiso_codigo]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row && $row['tiene_permiso'] > 0;
-    } catch (Exception $e) {
-        error_log("Error al verificar permiso: " . $e->getMessage());
+    
+    if (!isset($_SESSION['permissions'])) {
+        error_log("[DEBUG verificarPermiso] FALLO: No hay permissions en sesión");
         return false;
+    }
+    
+    error_log("[DEBUG verificarPermiso] Permisos disponibles: " . print_r($_SESSION['permissions'], true));
+    
+    $tienePermiso = in_array($permiso_codigo, $_SESSION['permissions']);
+    error_log("[DEBUG verificarPermiso] ¿Tiene permiso '$permiso_codigo'? " . ($tienePermiso ? 'SÍ' : 'NO'));
+    
+    return $tienePermiso;
+}
+
+/**
+ * Determina la página inicial para un usuario según sus permisos
+ * @return string La URL de la página inicial apropiada
+ */
+function obtenerPaginaInicial() {
+    error_log("[DEBUG obtenerPaginaInicial] Determinando página inicial para usuario: " . ($_SESSION['user_id'] ?? 'NO_AUTH'));
+    
+    if (verificarPermiso('ver_dashboard')) {
+        error_log("[DEBUG obtenerPaginaInicial] Redirigiendo a DASHBOARD");
+        return APP_URL . '/dashboard';
+    } elseif (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')) {
+        error_log("[DEBUG obtenerPaginaInicial] Redirigiendo a MONITOR");
+        return APP_URL . '/monitor';
+    } elseif (verificarPermiso('ver_mascotas') || verificarPermiso('ver_todas_mascotas')) {
+        error_log("[DEBUG obtenerPaginaInicial] Redirigiendo a MASCOTAS");
+        return APP_URL . '/mascotas';
+    } elseif (verificarPermiso('ver_dispositivos')) {
+        error_log("[DEBUG obtenerPaginaInicial] Redirigiendo a DISPOSITIVOS");
+        return APP_URL . '/dispositivos';
+    } else {
+        error_log("[DEBUG obtenerPaginaInicial] Sin permisos - Redirigiendo a ERROR 403");
+        // Si no tiene permisos para ninguna página principal, mostrar error
+        return APP_URL . '/errors/403';
     }
 }
 ?> 
