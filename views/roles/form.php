@@ -12,13 +12,6 @@ $permisosAsignados = $esEdicion ? ($rol['permiso_ids'] ?? []) : [];
     <?php if ($esEdicion) : ?>
         <input type="hidden" name="id_rol" value="<?= htmlspecialchars($rolData['id_rol']) ?>">
     <?php endif; ?>
-
-    <div class="modal-header">
-        <h5 class="modal-title" id="modal-generico-titulo"><?= $titulo ?></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-    </div>
-
-    <div class="modal-body">
         <div class="form-group mb-3">
             <label for="nombre" class="form-label">Nombre del Rol</label>
             <input type="text" class="form-control" id="nombre" name="nombre" required 
@@ -50,10 +43,9 @@ $permisosAsignados = $esEdicion ? ($rol['permiso_ids'] ?? []) : [];
                 <?php endif; ?>
             </div>
         </div>
-    </div>
-
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    
+    <div class="mt-3 text-end">
+        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">Guardar Rol</button>
     </div>
 </form> 

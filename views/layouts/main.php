@@ -138,8 +138,9 @@ if (!isset($content)) {
                 <div class="sidebar-menu">
                     <div class="sidebar-section">
                         <?php if (verificarPermiso('ver_dashboard')): ?>
-                        <a href="<?= APP_URL ?>/dashboard" class="sidebar-item<?= ($menuActivo === 'dashboard' ? ' active' : '') ?>">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        <a href="<?= APP_URL ?>/dashboard" class="sidebar-item<?= ($menuActivo === 'dashboard' ? ' active' : '') ?>" 
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                            <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
                         </a>
                         <?php endif; ?>
                     </div>
@@ -148,13 +149,15 @@ if (!isset($content)) {
                             <i class="fas fa-folder me-2"></i> Administración
                         </div>
                         <?php if (verificarPermiso('ver_usuarios')): ?>
-                        <a href="<?= APP_URL ?>/usuarios" class="sidebar-item<?= ($menuActivo === 'usuarios' ? ' active' : '') ?>">
-                            <i class="fas fa-users"></i> Usuarios
+                        <a href="<?= APP_URL ?>/usuarios" class="sidebar-item<?= ($menuActivo === 'usuarios' ? ' active' : '') ?>"
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Usuarios">
+                            <i class="fas fa-users"></i> <span>Usuarios</span>
                         </a>
                         <?php endif; ?>
                         <?php if (verificarPermiso('ver_roles')): ?>
-                        <a href="<?= APP_URL ?>/roles" class="sidebar-item<?= ($menuActivo === 'roles' ? ' active' : '') ?>">
-                            <i class="fas fa-user-tag"></i> Roles y Permisos
+                        <a href="<?= APP_URL ?>/roles" class="sidebar-item<?= ($menuActivo === 'roles' ? ' active' : '') ?>"
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Roles y Permisos">
+                            <i class="fas fa-user-tag"></i> <span>Roles y Permisos</span>
                         </a>
                         <?php endif; ?>
                     </div>
@@ -163,18 +166,21 @@ if (!isset($content)) {
                             <i class="fas fa-broadcast-tower me-2"></i> Monitoreo
                         </div>
                         <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
-                                    <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>">
-                <i class="fas fa-chart-line"></i> Monitor IoT
-            </a>
-            <?php endif; ?>
+                        <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>"
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Monitor IoT">
+                            <i class="fas fa-chart-line"></i> <span>Monitor IoT</span>
+                        </a>
+                        <?php endif; ?>
                         <?php if (verificarPermiso('ver_mascotas') || verificarPermiso('ver_todas_mascotas')): ?>
-                        <a href="<?= APP_URL ?>/mascotas" class="sidebar-item<?= ($menuActivo === 'mascotas' ? ' active' : '') ?>">
-                            <i class="fas fa-paw"></i> Mascotas
+                        <a href="<?= APP_URL ?>/mascotas" class="sidebar-item<?= ($menuActivo === 'mascotas' ? ' active' : '') ?>"
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Mascotas">
+                            <i class="fas fa-paw"></i> <span>Mascotas</span>
                         </a>
                         <?php endif; ?>
                         <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
-                        <a href="<?= APP_URL ?>/dispositivos" class="sidebar-item<?= ($menuActivo === 'dispositivos' ? ' active' : '') ?>">
-                            <i class="fas fa-microchip"></i> Dispositivos
+                        <a href="<?= APP_URL ?>/dispositivos" class="sidebar-item<?= ($menuActivo === 'dispositivos' ? ' active' : '') ?>"
+                           data-bs-toggle="tooltip" data-bs-placement="right" title="Dispositivos">
+                            <i class="fas fa-microchip"></i> <span>Dispositivos</span>
                         </a>
                         <?php endif; ?>
                         
@@ -263,6 +269,12 @@ if (!isset($content)) {
     <?php endif; ?>
 
     <script>
+        // Inicializar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
         // Sidebar colapsable y móvil mejorado
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
@@ -288,8 +300,26 @@ if (!isset($content)) {
                     }
                 } else {
                     sidebar.classList.toggle('sidebar-collapsed');
+                    toggleTooltips();
                 }
             });
+            
+            // Función para activar/desactivar tooltips según estado del sidebar
+            function toggleTooltips() {
+                const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+                tooltipTriggerList.forEach(function(element) {
+                    const tooltip = bootstrap.Tooltip.getInstance(element);
+                    if (isCollapsed) {
+                        if (!tooltip) {
+                            new bootstrap.Tooltip(element);
+                        }
+                    } else {
+                        if (tooltip) {
+                            tooltip.dispose();
+                        }
+                    }
+                });
+            }
             
             sidebarOverlay.addEventListener('click', closeSidebarMobile);
             

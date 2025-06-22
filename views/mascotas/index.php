@@ -1,7 +1,7 @@
 <?php
 // Test: Esto es un comentario de prueba
-$titulo = "Gestión de Mascotas";
-$subtitulo = "Administración de mascotas y sus dispositivos de monitoreo.";
+$titulo = "Administración de mascotas";
+$subtitulo = "Administración de mascotas";
 ?>
 
 <div class="container-fluid pt-3">
@@ -14,7 +14,7 @@ $subtitulo = "Administración de mascotas y sus dispositivos de monitoreo.";
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table id="tablaMascotas" class="table table-striped table-hover" style="width:100%">
+                <table id="tablaMascotas" class="table table-hover" style="width:100%">
                     <thead>
                         <tr>
                             <th>ID</th>

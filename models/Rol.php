@@ -40,12 +40,12 @@ class Rol extends Model {
                 FROM permisos p
                 JOIN roles_permisos rp ON p.id_permiso = rp.permiso_id
                 WHERE rp.rol_id = :rol_id";
-        return $this->query($sql, [':rol_id' => $rol_id], true);
+        return $this->query($sql, [':rol_id' => $rol_id]);
     }
     
     public function getPermisos() {
-        $sql = "SELECT * FROM permisos";
-        return $this->query($sql, [], true);
+        $sql = "SELECT * FROM permisos ORDER BY nombre";
+        return $this->query($sql, []);
     }
 
     public function getPaginated($start, $length, $searchValue, $orderColumn, $orderDir)
@@ -113,7 +113,7 @@ class Rol extends Model {
             $stmt->execute([
                 $data['nombre'],
                 $data['descripcion'],
-                $data['estado']
+                $data['estado'] ?? 'activo'
             ]);
             
             $id_rol = $this->db->getConnection()->lastInsertId();
@@ -161,7 +161,7 @@ class Rol extends Model {
             $stmt->execute([
                 $data['nombre'],
                 $data['descripcion'],
-                $data['estado'],
+                $data['estado'] ?? 'activo',
                 $id
             ]);
             // Actualizar permisos

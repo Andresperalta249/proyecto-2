@@ -192,7 +192,7 @@ class DatosSensor extends Model {
     }
 
     /**
-     * Búsqueda avanzada y paginada de registros históricos para el reporte moderno
+     * Búsqueda avanzada y paginada de registros históricos
      */
     public function buscarRegistrosAvanzado($usuario_id = null, $mascota_id = null, $mac = null, $page = 1, $perPage = 20, $fecha_inicio = null, $fecha_fin = null) {
         $offset = ($page - 1) * $perPage;

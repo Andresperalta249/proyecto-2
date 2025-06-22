@@ -210,16 +210,54 @@ $(function() {
       });
       $('#tabla-registros tbody').html(html);
       
-      // Paginador
+      // Actualizar contador de registros
+      $('#total-registros').text(`${resp.total || 0} registros`);
+      
+      // Paginador mejorado
       let totalPages = Math.ceil(resp.total / (resp.perPage || 20));
+      let currentPage = resp.page || 1;
       let pagHtml = '';
+      
       if (totalPages > 1) {
-        for (let i = 1; i <= Math.min(totalPages, 10); i++) {
-          pagHtml += `<button class="btn btn-sm ${i === resp.page ? 'btn-primary' : 'btn-outline-primary'} mx-1" onclick="actualizarPaginacion(${i})">${i}</button>`;
+        // Botón Anterior
+        if (currentPage > 1) {
+          pagHtml += `<button class="btn btn-sm btn-outline-secondary me-2" onclick="actualizarPaginacion(${currentPage - 1})">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </button>`;
         }
-        if (totalPages > 10) {
-          pagHtml += `<span class="mx-2">... ${totalPages} páginas</span>`;
+        
+        // Primera página
+        if (currentPage > 3) {
+          pagHtml += `<button class="btn btn-sm btn-outline-primary mx-1" onclick="actualizarPaginacion(1)">1</button>`;
+          if (currentPage > 4) {
+            pagHtml += `<span class="mx-2">...</span>`;
+          }
         }
+        
+        // Páginas alrededor de la actual
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+          pagHtml += `<button class="btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'} mx-1" onclick="actualizarPaginacion(${i})">${i}</button>`;
+        }
+        
+        // Última página
+        if (currentPage < totalPages - 2) {
+          if (currentPage < totalPages - 3) {
+            pagHtml += `<span class="mx-2">...</span>`;
+          }
+          pagHtml += `<button class="btn btn-sm btn-outline-primary mx-1" onclick="actualizarPaginacion(${totalPages})">${totalPages}</button>`;
+        }
+        
+        // Botón Siguiente
+        if (currentPage < totalPages) {
+          pagHtml += `<button class="btn btn-sm btn-outline-secondary ms-2" onclick="actualizarPaginacion(${currentPage + 1})">
+            Siguiente <i class="fas fa-chevron-right"></i>
+          </button>`;
+        }
+        
+
       }
       $('#paginador').html(pagHtml);
       
@@ -235,11 +273,39 @@ $(function() {
     });
   }
   
-  // Función global para paginación
+  // Funciones globales para paginación
   window.cargarRegistros = cargarRegistros;
   window.actualizarPaginacion = function(page) {
     cargarRegistros(page);
   };
+  
+
+  
+  // Navegación con teclado simplificada
+  $(document).on('keydown', function(e) {
+    // Solo si no estamos escribiendo en un input
+    if (e.target.tagName.toLowerCase() !== 'input' && e.target.tagName.toLowerCase() !== 'textarea') {
+      const currentPageBtn = $('.btn-primary[onclick*="actualizarPaginacion"]');
+      if (currentPageBtn.length) {
+        const currentPage = parseInt(currentPageBtn.text());
+        
+        // Flecha izquierda = página anterior
+        if (e.key === 'ArrowLeft' && currentPage > 1) {
+          e.preventDefault();
+          cargarRegistros(currentPage - 1);
+        }
+        
+        // Flecha derecha = página siguiente  
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const nextBtn = $('button[onclick*="actualizarPaginacion"]:contains("Siguiente")');
+          if (nextBtn.length) {
+            cargarRegistros(currentPage + 1);
+          }
+        }
+      }
+    }
+  });
 
   // Mostrar todas las mascotas en el mapa con popups
   function cargarUltimasUbicaciones() {

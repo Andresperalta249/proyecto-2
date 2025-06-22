@@ -77,7 +77,9 @@ class RolesController extends Controller
             'rol' => null,
             'permisos' => $this->rolModel->getPermisos()
         ];
-        $this->view->render('roles/form', $data, true);
+        
+        $view = new View();
+        $view->render('roles/form', $data, false);
     }
 
     public function editarAction($id)
