@@ -6,6 +6,12 @@ class MonitorController extends Controller {
 
     public function __construct() {
         parent::__construct();
+        
+        // Verificar autenticación para todo el controlador
+        if (!isset($_SESSION['user_id'])) {
+            redirect('auth/login');
+        }
+        
         $this->dispositivoModel = new DispositivoModel();
         $this->mascotaModel = new Mascota();
         $this->datosSensorModel = new DatosSensorModel();
@@ -65,41 +71,22 @@ class MonitorController extends Controller {
         
         if (!$id) {
             http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => 'ID de dispositivo no proporcionado'
-            ]);
+            echo json_encode(['success' => false, 'error' => 'ID de dispositivo no proporcionado']);
             return;
         }
 
-        // Verificar sesión y permisos
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'error' => 'No autorizado'
-            ]);
-            return;
-        }
-
-        // Verificar si el dispositivo pertenece al usuario
+        // Verificar si el dispositivo pertenece al usuario o tiene permisos para ver todos
         $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-        if (!$dispositivo || $dispositivo['usuario_id'] != $_SESSION['user_id']) {
+        if (!verificarPermiso('ver_todos_dispositivo') && $dispositivo['usuario_id'] != $_SESSION['user_id']) {
             http_response_code(403);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Acceso denegado'
-            ]);
+            echo json_encode(['success' => false, 'error' => 'Acceso denegado']);
             return;
         }
 
         try {
             $horas = isset($_GET['horas']) ? (int)$_GET['horas'] : 24;
             $datos = $this->datosSensorModel->getDatosPorDispositivo($id, $horas);
-            $ubicacion = $this->dispositivoModel->getUltimaUbicacion($id);
-            
-            error_log("Datos obtenidos para dispositivo {$id}: " . print_r($datos, true));
-            error_log("Ubicación obtenida para dispositivo {$id}: " . print_r($ubicacion, true));
+            $ubicacion = $this->datosSensorModel->getUltimaUbicacion($id);
             
             echo json_encode([
                 'success' => true,
@@ -109,86 +96,11 @@ class MonitorController extends Controller {
         } catch (Exception $e) {
             error_log("Error en getDatosAction: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Error al obtener los datos: ' . $e->getMessage()
-            ]);
+            echo json_encode(['success' => false, 'error' => 'Error al obtener los datos']);
         }
     }
 
-    public function getRutaAction($id = null) {
-        if (!$id) {
-            http_response_code(400);
-            echo json_encode(['error' => 'ID de dispositivo no proporcionado']);
-            return;
-        }
 
-        // Verificar sesión y permisos
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'No autorizado']);
-            return;
-        }
-
-        // Verificar si el dispositivo pertenece al usuario
-        $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-        if (!$dispositivo || $dispositivo['usuario_id'] != $_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Acceso denegado']);
-            return;
-        }
-
-        try {
-            $horas = isset($_GET['horas']) ? (int)$_GET['horas'] : 24;
-            $ruta = $this->dispositivoModel->getRuta($id, $horas);
-
-            echo json_encode([
-                'success' => true,
-                'ruta' => $ruta
-            ]);
-        } catch (Exception $e) {
-            error_log("Error en getRutaAction: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => 'Error al obtener la ruta']);
-        }
-    }
-
-    public function getGraficaAction($id = null) {
-        if (!$id) {
-            http_response_code(400);
-            echo json_encode(['error' => 'ID de dispositivo no proporcionado']);
-            return;
-        }
-
-        // Verificar sesión y permisos
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'No autorizado']);
-            return;
-        }
-
-        // Verificar si el dispositivo pertenece al usuario
-        $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-        if (!$dispositivo || $dispositivo['usuario_id'] != $_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Acceso denegado']);
-            return;
-        }
-
-        try {
-            $horas = isset($_GET['horas']) ? (int)$_GET['horas'] : 24;
-            $datos = $this->datosSensorModel->getDatosParaGrafica($id, $horas);
-            
-            echo json_encode([
-                'success' => true,
-                'datos' => $datos
-            ]);
-        } catch (Exception $e) {
-            error_log("Error en getGraficaAction: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => 'Error al obtener los datos para la gráfica']);
-        }
-    }
 
     /**
      * Obtiene la última ubicación de un dispositivo
@@ -301,6 +213,167 @@ class MonitorController extends Controller {
         header('Content-Type: application/json');
         http_response_code($status);
         echo json_encode($data);
+        exit;
+    }
+
+    // ========================================
+    // FUNCIONALIDAD DE REPORTES INTEGRADA
+    // ========================================
+
+    public function getPropietariosAction() {
+        header('Content-Type: application/json');
+        try {
+            $q = $_GET['q'] ?? '';
+            $userModel = $this->loadModel('UsuarioModel');
+            
+            // Filtrar propietarios según permisos
+            if (verificarPermiso('ver_todas_mascotas')) {
+                // Puede ver todas las mascotas - mostrar todos los usuarios
+                $propietarios = $userModel->getAll();
+            } else if (verificarPermiso('ver_mascotas')) {
+                // Solo puede ver sus propias mascotas - mostrar solo él mismo
+                $propietarios = [$userModel->findById($_SESSION['user_id'])];
+            } else {
+                echo json_encode(['results' => []]);
+                exit;
+            }
+            
+            $result = [];
+            foreach ($propietarios as $u) {
+                if ($u && (empty($q) || stripos($u['nombre'], $q) !== false || stripos($u['email'], $q) !== false)) {
+                    $result[] = [
+                        'id' => $u['id_usuario'],
+                        'text' => $u['nombre'] . ' (' . $u['email'] . ')'
+                    ];
+                }
+            }
+            echo json_encode(['results' => $result]);
+        } catch (Exception $e) {
+            error_log('Error en getPropietariosAction: ' . $e->getMessage());
+            echo json_encode(['results' => []]);
+        }
+        exit;
+    }
+
+    public function getMascotasPorPropietarioAction() {
+        header('Content-Type: application/json');
+        $usuario_id = $_GET['usuario_id'] ?? null;
+        if (!$usuario_id) { echo json_encode(['results'=>[]]); exit; }
+        $mascotas = $this->mascotaModel->findAll(['usuario_id' => $usuario_id]);
+        $result = array_map(function($m) {
+            return [
+                'id' => $m['id_mascota'],
+                'text' => $m['nombre'] . ' (' . $m['especie'] . ')'
+            ];
+        }, $mascotas);
+        echo json_encode(['results' => $result]);
+        exit;
+    }
+
+    public function getMacsAction() {
+        header('Content-Type: application/json');
+        try {
+            $q = $_GET['q'] ?? '';
+            $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
+            
+            $result = [];
+            foreach ($dispositivos as $d) {
+                if (empty($q) || stripos($d['mac'], $q) !== false) {
+                    $result[] = [
+                        'id' => $d['mac'],
+                        'text' => $d['mac'] . ' (' . $d['nombre'] . ')'
+                    ];
+                }
+            }
+            echo json_encode(['results' => $result]);
+        } catch (Exception $e) {
+            error_log('Error en getMacsAction: ' . $e->getMessage());
+            echo json_encode(['results' => []]);
+        }
+        exit;
+    }
+
+    public function getRegistrosAction() {
+        header('Content-Type: application/json');
+        try {
+            $usuario_id = $_GET['usuario_id'] ?? null;
+            $mascota_id = $_GET['mascota_id'] ?? null;
+            $mac = $_GET['mac'] ?? null;
+            $mostrarTodos = $_GET['mostrar_todos'] ?? false;
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $perPage = min(50, intval($_GET['perPage'] ?? 20));
+            $fecha_inicio = $_GET['fecha_inicio'] ?? null;
+            $fecha_fin = $_GET['fecha_fin'] ?? null;
+            
+            // Si se solicita mostrar todos, aplicar filtro según permisos
+            if ($mostrarTodos) {
+                if (verificarPermiso('ver_todas_mascotas')) {
+                    // Puede ver todas las mascotas del sistema
+                    $usuario_id = null;
+                    $mascota_id = null;
+                } else if (verificarPermiso('ver_mascotas')) {
+                    // Solo puede ver sus propias mascotas
+                    $usuario_id = $_SESSION['user_id'];
+                    $mascota_id = null;
+                } else {
+                    echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
+                    exit;
+                }
+            }
+            
+            $result = $this->datosSensorModel->buscarRegistrosAvanzado($usuario_id, $mascota_id, $mac, $page, $perPage, $fecha_inicio, $fecha_fin);
+            echo json_encode($result);
+        } catch (Exception $e) {
+            error_log('Error en getRegistrosAction: ' . $e->getMessage());
+            echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
+        }
+        exit;
+    }
+
+    public function exportarCsvAction() {
+        try {
+            $usuario_id = $_GET['usuario_id'] ?? null;
+            $mascota_id = $_GET['mascota_id'] ?? null;
+            $mac = $_GET['mac'] ?? null;
+            
+            $result = $this->datosSensorModel->buscarRegistrosAvanzado($usuario_id, $mascota_id, $mac, 1, 10000);
+            $registros = $result['data'] ?? [];
+            
+            // Exportar como CSV
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment;filename="reporte_monitoreo_iot.csv"');
+            $out = fopen('php://output', 'w');
+            
+            // BOM para UTF-8
+            fputs($out, $bom = chr(0xEF) . chr(0xBB) . chr(0xBF));
+            
+            fputcsv($out, ['Fecha y hora','Temperatura','Ritmo cardíaco','Ubicación','Batería']);
+            foreach($registros as $r) {
+                fputcsv($out, [
+                    $r['fecha_hora'] ?? '',
+                    $r['temperatura'] ?? '',
+                    $r['ritmo_cardiaco'] ?? '',
+                    $r['ubicacion'] ?? '',
+                    $r['bateria'] ?? ''
+                ]);
+            }
+            fclose($out);
+        } catch (Exception $e) {
+            error_log('Error en exportarCsvAction: ' . $e->getMessage());
+            echo 'Error al exportar datos';
+        }
+        exit;
+    }
+
+    public function getUltimasUbicacionesAction() {
+        header('Content-Type: application/json');
+        try {
+            $result = $this->datosSensorModel->obtenerUltimasUbicacionesMascotas();
+            echo json_encode($result);
+        } catch (Exception $e) {
+            error_log('Error en getUltimasUbicacionesAction: ' . $e->getMessage());
+            echo json_encode([]);
+        }
         exit;
     }
 }

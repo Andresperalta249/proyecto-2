@@ -163,10 +163,10 @@ if (!isset($content)) {
                             <i class="fas fa-broadcast-tower me-2"></i> Monitoreo
                         </div>
                         <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
-                        <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>">
-                            <i class="fas fa-desktop"></i> Monitor
-                        </a>
-                        <?php endif; ?>
+                                    <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>">
+                <i class="fas fa-desktop"></i> Monitor IoT
+            </a>
+            <?php endif; ?>
                         <?php if (verificarPermiso('ver_mascotas') || verificarPermiso('ver_todas_mascotas')): ?>
                         <a href="<?= APP_URL ?>/mascotas" class="sidebar-item<?= ($menuActivo === 'mascotas' ? ' active' : '') ?>">
                             <i class="fas fa-paw"></i> Mascotas
@@ -177,11 +177,7 @@ if (!isset($content)) {
                             <i class="fas fa-microchip"></i> Dispositivos
                         </a>
                         <?php endif; ?>
-                        <?php if (verificarPermiso('ver_reportes')): ?>
-                        <a href="<?= APP_URL ?>/reporte/monitoreo" class="sidebar-item<?= ($menuActivo === 'reporte' ? ' active' : '') ?>">
-                            <i class="fas fa-chart-line"></i> Reporte IoT
-                        </a>
-                        <?php endif; ?>
+                        
                     </div>
                 </div>
                 <div class="sidebar-footer">
