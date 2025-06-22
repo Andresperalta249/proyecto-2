@@ -7,10 +7,8 @@ $(function() {
   let marker = null;
   let markersGroup = null;
   
-  // Inicializar solo cuando se active la pestaña de reportes
-  $('#reportes-tab').on('shown.bs.tab', function (e) {
-    inicializarReportes();
-  });
+  // Inicializar directamente al cargar la página
+  inicializarReportes();
   
   function inicializarReportes() {
     console.log('Inicializando funcionalidad de reportes...');
@@ -248,7 +246,7 @@ $(function() {
 
   // Actualizar ubicaciones cuando cambien los filtros
   $(document).on('change', '#propietario, #mascota, #mac', function() {
-    if (map && $('#reportes-panel').hasClass('active')) {
+    if (map) {
       cargarUltimasUbicaciones();
     }
   });

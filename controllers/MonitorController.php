@@ -24,17 +24,17 @@ class MonitorController extends Controller {
         }
 
         $this->view->setLayout('main');
-        $this->view->setData('titulo', 'Monitor de Dispositivos');
-        $this->view->setData('subtitulo', 'Selecciona un dispositivo para ver su estado en tiempo real.');
+        $this->view->setData('titulo', 'Monitor IoT');
+        $this->view->setData('subtitulo', 'Monitor IoT - Consulta datos históricos, ubicaciones y filtra por dispositivos y mascotas.');
 
-        if (function_exists('verificarPermiso') && verificarPermiso('ver_todos_dispositivo')) {
-            $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
-        } else {
-            $dispositivos = $this->dispositivoModel->getDispositivosWithMascotas($_SESSION['user_id']);
-        }
-
+        // Determinar permisos para filtros
+        $puedeVerTodasMascotas = verificarPermiso('ver_todas_mascotas');
+        $puedeVerMascotas = verificarPermiso('ver_mascotas');
+        
         $this->view->render('monitor/index', [
-            'dispositivos' => $dispositivos,
+            'puedeVerTodasMascotas' => $puedeVerTodasMascotas,
+            'puedeVerMascotas' => $puedeVerMascotas,
+            'usuarioActual' => $_SESSION['user_id']
         ]);
     }
 

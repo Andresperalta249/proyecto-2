@@ -164,7 +164,7 @@ if (!isset($content)) {
                         </div>
                         <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
                                     <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>">
-                <i class="fas fa-desktop"></i> Monitor IoT
+                <i class="fas fa-chart-line"></i> Monitor IoT
             </a>
             <?php endif; ?>
                         <?php if (verificarPermiso('ver_mascotas') || verificarPermiso('ver_todas_mascotas')): ?>
