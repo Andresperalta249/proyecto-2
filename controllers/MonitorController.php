@@ -297,39 +297,56 @@ class MonitorController extends Controller {
     public function getRegistrosAction() {
         header('Content-Type: application/json');
         try {
-            $usuario_id = $_GET['usuario_id'] ?? null;
-            $mascota_id = $_GET['mascota_id'] ?? null;
-            $mac = $_GET['mac'] ?? null;
-            $mostrarTodos = $_GET['mostrar_todos'] ?? false;
+            // Procesar parámetros correctamente: convertir strings vacíos a null
+            $usuario_id = !empty($_GET['usuario_id']) ? $_GET['usuario_id'] : null;
+            $mascota_id = !empty($_GET['mascota_id']) ? $_GET['mascota_id'] : null;
+            $mac = !empty($_GET['mac']) ? $_GET['mac'] : null;
+            
+            // Convertir string boolean a boolean real
+            $mostrarTodos = ($_GET['mostrar_todos'] ?? 'false') === 'true';
+            
             $page = max(1, intval($_GET['page'] ?? 1));
             $perPage = min(50, intval($_GET['perPage'] ?? 20));
-            $fecha_inicio = $_GET['fecha_inicio'] ?? null;
-            $fecha_fin = $_GET['fecha_fin'] ?? null;
+            
+            $fecha_inicio = !empty($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : null;
+            $fecha_fin = !empty($_GET['fecha_fin']) ? $_GET['fecha_fin'] : null;
+            
+            // Log para debug (remover en producción)
+            error_log("DEBUG getRegistros - usuario_id: " . ($usuario_id ?? 'null') . ", mascota_id: " . ($mascota_id ?? 'null') . ", mac: " . ($mac ?? 'null') . ", mostrarTodos: " . ($mostrarTodos ? 'true' : 'false'));
             
             // SIEMPRE aplicar filtros de permisos apropiados
             if ($mostrarTodos || (!$usuario_id && !$mascota_id && !$mac)) {
+                error_log("DEBUG: Entrando en rama principal de filtros");
+                
                 // Si se solicita mostrar todos O si no hay filtros específicos, aplicar permisos
                 if (verificarPermiso('ver_todas_mascotas')) {
+                    error_log("DEBUG: Usuario puede ver TODAS las mascotas");
                     // Puede ver todas las mascotas del sistema - no filtrar por usuario
                     // Mantener usuario_id, mascota_id y mac tal como vienen
                 } else if (verificarPermiso('ver_mascotas')) {
+                    error_log("DEBUG: Usuario solo puede ver SUS mascotas");
                     // Solo puede ver sus propias mascotas - filtrar por usuario actual
                     if (!$usuario_id) {
                         $usuario_id = $_SESSION['user_id'];
+                        error_log("DEBUG: Asignando usuario_id = " . $_SESSION['user_id']);
                     } else if ($usuario_id != $_SESSION['user_id']) {
+                        error_log("DEBUG: Intenta ver datos de otro usuario sin permiso");
                         // Intenta ver datos de otro usuario sin permiso
                         echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
                         exit;
                     }
                 } else {
+                    error_log("DEBUG: No tiene permisos para ver datos");
                     // No tiene permisos para ver datos
                     echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
                     exit;
                 }
             } else {
+                error_log("DEBUG: Hay filtros específicos");
                 // Hay filtros específicos - verificar permisos
                 if (!verificarPermiso('ver_todas_mascotas')) {
                     if ($usuario_id && $usuario_id != $_SESSION['user_id']) {
+                        error_log("DEBUG: Intenta filtrar por otro usuario sin permiso");
                         // Intenta filtrar por otro usuario sin permiso
                         echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
                         exit;
@@ -337,11 +354,17 @@ class MonitorController extends Controller {
                     // Si no especifica usuario, usar el actual
                     if (!$usuario_id) {
                         $usuario_id = $_SESSION['user_id'];
+                        error_log("DEBUG: Asignando usuario_id = " . $_SESSION['user_id'] . " (filtros específicos)");
                     }
                 }
             }
             
+            error_log("DEBUG: Parámetros finales - usuario_id: " . ($usuario_id ?? 'null') . ", mascota_id: " . ($mascota_id ?? 'null') . ", mac: " . ($mac ?? 'null'));
+            
             $result = $this->datosSensorModel->buscarRegistrosAvanzado($usuario_id, $mascota_id, $mac, $page, $perPage, $fecha_inicio, $fecha_fin);
+            
+            error_log("DEBUG: Resultado - total: " . $result['total'] . ", registros: " . count($result['data']));
+            
             echo json_encode($result);
         } catch (Exception $e) {
             error_log('Error en getRegistrosAction: ' . $e->getMessage());
