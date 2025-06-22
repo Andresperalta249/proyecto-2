@@ -114,4 +114,36 @@ function validatePassword($password) {
 if (!defined('BASE_URL')) {
     define('BASE_URL', '/proyecto-2/');
 }
+
+/**
+ * Verifica si el usuario actual tiene un permiso específico
+ * @param string $permiso_codigo Código del permiso a verificar
+ * @return bool True si el usuario tiene el permiso, False en caso contrario
+ */
+function verificarPermiso($permiso_codigo) {
+    if (!isset($_SESSION['user_id'])) {
+        return false;
+    }
+    // Validar solo por permisos en sesión
+    if (isset($_SESSION['permissions']) && is_array($_SESSION['permissions'])) {
+        return in_array($permiso_codigo, $_SESSION['permissions']);
+    }
+    // Fallback: si no hay permisos en sesión, consultar BD (caso de compatibilidad)
+    try {
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*) as tiene_permiso 
+                FROM usuarios u 
+                JOIN roles r ON u.rol_id = r.id_rol 
+                JOIN roles_permisos rp ON r.id_rol = rp.rol_id 
+                JOIN permisos p ON rp.permiso_id = p.id_permiso 
+                WHERE u.id_usuario = ? AND p.codigo = ? AND p.estado = 'activo'";
+        $stmt = $db->getConnection()->prepare($sql);
+        $stmt->execute([$_SESSION['user_id'], $permiso_codigo]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row && $row['tiene_permiso'] > 0;
+    } catch (Exception $e) {
+        error_log("Error al verificar permiso: " . $e->getMessage());
+        return false;
+    }
+}
 ?> 

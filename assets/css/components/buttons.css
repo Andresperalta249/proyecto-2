@@ -211,6 +211,20 @@
 /* =============================================
    BOTONES DE ACCIÓN EN TABLAS (MEJORADOS)
    ============================================= */
+.table .btn {
+    padding: .25rem .5rem;
+    font-size: .8rem;
+    border-radius: .2rem;
+}
+
+.table .btn-group .btn {
+    margin-right: 5px;
+}
+
+.table .btn-group .btn:last-child {
+    margin-right: 0;
+}
+
 .table .btn-sm {
     transition: all 0.2s ease-in-out;
 }

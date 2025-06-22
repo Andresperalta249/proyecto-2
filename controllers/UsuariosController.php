@@ -1,27 +1,19 @@
 <?php
 require_once 'core/Controller.php';
-require_once 'core/Model.php';
 require_once 'models/UsuarioModel.php';
 require_once 'models/Rol.php';
 
-/**
- * Controlador para la gestión de usuarios.
- * Maneja todas las operaciones CRUD y relacionadas con los usuarios del sistema.
- */
 class UsuariosController extends Controller {
 
     private $usuarioModel;
-    private $Rol;
+    private $rolModel;
 
     public function __construct() {
         parent::__construct();
         $this->usuarioModel = new UsuarioModel();
+        $this->rolModel = new Rol();
     }
 
-    /**
-     * Muestra la página principal de gestión de usuarios.
-     * Carga el layout y la vista principal del módulo de usuarios.
-     */
     public function indexAction() {
         if (!verificarPermiso('ver_usuarios')) {
             $this->view->render('errors/403');
@@ -29,15 +21,9 @@ class UsuariosController extends Controller {
         }
         
         $this->view->setLayout('main');
-        $this->view->setData('titulo', 'Gestión de Usuarios');
-        $this->view->setData('subtitulo', 'Administración de usuarios y sus roles en el sistema.');
         $this->view->render('usuarios/index');
     }
 
-    /**
-     * Proporciona los datos de los usuarios para DataTables.
-     * Maneja la paginación, búsqueda y ordenamiento del lado del servidor.
-     */
     public function obtenerUsuariosAction() {
         if (!verificarPermiso('ver_usuarios')) {
             $this->jsonResponse(['error' => 'No tienes permiso'], 403);
@@ -61,7 +47,24 @@ class UsuariosController extends Controller {
         $usuarios = $this->usuarioModel->obtenerUsuariosPaginados($start, $length, $search);
 
         $data = [];
+        $currentUserId = $_SESSION['user_id'] ?? null;
+        $canEditGlobal = verificarPermiso('editar_usuarios');
+        $canDeleteGlobal = verificarPermiso('eliminar_usuarios');
+
         foreach ($usuarios as $usuario) {
+            $canEdit = $canEditGlobal;
+            $canDelete = $canDeleteGlobal;
+
+            // Regla: No se puede eliminar al Super Administrador (rol_id 3)
+            if ($usuario['rol_id'] == 3) {
+                $canDelete = false;
+            }
+
+            // Regla: No se puede eliminar a uno mismo
+            if ($usuario['id_usuario'] == $currentUserId) {
+                $canDelete = false;
+            }
+
             $data[] = [
                 'id' => $usuario['id_usuario'],
                 'nombre' => htmlspecialchars($usuario['nombre']),
@@ -69,7 +72,9 @@ class UsuariosController extends Controller {
                 'telefono' => htmlspecialchars($usuario['telefono'] ?? ''),
                 'rol' => htmlspecialchars($usuario['rol_nombre']),
                 'direccion' => htmlspecialchars($usuario['direccion'] ?? ''),
-                'estado' => $usuario['estado']
+                'estado' => $usuario['estado'],
+                'puede_editar' => $canEdit,
+                'puede_eliminar' => $canDelete
             ];
         }
 
@@ -81,123 +86,77 @@ class UsuariosController extends Controller {
         ]);
     }
 
-    /**
-     * Crea un nuevo usuario en el sistema.
-     * Valida los datos y los inserta en la base de datos.
-     */
-    public function crearAction() {
-        if (!$this->isPostRequest() || !verificarPermiso('crear_usuarios')) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Acción no permitida.'], 403);
-        }
-
-        $datos = $this->_obtenerDatosDelRequest();
-        
-        // Verificar que Administrador no pueda crear Super Administrador
-        if ($datos['rol_id'] == 3 && !verificarPermiso('crear_super_admin')) {
-            return $this->jsonResponse(['success' => false, 'error' => 'No tienes permisos para crear Super Administradores.'], 403);
-        }
-
-        $errores = $this->_validarDatosUsuario($datos, true);
-
-        if (!empty($errores)) {
-            return $this->jsonResponse(['success' => false, 'errors' => $errores], 400);
-        }
-
-        $datos['password'] = password_hash($datos['password'], PASSWORD_BCRYPT);
-
-        $resultado = $this->usuarioModel->crearUsuario($datos);
-
-        if (is_numeric($resultado)) {
-            $this->jsonResponse(['success' => true, 'message' => 'Usuario creado correctamente.']);
-        } else {
-            // El modelo devolvió un mensaje de error
-            $this->jsonResponse([
-                'success' => false, 
-                'message' => 'No se pudo procesar la solicitud.',
-                'error_code' => 'DB_INSERT_ERROR',
-                'details' => $resultado // Aquí va el error de PDO
-            ], 500);
-        }
-    }
-
-    /**
-     * Edita un usuario existente.
-     * Valida los datos y los actualiza en la base de datos.
-     */
-    public function editarAction() {
-        if (!$this->isPostRequest() || !verificarPermiso('editar_usuarios')) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Acción no permitida.'], 403);
-        }
-
-        $datos = $this->_obtenerDatosDelRequest();
-        
-        // Verificar que el usuario existe
-        $usuario = $this->usuarioModel->obtenerUsuarioPorId($datos['id_usuario']);
-        if (!$usuario) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Usuario no encontrado.'], 404);
-        }
-
-        // Proteger Super Administrador (rol_id = 3)
-        if ($usuario['rol_id'] == 3) {
-            return $this->jsonResponse(['success' => false, 'error' => 'No se puede editar un Super Administrador.'], 400);
-        }
-
-        // Si no es Super Administrador, no puede editar roles básicos
-        if (!verificarPermiso('editar_roles_basicos') && in_array($usuario['rol_id'], [1, 2, 3])) {
-            return $this->jsonResponse(['success' => false, 'error' => 'No tienes permisos para editar usuarios con roles básicos.'], 403);
-        }
-
-        // Verificar que Administrador no pueda cambiar rol a Super Administrador
-        if ($datos['rol_id'] == 3 && !verificarPermiso('crear_super_admin')) {
-            return $this->jsonResponse(['success' => false, 'error' => 'No tienes permisos para asignar rol de Super Administrador.'], 403);
-        }
-
-        $esCambioDePassword = !empty($datos['password']);
-        $errores = $this->_validarDatosUsuario($datos, $esCambioDePassword, $datos['id_usuario']);
-
-        if (!empty($errores)) {
-            return $this->jsonResponse(['success' => false, 'errors' => $errores], 400);
-        }
-
-        if ($esCambioDePassword) {
-            $datos['password'] = password_hash($datos['password'], PASSWORD_BCRYPT);
-        }
-
-        unset($datos['confirm_password']);
-
-        error_log("EDITAR USUARIO - DATOS ENVIADOS AL MODELO: " . print_r($datos, true));
-
-        if ($this->usuarioModel->actualizarUsuario($datos)) {
-            $this->jsonResponse(['success' => true, 'message' => 'Usuario actualizado correctamente.']);
-        } else {
-            $this->jsonResponse(['success' => false, 'error' => 'Error al actualizar el usuario.'], 500);
-        }
-    }
-    
-    /**
-     * Carga el HTML del formulario de creación/edición de usuario.
-     * @param int|null $id El ID del usuario a editar. Si es null, es un formulario de creación.
-     */
     public function cargarFormularioAction($id = null) {
-        $this->Rol = $this->loadModel('Rol');
-        $roles = $this->Rol->getAll();
-        
-        $data = ['roles' => $roles];
-        
-        if ($id) {
-            $this->usuarioModel = $this->loadModel('UsuarioModel');
-            $usuario = $this->usuarioModel->obtenerUsuarioPorId($id);
-            if ($usuario) {
-                $data['usuario'] = $usuario;
-            }
+        $permisoRequerido = $id ? 'editar_usuarios' : 'crear_usuarios';
+        if (!verificarPermiso($permisoRequerido)) {
+            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.']);
+            return;
         }
+
+        $usuario = $id ? $this->usuarioModel->find($id) : null;
+        $roles = $this->rolModel->getAll();
         
-        echo $this->view->render('usuarios/form', $data, true);
+        $this->view->render('usuarios/form', [
+            'usuario' => $usuario,
+            'roles' => $roles
+        ], false);
     }
 
-    /**
-     * Cambia el estado (activo/inactivo) de un usuario.
-     */
+    public function guardarAction() {
+        if (!$this->isPostRequest()) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Método no permitido.'], 405);
+        }
+
+        $id = $_POST['id_usuario'] ?? null;
+        $permisoRequerido = $id ? 'editar_usuarios' : 'crear_usuarios';
+        if (!verificarPermiso($permisoRequerido)) {
+            return $this->jsonResponse(['success' => false, 'message' => 'No tienes permiso para esta acción.'], 403);
+        }
+
+        $data = [
+            'nombre' => trim($_POST['nombre']),
+            'email' => trim($_POST['email']),
+            'telefono' => trim($_POST['telefono']),
+            'direccion' => trim($_POST['direccion']),
+            'rol_id' => (int)$_POST['rol_id'],
+            'estado' => $_POST['estado'] ?? 'inactivo',
+        ];
+
+        // Validaciones básicas
+        if (empty($data['nombre']) || empty($data['email']) || empty($data['rol_id'])) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Nombre, email y rol son obligatorios.'], 400);
+        }
+
+        if ($this->usuarioModel->emailExiste($data['email'], $id)) {
+            return $this->jsonResponse(['success' => false, 'message' => 'El email ya está en uso por otro usuario.'], 400);
+        }
+
+        if (!empty($_POST['password'])) {
+            if ($_POST['password'] !== $_POST['confirm_password']) {
+                return $this->jsonResponse(['success' => false, 'message' => 'Las contraseñas no coinciden.'], 400);
+            }
+            $data['password'] = password_hash($_POST['password'], PASSWORD_BCRYPT);
+        }
+
+        try {
+            if ($id) {
+                // Actualizar
+                $this->usuarioModel->update($id, $data);
+                $mensaje = 'Usuario actualizado correctamente.';
+            } else {
+                // Crear
+                if (empty($data['password'])) {
+                    return $this->jsonResponse(['success' => false, 'message' => 'La contraseña es obligatoria para nuevos usuarios.'], 400);
+                }
+                $this->usuarioModel->create($data);
+                $mensaje = 'Usuario creado correctamente.';
+            }
+            $this->jsonResponse(['success' => true, 'message' => $mensaje]);
+        } catch (Exception $e) {
+            $this->jsonResponse(['success' => false, 'message' => 'Error al guardar el usuario: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function toggleEstadoAction() {
         error_log("[DEBUG] toggleEstadoAction llamado");
         error_log("[DEBUG] POST recibido: " . print_r($_POST, true));
@@ -230,13 +189,13 @@ class UsuariosController extends Controller {
         }
     }
 
-    /**
-     * Elimina un usuario del sistema.
-     * @param int|null $id El ID del usuario a eliminar.
-     */
-    public function eliminarUsuarioAction($id = null) {
-        if (!$this->isPostRequest() || !verificarPermiso('eliminar_usuarios')) {
-            return $this->jsonResponse(['status' => 'error', 'message' => 'Acción no permitida.'], 403);
+    public function eliminarUsuarioAction($id) {
+        if (!verificarPermiso('eliminar_usuarios')) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'No tienes permiso para eliminar usuarios.'], 403);
+        }
+
+        if (!$this->isPostRequest()) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Método no permitido.'], 405);
         }
 
         if (!$id) {
@@ -254,113 +213,26 @@ class UsuariosController extends Controller {
             return $this->jsonResponse(['status' => 'error', 'message' => 'No puedes eliminar tu propia cuenta.'], 400);
         }
 
-        // Proteger Super Administrador (rol_id = 3) - nadie puede eliminarlo, ni siquiera él mismo
+        // Proteger Super Administrador (rol_id = 3) - nadie puede eliminarlo
         if ($usuario['rol_id'] == 3) {
-            return $this->jsonResponse(['status' => 'error', 'message' => 'No se puede eliminar un Super Administrador.'], 400);
+            return $this->jsonResponse(['status' => 'error', 'message' => 'No se puede eliminar a un Super Administrador.'], 403);
         }
 
-        // Si no es Super Administrador, no puede eliminar roles básicos
-        if (!verificarPermiso('eliminar_roles_basicos') && in_array($usuario['rol_id'], [1, 2, 3])) {
-            return $this->jsonResponse(['status' => 'error', 'message' => 'No tienes permisos para eliminar usuarios con roles básicos.'], 403);
+        // Nueva Regla: Un Administrador (rol 1) no puede eliminar a otro Administrador (rol 1) o Super Administrador (rol 3)
+        $currentUserRolId = $_SESSION['user']['rol_id'] ?? null;
+        if ($currentUserRolId == 1 && ($usuario['rol_id'] == 1 || $usuario['rol_id'] == 3)) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Como Administrador, no puedes eliminar a otros administradores o super administradores.'], 403);
         }
 
         if ($this->usuarioModel->delete($id)) {
+            $this->logModel->crearLog($_SESSION['user_id'], 'Eliminación del usuario ID: ' . $id);
             $this->jsonResponse(['status' => 'success', 'message' => 'Usuario eliminado correctamente.']);
         } else {
             $this->jsonResponse(['status' => 'error', 'message' => 'Error al eliminar el usuario.'], 500);
         }
     }
 
-    /**
-     * Verifica si la solicitud actual es de tipo POST.
-     * @return bool
-     */
     private function isPostRequest() {
         return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
-
-    /**
-     * Recoge y sanitiza los datos del usuario desde la solicitud POST.
-     * @return array
-     */
-    private function _obtenerDatosDelRequest() {
-        return [
-            'id_usuario' => filter_input(INPUT_POST, 'id_usuario', FILTER_VALIDATE_INT),
-            'nombre' => filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'email' => filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL),
-            'telefono' => filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'direccion' => filter_input(INPUT_POST, 'direccion', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'rol_id' => filter_input(INPUT_POST, 'rol_id', FILTER_VALIDATE_INT),
-            'estado' => filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'password' => $_POST['password'] ?? null,
-            'confirm_password' => $_POST['confirm_password'] ?? null
-        ];
-    }
-
-    /**
-     * Valida los datos de un usuario para creación o edición.
-     * @param array $datos Los datos del usuario a validar.
-     * @param bool $esCreacion Indica si la validación es para un nuevo usuario.
-     * @param int|null $idUsuario El ID del usuario que se está editando (para ignorarlo en la validación de unicidad).
-     * @return array Un array de errores. Vacío si no hay errores.
-     */
-    private function _validarDatosUsuario($datos, $esCreacion, $idUsuario = null) {
-        $errores = [];
-
-        if (empty($datos['nombre'])) {
-            $errores['nombre'] = 'El nombre es obligatorio.';
-        }
-        if (empty($datos['email'])) {
-            $errores['email'] = 'El email no es válido.';
-        }
-        if (empty($datos['rol_id'])) {
-            $errores['rol_id'] = 'Debe seleccionar un rol.';
-        }
-        if ($this->usuarioModel->emailExiste($datos['email'], $idUsuario)) {
-            $errores['email'] = 'Este email ya está en uso.';
-        }
-
-        if (empty($datos['estado'])) $errores['estado'] = 'El estado es obligatorio.';
-        
-        // --- Validación de Contraseña ---
-        // La contraseña solo es obligatoria al crear un usuario.
-        // Al editar, solo se valida si se proporciona una nueva.
-        $esPasswordRequerido = $esCreacion;
-
-        if (!empty($datos['password'])) {
-            if (strlen($datos['password']) < 8 ||
-                !preg_match('/[A-Z]/', $datos['password']) ||
-                !preg_match('/[a-z]/', $datos['password']) ||
-                !preg_match('/[0-9]/', $datos['password'])) {
-                
-                $errores['password'] = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.';
-            }
-
-            if ($datos['password'] !== $datos['confirm_password']) {
-                $errores['confirm_password'] = 'Las contraseñas no coinciden.';
-            }
-        } elseif ($esPasswordRequerido) {
-            $errores['password'] = 'La contraseña es obligatoria.';
-        }
-
-        // Validaciones de permisos
-        $usuarioAfectado = $idUsuario ? $this->usuarioModel->obtenerUsuarioPorId($idUsuario) : null;
-
-        // Proteger Super Administrador (rol_id = 3)
-        if ($usuarioAfectado && $usuarioAfectado['rol_id'] == 3) {
-            $errores['permisos'] = 'No se puede editar un Super Administrador.';
-        }
-        
-        // No se pueden editar roles básicos sin permiso
-        if ($usuarioAfectado && !verificarPermiso('editar_roles_basicos') && in_array($usuarioAfectado['rol_id'], [1, 2, 3])) {
-            $errores['permisos'] = 'No tienes permisos para editar usuarios con roles básicos.';
-        }
-        
-        // Asignar rol de Super Administrador solo con permiso
-        if ($datos['rol_id'] == 3 && !verificarPermiso('crear_super_admin')) {
-            $errores['permisos'] = 'No tienes permisos para asignar el rol de Super Administrador.';
-        }
-
-        return $errores;
-    }
-} 
+}

@@ -62,7 +62,6 @@
   </div>
 </div>
 
-<script src="<?= APP_URL ?>/assets/js/config.js"></script>
 <script src="<?= APP_URL ?>/assets/js/reportes.js"></script>
 <script>
 // Aquí irá la lógica JS para cargar propietarios, mascotas, MACs, mapa y tabla

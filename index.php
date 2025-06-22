@@ -41,7 +41,6 @@ error_log("Aplicación iniciando - " . date('Y-m-d H:i:s'));
 // Cargar la configuración primero
 require_once dirname(__FILE__) . '/config/config.php';
 require_once ROOT_PATH . '/core/Autoload.php';
-require_once ROOT_PATH . '/includes/functions.php';
 
 try {
     // Obtener la URL solicitada
@@ -77,6 +76,14 @@ try {
     // Verificar autenticación para rutas protegidas
     $public_routes = ['auth', 'api'];
     if (!in_array($controller, $public_routes) && !isset($_SESSION['user_id'])) {
+        // Si es una petición AJAX, no redirigir, sino devolver un error JSON
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            http_response_code(401); // Unauthorized
+            echo json_encode(['error' => 'Sesión expirada. Por favor, recargue la página.']);
+            exit;
+        }
+        // Si no es AJAX, redirigir al login
         header('Location: ' . APP_URL . '/auth/login');
         exit;
     }

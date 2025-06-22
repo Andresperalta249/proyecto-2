@@ -134,15 +134,11 @@
     padding: var(--spacing-4);
     background-color: #f8f9fc;
     transition: all 0.3s ease;
-    overflow-y: auto; /* Permitir scroll vertical general */
-    overflow-x: auto; /* Permitir scroll horizontal si el contenido se desborda */
-    width: 100%;
-    flex-grow: 1;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding-bottom: 0 !important;
+    overflow-y: auto; /* Permitir scroll solo en el contenido principal si se desborda */
+    flex-grow: 1; /* Asegura que ocupe el espacio restante */
+    display: flex; /* Añadido para mejor control del contenido interno */
+    flex-direction: column; /* Alinea los hijos verticalmente */
+    height: 100%; /* Ocupa el 100% de la altura del wrapper */
 }
 
 /* Estado colapsado (si se vuelve a implementar) */

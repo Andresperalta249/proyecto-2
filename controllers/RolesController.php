@@ -1,227 +1,221 @@
 <?php
-class RolesController {
-    private $model;
-    private $view;
-    
-    public function __construct() {
-        $this->model = new Rol();
-        $this->view = new View();
+
+class RolesController extends Controller
+{
+    private $rolModel;
+
+    public function __construct()
+    {
+        parent::__construct();
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        $this->rolModel = $this->loadModel('Rol');
     }
-    
-    public function indexAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_ver')) {
+
+    public function indexAction()
+    {
+        if (!verificarPermiso('ver_roles')) {
             $this->view->render('errors/403');
             return;
         }
-        
+
         $this->view->setLayout('main');
         $this->view->setData('titulo', 'Gestión de Roles');
-        $this->view->setData('subtitulo', 'Administración de roles y permisos en el sistema.');
+        $this->view->setData('subtitulo', 'Administración de roles y permisos del sistema.');
         $this->view->render('roles/index');
     }
-    
-    public function getAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_editar')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para editar roles']);
-            exit;
+
+    public function listarAction()
+    {
+        if (!$this->isPostRequest() || !verificarPermiso('ver_roles')) {
+            return $this->jsonResponse(['error' => 'Acceso denegado'], 403);
         }
-        
-        $id = $_GET['id'] ?? null;
-        if ($id) {
-            $rol = $this->model->getById($id);
-            if ($rol) {
-                echo json_encode(['success' => true, 'data' => $rol]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Rol no encontrado']);
+
+        try {
+            $draw = $_POST['draw'] ?? 1;
+            $start = $_POST['start'] ?? 0;
+            $length = $_POST['length'] ?? 10;
+            $searchValue = $_POST['search']['value'] ?? '';
+            
+            $orderColumnIndex = $_POST['order'][0]['column'] ?? 0;
+            $orderColumnName = $_POST['columns'][$orderColumnIndex]['data'] ?? 'id_rol';
+            $orderDir = $_POST['order'][0]['dir'] ?? 'asc';
+            
+            $allowedColumns = ['id_rol', 'nombre', 'descripcion', 'estado'];
+            if (!in_array($orderColumnName, $allowedColumns)) {
+                $orderColumnName = 'id_rol';
             }
-        } else {
-            // Cargar formulario para nuevo rol, pasando permisos
-            $permisos = $this->model->getPermisos();
-            $data = [
-                'rol' => null,
-                'permisos' => $permisos
-            ];
-            require_once 'views/roles/form.php';
+
+            $result = $this->rolModel->getPaginated($start, $length, $searchValue, $orderColumnName, $orderDir);
+            
+            $data = array_map(function($rol) {
+                $rol['is_protected'] = in_array($rol['id_rol'], [1, 2, 3]);
+                return $rol;
+            }, $result['data']);
+
+            $this->jsonResponse([
+                'draw' => intval($draw),
+                'recordsTotal' => $result['recordsTotal'],
+                'recordsFiltered' => $result['recordsFiltered'],
+                'data' => $data
+            ]);
+        } catch (Exception $e) {
+            error_log('Error en RolesController::listarAction: ' . $e->getMessage());
+            $this->jsonResponse(['error' => 'Ocurrió un error en el servidor.'], 500);
         }
     }
-    
-    public function createAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_crear')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para crear roles']);
-            exit;
+
+    public function crearAction()
+    {
+        if (!verificarPermiso('crear_roles')) {
+            echo '<div class="alert alert-danger">No tienes permiso para crear roles.</div>';
+            return;
         }
+
         $data = [
-            'nombre' => $_POST['nombre'] ?? '',
-            'descripcion' => $_POST['descripcion'] ?? '',
-            'estado' => $_POST['estado'] ?? 'activo',
-            'permisos' => $_POST['permisos'] ?? []
+            'rol' => null,
+            'permisos' => $this->rolModel->getPermisos()
         ];
-        // Validar que al menos un permiso esté seleccionado
-        if (empty($data['permisos'])) {
-            echo json_encode(['success' => false, 'error' => 'Debes asignar al menos un permiso al rol.']);
-            exit;
-        }
-        if ($this->model->create($data)) {
-            echo json_encode(['success' => true, 'message' => 'Rol creado exitosamente']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Error al crear el rol']);
-        }
+        $this->view->render('roles/form', $data, true);
     }
-    
-    public function updateAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_editar')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para editar roles']);
-            exit;
+
+    public function editarAction($id)
+    {
+        if (in_array($id, [1, 2, 3])) {
+            echo '<div class="alert alert-warning text-center"><strong>Acción denegada:</strong> Este rol está protegido y no puede ser editado.</div>';
+            return;
         }
-        $id = $_POST['id_rol'] ?? null;
-        if (!$id) {
-            echo json_encode(['success' => false, 'error' => 'ID de rol no proporcionado']);
-            exit;
+
+        if (!verificarPermiso('editar_roles')) {
+            echo '<div class="alert alert-danger">No tienes permiso para editar roles.</div>';
+            return;
         }
-        $data = [
-            'nombre' => $_POST['nombre'] ?? '',
-            'descripcion' => $_POST['descripcion'] ?? '',
-            'estado' => $_POST['estado'] ?? 'activo',
-        ];
-        // Si se envían permisos, usarlos. Si no, mantener los actuales.
-        if (isset($_POST['permisos'])) {
-            $data['permisos'] = $_POST['permisos'];
-            // Si explícitamente no hay ninguno seleccionado, mostrar error
-            if (empty($data['permisos'])) {
-                echo json_encode(['success' => false, 'error' => 'Debes asignar al menos un permiso al rol.']);
-                exit;
-            }
-        } else {
-            // Mantener los permisos actuales
-            $rolActual = $this->model->getById($id);
-            $data['permisos'] = $rolActual['permiso_ids'] ?? [];
+
+        $rol = $this->rolModel->find($id, 'id_rol');
+        if (!$rol) {
+            echo '<div class="alert alert-danger">Rol no encontrado.</div>';
+            return;
         }
-        if ($this->model->update($id, $data)) {
-            echo json_encode(['success' => true, 'message' => 'Rol actualizado exitosamente']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Error al actualizar el rol']);
-        }
-    }
-    
-    public function deleteAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_eliminar')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para eliminar roles']);
-            exit;
-        }
+
+        $permisosAsignados = $this->rolModel->getPermisosPorRol($id);
+        $rol['permiso_ids'] = array_column($permisosAsignados, 'id_permiso');
         
-        $id = $_POST['id'] ?? null;
-        if (!$id) {
-            echo json_encode(['success' => false, 'error' => 'ID de rol no proporcionado']);
-            exit;
-        }
-        
-        if ($this->model->delete($id)) {
-            echo json_encode(['success' => true, 'message' => 'Rol eliminado exitosamente']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Error al eliminar el rol']);
-        }
-    }
-    
-    public function cambiarEstadoAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_editar')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para editar roles']);
-            exit;
-        }
-        
-        $id = $_POST['id'] ?? null;
-        $estado = $_POST['estado'] ?? null;
-        
-        if (!$id || !$estado) {
-            echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
-            exit;
-        }
-        
-        if ($this->model->cambiarEstado($id, $estado)) {
-            echo json_encode(['success' => true, 'message' => 'Estado actualizado exitosamente']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Error al cambiar el estado']);
-        }
-    }
-    
-    public function getPermisosAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_ver')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para ver roles']);
-            exit;
-        }
-        $id = $_GET['id'] ?? null;
-        if (!$id) {
-            echo json_encode(['success' => false, 'error' => 'ID de rol no proporcionado']);
-            exit;
-        }
-        $permisos = $this->model->getPermisosPorRol($id);
-        if ($permisos !== false) {
-            echo json_encode(['success' => true, 'permisos' => $permisos]);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Error al obtener los permisos']);
-        }
-    }
-    
-    public function tablaAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_ver')) {
-            header('Location: ' . APP_URL . '/error/403');
-            exit;
-        }
-        
-        require_once 'views/roles/tabla.php';
-    }
-    
-    public function formAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_editar')) {
-            header('Location: ' . APP_URL . '/error/403');
-            exit;
-        }
-        
-        $id = $_GET['id'] ?? null;
-        $rol = null;
-        if ($id) {
-            $rol = $this->model->getById($id);
-        }
-        $permisos = $this->model->getPermisos();
         $data = [
             'rol' => $rol,
-            'permisos' => $permisos
+            'permisos' => $this->rolModel->getPermisos()
         ];
-        require 'views/roles/form.php';
+
+        $view = new View();
+        $view->render('roles/form', $data, false);
     }
     
-    public function listAction() {
-        // Verificar permisos
-        if (!verificarPermiso('roles_ver')) {
-            echo json_encode(['success' => false, 'error' => 'No tienes permiso para ver roles']);
-            exit;
+    public function guardarAction()
+    {
+        if (!$this->isPostRequest()) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
         }
-        $draw = isset($_POST['draw']) ? intval($_POST['draw']) : 0;
-        $roles = $this->model->getAll();
-        // Mapear id_rol a id para DataTables
-        foreach ($roles as &$rol) {
-            $rol['id'] = $rol['id_rol'];
+        
+        $id = $_POST['id_rol'] ?? null;
+
+        if ($id && in_array($id, [1, 2, 3])) {
+            return $this->jsonResponse(['success' => false, 'message' => 'No se puede modificar un rol protegido.'], 403);
         }
-        $total = count($roles);
-        echo json_encode([
-            'draw' => $draw,
-            'recordsTotal' => $total,
-            'recordsFiltered' => $total,
-            'data' => $roles
-        ]);
-        exit;
+
+        $isEdit = !empty($id);
+
+        if (($isEdit && !verificarPermiso('editar_roles')) || (!$isEdit && !verificarPermiso('crear_roles'))) {
+            return $this->jsonResponse(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.'], 403);
+        }
+
+        try {
+            $data = [
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'descripcion' => trim($_POST['descripcion'] ?? ''),
+                'permisos' => $_POST['permisos'] ?? []
+            ];
+
+            if (empty($data['nombre'])) {
+                 return $this->jsonResponse(['success' => false, 'message' => 'El nombre del rol es obligatorio.']);
+            }
+
+            if ($isEdit) {
+                $success = $this->rolModel->update($id, $data);
+                $message = 'Rol actualizado correctamente.';
+            } else {
+                $success = $this->rolModel->create($data);
+                $message = 'Rol creado correctamente.';
+            }
+
+            if ($success) {
+                $this->jsonResponse(['success' => true, 'message' => $message]);
+            } else {
+                $this->jsonResponse(['success' => false, 'message' => 'Error al guardar el rol. Verifique que el nombre no esté duplicado.']);
+            }
+        } catch (Exception $e) {
+             error_log('Error en RolesController::guardarAction: ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Ocurrió un error en el servidor.'], 500);
+        }
     }
-    
-    public function obtenerRolesAction() {
-        // Alias de listAction para compatibilidad con DataTables
-        $this->listAction();
+
+    public function eliminarAction()
+    {
+        if (!$this->isPostRequest() || !verificarPermiso('eliminar_roles')) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Acceso denegado.'], 403);
+        }
+
+        try {
+            $id = filter_var($_POST['id_rol'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$id) {
+                return $this->jsonResponse(['success' => false, 'message' => 'ID de rol inválido.'], 400);
+            }
+
+            if ($id <= 3) {
+                return $this->jsonResponse(['success' => false, 'message' => 'No se puede eliminar un rol protegido.'], 403);
+            }
+            
+            if ($this->rolModel->delete($id)) {
+                $this->jsonResponse(['success' => true, 'message' => 'Rol eliminado correctamente.']);
+            } else {
+                $this->jsonResponse(['success' => false, 'message' => 'No se pudo eliminar el rol. Es posible que tenga usuarios asociados.']);
+            }
+        } catch (Exception $e) {
+            error_log('Error en RolesController::eliminarAction: ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Ocurrió un error en el servidor.'], 500);
+        }
+    }
+
+    public function toggleEstadoAction()
+    {
+        if (!$this->isPostRequest() || !verificarPermiso('editar_roles')) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Acceso denegado.'], 403);
+        }
+
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        if (!$id || !$estado || !in_array($estado, ['activo', 'inactivo'])) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Datos inválidos.'], 400);
+        }
+
+        if ($id <= 3) {
+            return $this->jsonResponse(['success' => false, 'message' => 'No se puede cambiar el estado de un rol protegido.'], 403);
+        }
+
+        try {
+            if ($this->rolModel->cambiarEstado($id, $estado)) {
+                $this->jsonResponse(['success' => true, 'message' => 'Estado actualizado.']);
+            } else {
+                $this->jsonResponse(['success' => false, 'message' => 'No se pudo actualizar el estado.'], 500);
+            }
+        } catch (Exception $e) {
+            $this->jsonResponse(['success' => false, 'message' => 'Error al actualizar el estado.'], 500);
+        }
+    }
+
+    private function isPostRequest()
+    {
+        return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 } 

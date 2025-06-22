@@ -1,397 +1,220 @@
-// Constantes y utilidades
-const API_ROLES = {
-    list: '/roles/list',
-    get: '/roles/get',
-    save: '/roles/save',
-    delete: '/roles/delete',
-    cambiarEstado: '/roles/cambiarEstado'
-};
+$(function () {
+    let tablaRoles;
+    const configElement = $('#roles-config');
+    const PERMISOS = {
+        editar: configElement.data('permiso-editar'),
+        eliminar: configElement.data('permiso-eliminar')
+    };
 
-// Funciones de utilidad
-const utils = {
-    mostrarError(mensaje) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: mensaje
+    // --- CONFIGURACIÓN DE DATATABLES ---
+    tablaRoles = $('#tablaRoles').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": `${APP_URL}/roles/listar`,
+            "type": "POST"
+        },
+        "columns": [
+            { "data": "id_rol" },
+            { "data": "nombre" },
+            { "data": "descripcion" },
+            { "data": "usuarios_count", "className": "text-center" },
+            { 
+                "data": "permisos_count",
+                "title": "PERMISOS",
+                "className": "text-center",
+                "render": function(data, type, row) {
+                    const permisosLista = row.permisos_lista ? row.permisos_lista.replace(/,/g, ',<br>') : 'Sin permisos';
+                    return `<span class="badge bg-info" data-bs-toggle="tooltip" data-bs-html="true" title="${permisosLista}">${data}</span>`;
+                }
+            },
+            {
+                title: 'ESTADO',
+                orderable: false,
+                className: 'text-center',
+                render: function(data, type, row) {
+                    const isChecked = data === 'activo';
+                    const isDisabled = row.is_protected;
+                    return `
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input class="form-check-input toggle-estado" type="checkbox" 
+                                   role="switch" id="toggle-${row.id_rol}" 
+                                   data-id="${row.id_rol}" 
+                                   ${isChecked ? 'checked' : ''}
+                                   ${isDisabled ? 'disabled' : ''}
+                                   title="${isDisabled ? 'Rol protegido' : 'Cambiar estado'}">
+                        </div>`;
+                }
+            },
+            {
+                data: null,
+                title: 'ACCIONES',
+                orderable: false,
+                className: 'text-center',
+                render: function(data, type, row) {
+                    if (row.is_protected) {
+                        return `
+                            <button class="btn btn-sm btn-secondary" disabled title="Rol protegido"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-secondary" disabled title="Rol protegido"><i class="fas fa-lock"></i></button>
+                        `;
+                    }
+
+                    const canDelete = row.usuarios_count == 0;
+                    const deleteButton = canDelete 
+                        ? `<button class="btn btn-sm btn-danger btn-eliminar" data-id="${row.id_rol}" title="Eliminar Rol"><i class="fas fa-trash-alt"></i></button>`
+                        : `<button class="btn btn-sm btn-secondary" disabled title="Rol asignado a usuarios"><i class="fas fa-lock"></i></button>`;
+
+                    return `
+                        <button class="btn btn-sm btn-info btn-editar" data-id="${row.id_rol}" title="Editar Rol"><i class="fas fa-edit"></i></button>
+                        ${deleteButton}
+                    `;
+                }
+            }
+        ],
+        "language": {
+            "url": `${APP_URL}/assets/js/i18n/Spanish.json`
+        },
+        "responsive": false,
+        "autoWidth": false,
+        "ordering": true,
+        "lengthChange": false,
+        "dom": 'ftip',
+        "drawCallback": function(settings) {
+            // Habilitar tooltips de Bootstrap en la tabla
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('#tablaRoles [data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
+
+    // --- MANEJO DE MODALES ---
+
+    function cargarFormularioEnModal(rolId = null) {
+        const url = rolId ? `${APP_URL}/roles/editar/${rolId}` : `${APP_URL}/roles/crear`;
+        const modalTitle = rolId ? 'Editar Rol' : 'Nuevo Rol';
+
+        $('#modalRol .modal-title').text(modalTitle);
+        $('#modalRol .modal-body').load(url, function(response, status, xhr) {
+            if (status === "error") {
+                Swal.fire('Error', 'No se pudo cargar el formulario: ' + xhr.statusText, 'error');
+                return;
+            }
+            $('#modalRol').modal('show');
+            inicializarEventosFormulario();
         });
-    },
-    
-    mostrarExito(mensaje) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Éxito',
-            text: mensaje
+    }
+
+    // Abrir modal para NUEVO rol
+    $('#btnNuevoRol').on('click', function() {
+        cargarFormularioEnModal();
+    });
+
+    // Abrir modal para EDITAR rol
+    $('#tablaRoles tbody').on('click', '.btn-editar', function() {
+        const rolId = $(this).data('id');
+        cargarFormularioEnModal(rolId);
+    });
+
+    // --- MANEJO DEL FORMULARIO DEL MODAL ---
+
+    function inicializarEventosFormulario() {
+        $('#formRol').on('submit', function(e) {
+            e.preventDefault();
+
+            const btnSubmit = $(this).find('button[type="submit"]');
+            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: `${APP_URL}/roles/guardar`,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            }).done(function(response) {
+                if (response.success) {
+                    $('#modalRol').modal('hide');
+                    Swal.fire('Éxito', response.message, 'success');
+                    tablaRoles.ajax.reload(null, false);
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            }).fail(function() {
+                Swal.fire('Error', 'Ocurrió un problema con la solicitud.', 'error');
+            }).always(function() {
+                btnSubmit.prop('disabled', false).html('Guardar');
+            });
         });
-    },
-    
-    confirmarAccion(titulo, texto) {
-        return Swal.fire({
-            title: titulo,
-            text: texto,
+    }
+
+    // --- MANEJO DE ELIMINACIÓN ---
+
+    $('#tablaRoles tbody').on('click', '.btn-eliminar', function() {
+        const rolId = $(this).data('id');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción no se puede deshacer.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí',
+            confirmButtonText: 'Sí, ¡eliminar!',
             cancelButtonText: 'Cancelar'
-        });
-    },
-    
-    formatearEstado(estado) {
-        return estado.charAt(0).toUpperCase() + estado.slice(1);
-    }
-};
-
-// Variable global para almacenar los permisos
-let permisos = [];
-
-// Función para cargar los roles
-function cargarRoles() {
-    $.ajax({
-        url: APP_URL + API_ROLES.list,
-        method: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                const roles = response.data;
-                const tbody = document.getElementById('tbodyRoles');
-                
-                if (!tbody) {
-                    console.error('No se encontró el elemento tbodyRoles');
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                
-                roles.forEach(rol => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="id-azul">${rol.id_rol}</td>
-                        <td>${rol.nombre}</td>
-                        <td>
-                            ${rol.id_rol > 3 ? 
-                                `<div class="form-check form-switch d-flex align-items-center mb-0">
-                                    <input class="form-check-input cambiar-estado-rol" type="checkbox" 
-                                           data-id="${rol.id_rol}" ${rol.estado === 'activo' ? 'checked' : ''}>
-                                    <label class="form-check-label ms-2">
-                                        ${utils.formatearEstado(rol.estado)}
-                                    </label>
-                                </div>` :
-                                `<span class="badge bg-${rol.estado === 'activo' ? 'success' : 'danger'}">
-                                    ${utils.formatearEstado(rol.estado)}
-                                </span>`
-                            }
-                        </td>
-                        <td>${rol.descripcion || 'Sin descripción'}</td>
-                        <td>
-                            <button class="btn-accion btn-primary ver-detalles" data-id="${rol.id_rol}" 
-                                    data-bs-toggle="modal" data-bs-target="#modalDetalles">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
-                                     stroke-width="1.5" stroke="currentColor" width="22" height="22">
-                                    <path stroke-linecap="round" stroke-linejoin="round" 
-                                          d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
-                                </svg>
-                            </button>
-                        </td>
-                        <td>
-                            ${rol.id_rol > 3 ? 
-                                `<button class="btn-accion btn-info editar-rol" data-id="${rol.id_rol}" 
-                                         data-bs-toggle="modal" data-bs-target="#modalRol">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-accion btn-danger eliminar-rol" data-id="${rol.id_rol}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>` :
-                                `<span class="text-muted" title="Rol protegido"><i class="fas fa-lock"></i> No editable</span>`
-                            }
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                utils.mostrarError('Error al cargar los roles: ' + response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
-    });
-}
-
-// Función para verificar permisos
-function tienePermiso(permiso, permisosRol) {
-    if (!permisosRol || !Array.isArray(permisosRol)) {
-        return false;
-    }
-    return permisosRol.includes(permiso);
-}
-
-// Función para mostrar éxito
-function mostrarExito(mensaje) {
-    Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: mensaje
-    });
-}
-
-// Evento para cambiar el estado de un rol
-$(document).on('change', '.cambiar-estado-rol', function() {
-    const idRol = $(this).data('id');
-    const nuevoEstado = $(this).prop('checked') ? 'activo' : 'inactivo';
-    
-    $.ajax({
-        url: APP_URL + API_ROLES.cambiarEstado,
-        method: 'POST',
-        data: { id: idRol, estado: nuevoEstado },
-        success: function(response) {
-            if (response.success) {
-                utils.mostrarExito('Estado actualizado correctamente');
-                cargarRoles();
-            } else {
-                utils.mostrarError('Error al actualizar el estado: ' + response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
-    });
-});
-
-// Evento para ver detalles de un rol
-$(document).on('click', '.ver-detalles', function() {
-    const idRol = $(this).data('id');
-    
-    $.ajax({
-        url: APP_URL + API_ROLES.get,
-        method: 'GET',
-        data: { id: idRol },
-        success: function(response) {
-            if (response.success) {
-                const rol = response.data;
-                $('#detallesNombre').text(rol.nombre);
-                $('#detallesDescripcion').text(rol.descripcion || 'Sin descripción');
-                $('#detallesEstado').text(utils.formatearEstado(rol.estado));
-                $('#detallesPermisos').html(rol.permisos.map(p => `<li>${p}</li>`).join(''));
-            } else {
-                utils.mostrarError('Error al cargar los detalles: ' + response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
-    });
-});
-
-// Evento para editar un rol
-$(document).on('click', '.editar-rol', function() {
-    const idRol = $(this).data('id');
-    
-    $.ajax({
-        url: APP_URL + API_ROLES.get,
-        method: 'GET',
-        data: { id: idRol },
-        success: function(response) {
-            if (response.success) {
-                const rol = response.data;
-                $('#id_rol').val(rol.id_rol);
-                $('#nombre').val(rol.nombre);
-                $('#descripcion').val(rol.descripcion);
-                $('#estado').val(rol.estado);
-                
-                // Marcar los permisos seleccionados
-                $('.permiso-checkbox').prop('checked', false);
-                if (Array.isArray(rol.permiso_ids)) {
-                    rol.permiso_ids.forEach(id => {
-                        $(`#permiso_${id}`).prop('checked', true);
-                    });
-                }
-            } else {
-                utils.mostrarError('Error al cargar los datos del rol: ' + response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
-    });
-});
-
-// Evento para eliminar un rol
-$(document).on('click', '.eliminar-rol', function() {
-    const idRol = $(this).data('id');
-    
-    utils.confirmarAccion('¿Estás seguro?', 'Esta acción no se puede deshacer')
-        .then((result) => {
+        }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: APP_URL + API_ROLES.delete,
-                    method: 'POST',
-                    data: { id: idRol },
-                    success: function(response) {
-                        if (response.success) {
-                            utils.mostrarExito('Rol eliminado correctamente');
-                            cargarRoles();
-                        } else {
-                            utils.mostrarError('Error al eliminar el rol: ' + response.error);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        utils.mostrarError('Error en la petición AJAX: ' + error);
+                    url: `${APP_URL}/roles/eliminar`,
+                    type: 'POST',
+                    data: { id_rol: rolId },
+                    dataType: 'json'
+                }).done(function(response) {
+                    if (response.success) {
+                        Swal.fire('Eliminado', response.message, 'success');
+                        tablaRoles.ajax.reload(null, false);
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
                     }
+                }).fail(function() {
+                    Swal.fire('Error', 'Ocurrió un problema con la solicitud.', 'error');
                 });
             }
         });
-});
-
-// Evento para crear/editar rol
-$('#formRol').on('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    $.ajax({
-        url: APP_URL + API_ROLES.save,
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            if (response.success) {
-                utils.mostrarExito('Rol guardado correctamente');
-                const modalRol = bootstrap.Modal.getInstance(document.getElementById('modalRol'));
-                if (modalRol) {
-                    modalRol.hide();
-                }
-                cargarRoles();
-            } else {
-                utils.mostrarError('Error al guardar el rol: ' + response.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
     });
-});
 
-// Función para cargar los permisos
-function cargarPermisos() {
-    $.ajax({
-        url: APP_URL + '/roles/getPermisos',
-        method: 'GET',
-        success: function(response) {
-            if (response.success) {
-                permisos = response.data;
-            } else {
-                utils.mostrarError('Error al cargar los permisos: ' + response.error);
+    // --- MANEJO DE CAMBIO DE ESTADO ---
+    $('#tablaRoles tbody').on('change', '.toggle-estado', function() {
+        const rolId = $(this).data('id');
+        const nuevoEstado = this.checked ? 'activo' : 'inactivo';
+
+        $.ajax({
+            url: `${APP_URL}/roles/toggleEstado`,
+            type: 'POST',
+            data: { id: rolId, estado: nuevoEstado },
+            dataType: 'json'
+        }).done(function(response) {
+            if (!response.success) {
+                Swal.fire('Error', response.message, 'error');
+                $(this).prop('checked', !this.checked); // Revertir
             }
-        },
-        error: function(xhr, status, error) {
-            utils.mostrarError('Error en la petición AJAX: ' + error);
-        }
+            // No se necesita mensaje de éxito, el cambio visual es suficiente
+        }.bind(this)).fail(function() {
+            Swal.fire('Error', 'Ocurrió un problema con la solicitud.', 'error');
+            $(this).prop('checked', !this.checked); // Revertir
+        }.bind(this));
     });
-}
 
-// Cargar los roles al iniciar
-$(document).ready(function() {
-    // Verificar que estamos en la página correcta
-    if (document.getElementById('tbodyRoles')) {
-        cargarRoles();
-        
-        // Inicializar los modales de Bootstrap
-        const modals = ['modalRol', 'modalDetalles'];
-        modals.forEach(modalId => {
-            const modalElement = document.getElementById(modalId);
-            if (modalElement) {
-                new bootstrap.Modal(modalElement, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            }
-        });
-    }
-});
-
-// Función global para guardar el rol (copiada desde la vista)
-function guardarRol() {
-    const form = document.getElementById('rolForm');
-    if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        Swal.fire({
-            icon: 'warning',
-            title: 'Permisos requeridos',
-            text: 'Selecciona al menos un permiso.'
-        });
-        return;
-    }
-    const formData = new FormData(form);
-    const idRol = formData.get('id_rol');
-    const nombre = formData.get('nombre');
-    const descripcion = formData.get('descripcion');
-    const url = idRol ? 'roles/update' : 'roles/create';
-    fetch(url, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: `El rol "${nombre}" (${descripcion}) se creó con éxito`,
-                showConfirmButton: false,
-                timer: 2000
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Ocurrió un error al crear el rol.'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Ha ocurrido un error al procesar la solicitud'
-        });
+    // --- LIMPIAR MODAL AL CERRAR ---
+    $('#modalRol').on('hidden.bs.modal', function () {
+        $(this).find('.modal-body').empty();
+        $(this).find('.modal-title').empty();
     });
-}
 
-window.verPermisos = function(id) {
-    $.ajax({
-        url: APP_URL + '/roles/getPermisos',
-        type: 'GET',
-        data: { id },
-        success: function(response) {
-            if (response.success) {
-                let permisosHtml = '<ul class="list-group">';
-                response.permisos.forEach(permiso => {
-                    permisosHtml += `<li class="list-group-item">
-                        <strong>${permiso.nombre}</strong>
-                        <br>
-                        <small class="text-muted">${permiso.descripcion}</small>
-                    </li>`;
-                });
-                permisosHtml += '</ul>';
-                Swal.fire({
-                    title: 'Permisos del Rol',
-                    html: permisosHtml,
-                    width: '600px',
-                    confirmButtonText: 'Cerrar'
-                });
-            } else {
-                utils.mostrarError(response.message || 'Error al obtener los permisos');
-            }
-        },
-        error: function() {
-            utils.mostrarError('Error al obtener los permisos');
-        }
+    // Destruir tooltips antes de recargar la tabla para evitar duplicados
+    $('#tablaRoles').on('preDraw.dt', function () {
+        $('[data-bs-toggle="tooltip"]').tooltip('dispose');
     });
-} 
+}); 

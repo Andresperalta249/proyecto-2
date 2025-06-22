@@ -1,6 +1,6 @@
 <?php
 require_once 'core/Controller.php';
-require_once 'models/Dispositivo.php';
+require_once 'models/DispositivoModel.php';
 require_once 'models/Mascota.php';
 require_once 'models/User.php';
 
@@ -17,7 +17,7 @@ class DashboardController extends Controller {
             exit;
         }
 
-        $this->dispositivoModel = new Dispositivo();
+        $this->dispositivoModel = new DispositivoModel();
         $this->mascotaModel = new Mascota();
     }
 

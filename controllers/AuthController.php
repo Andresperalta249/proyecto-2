@@ -82,6 +82,10 @@ class AuthController extends Controller {
                     $_SESSION['user_name'] = $usuario['nombre'];
                     $_SESSION['user_role'] = $usuario['rol_id'];
 
+                    // Cargar permisos del usuario en la sesión para optimizar consultas
+                    $permisos = obtenerPermisosUsuario($usuario['id_usuario']);
+                    $_SESSION['permissions'] = $permisos;
+
                     $this->usuarioModel->registrarInicioSesion($usuario['id_usuario']);
 
                     if ($isAjax) {
@@ -248,8 +252,12 @@ class AuthController extends Controller {
     }
 
     public function logoutAction() {
+        session_start();
+        session_unset();
         session_destroy();
-        $this->redirect('auth/login');
+        // Redirigir a la página de login
+        header('Location: ' . BASE_URL . 'auth/login');
+        exit;
     }
 
     public function testdbAction() {
@@ -291,7 +299,7 @@ class AuthController extends Controller {
     }
 
     public function forgotPasswordAction() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($this->isPostRequest()) {
             $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
             if (!$email) {
                 $this->jsonResponse(['success' => false, 'error' => 'Correo inválido'], 400);
@@ -371,6 +379,10 @@ class AuthController extends Controller {
         } else {
             $this->render('auth/new-password');
         }
+    }
+
+    protected function render($view, $data = []) {
+        $this->view->render($view, $data);
     }
 }
 ?> 

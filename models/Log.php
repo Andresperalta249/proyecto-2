@@ -24,8 +24,8 @@ class Log extends Model {
         try {
             $sql = "SELECT l.*, d.nombre as dispositivo_nombre, m.nombre as mascota_nombre
                     FROM {$this->table} l
-                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id
-                    LEFT JOIN mascotas m ON d.mascota_id = m.id
+                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
+                    LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
                     WHERE d.usuario_id = :usuario_id
                     ORDER BY l.fecha DESC
                     LIMIT :limit";
@@ -90,7 +90,7 @@ class Log extends Model {
                         COUNT(DISTINCT dispositivo_id) as dispositivos,
                         COUNT(DISTINCT tipo) as tipos
                     FROM {$this->table} l
-                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id
+                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
                     WHERE d.usuario_id = :usuario_id";
             $result = $this->query($sql, [':usuario_id' => $usuario_id]);
             return $result ? $result[0] : [
@@ -129,8 +129,8 @@ class Log extends Model {
         try {
             $sql = "SELECT l.*, d.nombre as dispositivo_nombre, m.nombre as mascota_nombre
                     FROM {$this->table} l
-                    JOIN dispositivos d ON l.dispositivo_id = d.id
-                    LEFT JOIN mascotas m ON d.mascota_id = m.id
+                    JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
+                    LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
                     WHERE l.dispositivo_id = :dispositivo_id
                     ORDER BY l.fecha DESC
                     LIMIT :limit";
@@ -149,8 +149,8 @@ class Log extends Model {
         try {
             $sql = "SELECT l.*, d.nombre as dispositivo_nombre, m.nombre as mascota_nombre
                     FROM {$this->table} l
-                    JOIN dispositivos d ON l.dispositivo_id = d.id
-                    JOIN mascotas m ON d.mascota_id = m.id
+                    JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
+                    JOIN mascotas m ON d.mascota_id = m.id_mascota
                     WHERE m.id_mascota = :mascota_id
                     ORDER BY l.fecha DESC
                     LIMIT :limit";
@@ -169,8 +169,8 @@ class Log extends Model {
         try {
             $sql = "SELECT l.*, d.nombre as dispositivo_nombre, m.nombre as mascota_nombre
                     FROM {$this->table} l
-                    JOIN dispositivos d ON l.dispositivo_id = d.id
-                    LEFT JOIN mascotas m ON d.mascota_id = m.id
+                    JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
+                    LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
                     WHERE d.usuario_id = :usuario_id 
                     AND l.tipo = :tipo
                     ORDER BY l.fecha DESC
@@ -191,8 +191,8 @@ class Log extends Model {
         try {
             $sql = "SELECT l.*, d.nombre as dispositivo_nombre, m.nombre as mascota_nombre
                     FROM {$this->table} l
-                    JOIN dispositivos d ON l.dispositivo_id = d.id
-                    LEFT JOIN mascotas m ON d.mascota_id = m.id
+                    JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
+                    LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
                     WHERE d.usuario_id = :usuario_id 
                     AND l.fecha BETWEEN :fecha_inicio AND :fecha_fin
                     ORDER BY l.fecha DESC";
@@ -215,7 +215,7 @@ class Log extends Model {
                         COUNT(*) as total,
                         COUNT(DISTINCT l.dispositivo_id) as dispositivos
                     FROM {$this->table} l
-                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id
+                    LEFT JOIN dispositivos d ON l.dispositivo_id = d.id_dispositivo
                     WHERE d.usuario_id = :usuario_id
                     GROUP BY l.tipo";
             $result = $this->query($sql, [':usuario_id' => $usuario_id]);

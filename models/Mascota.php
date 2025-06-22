@@ -22,11 +22,16 @@ class Mascota extends Model {
     public function updateMascota($id, $data) {
         $allowed = ['nombre', 'especie', 'tamano', 'fecha_nacimiento', 'usuario_id', 'estado', 'genero'];
         $filtered = array_intersect_key($data, array_flip($allowed));
-        return $this->update($id, $filtered);
+        return $this->update($id, $filtered, 'id_mascota');
     }
 
     public function deleteMascota($id) {
-        return $this->delete($id);
+        // Primero, desasociar dispositivos
+        $dispositivoModel = new DispositivoModel();
+        $dispositivoModel->desasociarDeMascota($id);
+        
+        // Luego, eliminar la mascota
+        return $this->delete($id, 'id_mascota');
     }
 
     public function getEstadisticas($usuario_id) {
@@ -71,7 +76,7 @@ class Mascota extends Model {
     }
 
     public function getMascotasConDispositivos($usuario_id) {
-        $sql = "SELECT m.*, COUNT(d.id) as total_dispositivos 
+        $sql = "SELECT m.*, COUNT(d.id_dispositivo) as total_dispositivos 
                 FROM {$this->table} m 
                 LEFT JOIN dispositivos d ON m.id_mascota = d.mascota_id 
                 WHERE m.usuario_id = :usuario_id 
@@ -105,11 +110,12 @@ class Mascota extends Model {
                     AVG(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE())) as edad_promedio,
                     MAX(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE())) as edad_maxima,
                     MIN(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE())) as edad_minima,
-                    COUNT(DISTINCT d.id) as total_dispositivos,
-                    COUNT(DISTINCT hm.id) as total_registros_medicos
+                    COUNT(DISTINCT d.id_dispositivo) as total_dispositivos,
+                    -- COUNT(DISTINCT hm.id) as total_registros_medicos
+                    0 as total_registros_medicos
                 FROM {$this->table} m
                 LEFT JOIN dispositivos d ON d.mascota_id = m.id_mascota
-                LEFT JOIN historial_medico hm ON hm.mascota_id = m.id_mascota
+                -- LEFT JOIN historial_medico hm ON hm.mascota_id = m.id_mascota
                 WHERE m.usuario_id = :usuario_id";
         
         $estadisticas = $this->query($sql, [':usuario_id' => $usuario_id])[0];
@@ -149,20 +155,20 @@ class Mascota extends Model {
         $sql = "SELECT 
                     m.*,
                     CASE 
-                        WHEN COUNT(d.id) = 0 THEN 'sin_dispositivo'
-                        WHEN COUNT(a.id) > 0 THEN 'con_alerta'
+                        WHEN COUNT(d.id_dispositivo) = 0 THEN 'sin_dispositivo'
+                        -- WHEN COUNT(a.id) > 0 THEN 'con_alerta'
                         ELSE 'normal'
                     END as estado
                 FROM {$this->table} m 
                 LEFT JOIN dispositivos d ON m.id_mascota = d.mascota_id 
-                LEFT JOIN alertas a ON d.id = a.dispositivo_id AND a.leida = 0
+                -- LEFT JOIN alertas a ON d.id_dispositivo = a.dispositivo_id AND a.leida = 0
                 WHERE m.usuario_id = :usuario_id
                 GROUP BY m.id_mascota";
         return $this->query($sql, [':usuario_id' => $usuario_id]);
     }
 
     public function findById($id) {
-        return $this->find($id);
+        return $this->find($id, 'id_mascota');
     }
 
     public function buscarMascotasPorTermino($termino, $userId, $soloPropias = false) {
@@ -361,6 +367,81 @@ class Mascota extends Model {
             'recordsTotal' => intval($totalRecords),
             'recordsFiltered' => intval($totalFiltered),
             'data' => $mascotas
+        ];
+    }
+
+    public function getPaginatedMascotas($params, $propietarioId = null)
+    {
+        $searchValue = $params['search']['value'] ?? '';
+        $start = $params['start'] ?? 0;
+        $length = $params['length'] ?? 10;
+        $orderColumnIndex = $params['order'][0]['column'] ?? 0;
+        $orderColumnName = $params['columns'][$orderColumnIndex]['data'] ?? 'm.id_mascota';
+        $orderDir = $params['order'][0]['dir'] ?? 'asc';
+
+        $columnMap = [
+            'id' => 'm.id_mascota',
+            'nombre' => 'm.nombre',
+            'especie' => 'm.especie',
+            'tamano' => 'm.tamano',
+            'genero' => 'm.genero',
+            'propietario' => 'u.nombre'
+        ];
+        $orderColumn = $columnMap[$orderColumnName] ?? 'm.id_mascota';
+
+        $baseQuery = "FROM mascotas m
+                      LEFT JOIN usuarios u ON m.usuario_id = u.id_usuario
+                      LEFT JOIN dispositivos d ON m.id_mascota = d.mascota_id";
+
+        $whereClauses = [];
+        $queryParams = [];
+
+        if ($propietarioId !== null) {
+            $whereClauses[] = "m.usuario_id = :propietarioId";
+            $queryParams[':propietarioId'] = $propietarioId;
+        }
+
+        if (!empty($searchValue)) {
+            $searchFields = ['m.nombre', 'm.especie', 'm.tamano', 'u.nombre'];
+            $searchWhere = [];
+            foreach ($searchFields as $field) {
+                $searchWhere[] = "$field LIKE :searchValue";
+            }
+            $whereClauses[] = "(" . implode(' OR ', $searchWhere) . ")";
+            $queryParams[':searchValue'] = '%' . $searchValue . '%';
+        }
+        
+        $whereSql = '';
+        if (!empty($whereClauses)) {
+            $whereSql = " WHERE " . implode(' AND ', $whereClauses);
+        }
+
+        $recordsTotalQuery = "SELECT COUNT(m.id_mascota) as total " . $baseQuery;
+        $recordsFilteredQuery = "SELECT COUNT(m.id_mascota) as total " . $baseQuery . $whereSql;
+        
+        $recordsTotal = $this->query($recordsTotalQuery)[0]['total'];
+        $recordsFiltered = $this->query($recordsFilteredQuery, $queryParams)[0]['total'];
+
+        $dataQuery = "SELECT m.id_mascota as id, m.nombre, m.especie, m.tamano, m.genero, u.nombre as propietario, m.estado,
+                             CASE 
+                                WHEN d.id_dispositivo IS NULL THEN 'sin asignar'
+                                WHEN d.estado = 'activo' THEN 'conectado'
+                                ELSE 'desconectado'
+                             END as dispositivo_estado
+                      " . $baseQuery . $whereSql . "
+                      ORDER BY $orderColumn $orderDir
+                      LIMIT :start, :length";
+        
+        $queryParams[':start'] = (int)$start;
+        $queryParams[':length'] = (int)$length;
+
+        $data = $this->query($dataQuery, $queryParams, PDO::FETCH_ASSOC);
+
+        return [
+            "draw" => intval($params['draw'] ?? 0),
+            "recordsTotal" => intval($recordsTotal),
+            "recordsFiltered" => intval($recordsFiltered),
+            "data" => $data
         ];
     }
 }

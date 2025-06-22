@@ -6,9 +6,9 @@ class MonitorController extends Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->dispositivoModel = new Dispositivo();
+        $this->dispositivoModel = new DispositivoModel();
         $this->mascotaModel = new Mascota();
-        $this->datosSensorModel = new DatosSensor();
+        $this->datosSensorModel = new DatosSensorModel();
     }
 
     public function indexAction() {
@@ -219,7 +219,7 @@ class MonitorController extends Controller {
                 }
             }
 
-            $datosSensor = new DatosSensor();
+            $datosSensor = new DatosSensorModel();
             $ultimaUbicacion = $datosSensor->getUltimaUbicacion($id);
 
             if (!$ultimaUbicacion || !isset($ultimaUbicacion['latitud']) || !isset($ultimaUbicacion['longitud'])) {
@@ -267,7 +267,7 @@ class MonitorController extends Controller {
             }
 
             $horas = isset($_GET['horas']) ? intval($_GET['horas']) : 24;
-            $datosSensor = new DatosSensor();
+            $datosSensor = new DatosSensorModel();
             $ultimosDatos = $datosSensor->getUltimosDatos($id, $horas);
             $ubicacion = $datosSensor->getUltimaUbicacion($id);
 

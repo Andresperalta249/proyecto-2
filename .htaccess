@@ -2,11 +2,16 @@
 php_flag display_errors off
 php_value error_reporting 0
 
+# Activar el motor de reescritura
 RewriteEngine On
-RewriteBase /proyecto-2/
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Evitar que las siguientes reglas se apliquen a archivos y directorios reales.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirigir todas las demás peticiones a index.php
+RewriteRule ^(.*)$ index.php [L,QSA]
 
 RewriteRule ^configuracion-alerta/?$ index.php?controller=configuracionAlerta&action=index [L]
 RewriteRule ^configuracion-alerta/crear/?$ index.php?controller=configuracionAlerta&action=crear [L]
@@ -104,4 +109,12 @@ Options -Indexes
 
 # Redirigir a HTTPS (descomentar si se usa SSL)
 # RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301] 
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Opciones adicionales de seguridad
+<Files ".user.ini">
+    Require all denied
+</Files>
+<Files ".htaccess">
+    Require all denied
+</Files> 

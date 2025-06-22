@@ -16,8 +16,6 @@
                                 <p class="mb-1"><strong>Nombre:</strong> <span id="detalleNombre"></span></p>
                                 <p class="mb-1"><strong>MAC:</strong> <span id="detalleMac"></span></p>
                                 <p class="mb-1"><strong>Estado:</strong> <span id="detalleEstado"></span></p>
-                                <p class="mb-1"><strong>Batería:</strong> <span id="detalleBateria"></span></p>
-                                <p class="mb-1"><strong>Última Lectura:</strong> <span id="detalleUltimaLectura"></span></p>
                             </div>
                         </div>
                     </div>

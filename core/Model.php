@@ -27,10 +27,10 @@ class Model {
         }
     }
 
-    public function find($id) {
-        $idField = $this->primaryKey;
-        $sql = "SELECT * FROM {$this->table} WHERE $idField = :$idField";
-        $result = $this->query($sql, [":$idField" => $id]);
+    public function find($id, $idField = null) {
+        $idField = $idField ?? $this->primaryKey;
+        $sql = "SELECT * FROM {$this->table} WHERE `$idField` = :idValue";
+        $result = $this->query($sql, [":idValue" => $id]);
         return $result ? $result[0] : null;
     }
 
@@ -67,29 +67,34 @@ class Model {
         }
     }
 
-    public function update($id, $data) {
+    public function update($id, $data, $idField = null) {
         $setClauses = [];
         foreach ($data as $key => $value) {
             $setClauses[] = "`$key` = :$key";
         }
-        $idField = $this->primaryKey;
-        $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE `$idField` = :$idField";
-        $data[$idField] = $id;
+        $idField = $idField ?? $this->primaryKey;
+        
+        $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE `$idField` = :idValue";
+        
+        // Usar un array de parámetros separado para evitar modificar el original
+        $params = $data;
+        $params['idValue'] = $id;
+
         try {
             $stmt = $this->db->getConnection()->prepare($sql);
-            return $stmt->execute($data);
+            return $stmt->execute($params);
         } catch (PDOException $e) {
             error_log("Error al actualizar registro: " . $e->getMessage());
             throw $e;
         }
     }
 
-    public function delete($id) {
-        $idField = $this->primaryKey;
-        $sql = "DELETE FROM {$this->table} WHERE `$idField` = :$idField";
+    public function delete($id, $idField = null) {
+        $idField = $idField ?? $this->primaryKey;
+        $sql = "DELETE FROM {$this->table} WHERE `$idField` = :idValue";
         try {
             $stmt = $this->db->getConnection()->prepare($sql);
-            return $stmt->execute([":$idField" => $id]);
+            return $stmt->execute([":idValue" => $id]);
         } catch (PDOException $e) {
             error_log("Error al eliminar registro: " . $e->getMessage());
             throw $e;

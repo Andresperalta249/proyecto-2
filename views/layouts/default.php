@@ -10,8 +10,8 @@
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>assets/css/device-monitor.css" rel="stylesheet">
-    <link href="<?= BASE_URL ?>assets/css/typography.css" rel="stylesheet">
-    <link href="<?= BASE_URL ?>assets/css/sidebar.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>assets/css/components/typography.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>assets/css/layout/sidebar.css" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">

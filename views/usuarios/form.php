@@ -1,12 +1,12 @@
 <?php
 $esEditar = isset($usuario) && !empty($usuario);
 $titulo = $esEditar ? 'Editar Usuario' : 'Nuevo Usuario';
-$urlAccion = $esEditar ? APP_URL . '/usuarios/editar' : APP_URL . '/usuarios/crear';
+$url_action = BASE_URL . 'usuarios/guardar';
 ?>
 
-<form id="formUsuario" action="<?= $urlAccion ?>" class="needs-validation" novalidate>
+<form id="formUsuario" action="<?php echo $url_action; ?>" method="post">
     <?php if ($esEditar): ?>
-        <input type="hidden" name="id_usuario" value="<?= $usuario['id_usuario'] ?>">
+        <input type="hidden" name="id_usuario" value="<?php echo $usuario['id_usuario'] ?? ''; ?>">
     <?php endif; ?>
 
     <div class="modal-header">

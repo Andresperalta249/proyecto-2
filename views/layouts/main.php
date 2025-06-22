@@ -8,7 +8,6 @@ $menuActivo = $GLOBALS['menuActivo'] ?? null;
 $logMsg = '['.date('Y-m-d H:i:s').'] Layout: content="' . (empty($content) ? 'VACIO' : 'LLENO') . '", ruta="' . ($_SERVER['REQUEST_URI'] ?? '') . '", usuario="' . (isset($_SESSION['user_id']) ? 'AUTENTICADO' : 'NO AUTENTICADO') . "\n";
 file_put_contents(__DIR__ . '/../../logs/error.log', $logMsg, FILE_APPEND);
 ?>
-<?php require_once __DIR__ . '/../../includes/functions.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -27,32 +26,42 @@ file_put_contents(__DIR__ . '/../../logs/error.log', $logMsg, FILE_APPEND);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     
-    <!-- Scripts -->
+    <!-- Bootstrap 5 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Chart.js -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-    <!-- Chart.js DataLabels -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> -->
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- DataTables y Extensiones (versiones compatibles) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.css">
+
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <!-- Otros scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Chart.js (descomentar si se usa) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> -->
+    
+    <!-- Estilos -->
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
     
     <!-- Base CSS -->
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/base/variables.css">
@@ -69,7 +78,7 @@ file_put_contents(__DIR__ . '/../../logs/error.log', $logMsg, FILE_APPEND);
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/components/pagination.css">
     
     <!-- Layout CSS -->
-    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/layout/sidebar-modern.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/layout/sidebar.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/layout/modals.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/layout/header.css">
     
@@ -128,37 +137,51 @@ if (!isset($content)) {
                 </div>
                 <div class="sidebar-menu">
                     <div class="sidebar-section">
+                        <?php if (verificarPermiso('ver_dashboard')): ?>
                         <a href="<?= APP_URL ?>/dashboard" class="sidebar-item<?= ($menuActivo === 'dashboard' ? ' active' : '') ?>">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
+                        <?php endif; ?>
                     </div>
                     <div class="sidebar-section">
                         <div class="sidebar-section-title px-3 py-2 text-muted small text-uppercase">
                             <i class="fas fa-folder me-2"></i> Administración
                         </div>
+                        <?php if (verificarPermiso('ver_usuarios')): ?>
                         <a href="<?= APP_URL ?>/usuarios" class="sidebar-item<?= ($menuActivo === 'usuarios' ? ' active' : '') ?>">
                             <i class="fas fa-users"></i> Usuarios
                         </a>
+                        <?php endif; ?>
+                        <?php if (verificarPermiso('ver_roles')): ?>
                         <a href="<?= APP_URL ?>/roles" class="sidebar-item<?= ($menuActivo === 'roles' ? ' active' : '') ?>">
                             <i class="fas fa-user-tag"></i> Roles y Permisos
                         </a>
+                        <?php endif; ?>
                     </div>
                     <div class="sidebar-section">
                         <div class="sidebar-section-title px-3 py-2 text-muted small text-uppercase">
                             <i class="fas fa-broadcast-tower me-2"></i> Monitoreo
                         </div>
+                        <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
                         <a href="<?= APP_URL ?>/monitor" class="sidebar-item<?= ($menuActivo === 'monitor' ? ' active' : '') ?>">
                             <i class="fas fa-desktop"></i> Monitor
                         </a>
+                        <?php endif; ?>
+                        <?php if (verificarPermiso('ver_mascotas') || verificarPermiso('ver_todas_mascotas')): ?>
                         <a href="<?= APP_URL ?>/mascotas" class="sidebar-item<?= ($menuActivo === 'mascotas' ? ' active' : '') ?>">
                             <i class="fas fa-paw"></i> Mascotas
                         </a>
+                        <?php endif; ?>
+                        <?php if (verificarPermiso('ver_dispositivos') || verificarPermiso('ver_todos_dispositivos')): ?>
                         <a href="<?= APP_URL ?>/dispositivos" class="sidebar-item<?= ($menuActivo === 'dispositivos' ? ' active' : '') ?>">
                             <i class="fas fa-microchip"></i> Dispositivos
                         </a>
+                        <?php endif; ?>
+                        <?php if (verificarPermiso('ver_reportes')): ?>
                         <a href="<?= APP_URL ?>/reporte/monitoreo" class="sidebar-item<?= ($menuActivo === 'reporte' ? ' active' : '') ?>">
                             <i class="fas fa-chart-line"></i> Reporte IoT
                         </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="sidebar-footer">
@@ -171,7 +194,7 @@ if (!isset($content)) {
                             </div>
                         </div>
                     </div>
-                    <a href="<?= APP_URL ?>/auth/logout" class="logout-btn">
+                    <a href="<?= BASE_URL ?>auth/logout" class="logout-btn">
                         <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
                     </a>
                 </div>
@@ -182,19 +205,13 @@ if (!isset($content)) {
             
             <!-- Main Content -->
             <div class="main-content">
-                <!-- Page Content -->
-                <div class="container-fluid dashboard-compact">
-                    <?php if (isset($titulo) && !(isset($_SERVER['REQUEST_URI']) && preg_match('#/monitor/device/#', $_SERVER['REQUEST_URI']))): ?>
-                    <div class="mb-4">
-                        <h1 class="fw-bold mb-0 title-h1"><?= htmlspecialchars($titulo) ?></h1>
-                        <?php if (isset($subtitulo)): ?>
-                            <div class="text-secondary small text-sm mb-1"><?= htmlspecialchars($subtitulo) ?></div>
-                        <?php endif; ?>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?= $content ?>
-                </div>
+                <?php require_once 'header.php'; ?>
+
+                <main class="content-fluid flex-grow-1 d-flex flex-column">
+                    <?php echo $content; ?>
+                </main>
+
+                <?php require_once 'footer.php'; ?>
             </div>
         </div> <!-- Fin layout-wrapper -->
     <?php else: ?>
@@ -206,13 +223,29 @@ if (!isset($content)) {
     
     <!-- Scripts principales al final para asegurar disponibilidad -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+    <!-- Scripts específicos de módulos -->
+    <script src="<?= APP_URL ?>/assets/js/config.js"></script>
+    <script src="<?= APP_URL ?>/assets/js/tables.js"></script>
+    
+    <!-- Scripts específicos por página -->
+    <?php if (isset($menuActivo)): ?>
+        <?php if ($menuActivo === 'dispositivos'): ?>
+            <script src="<?= APP_URL ?>/assets/js/dispositivos.js"></script>
+        <?php endif; ?>
+        <?php if ($menuActivo === 'usuarios'): ?>
+            <script src="<?= APP_URL ?>/assets/js/usuarios.js"></script>
+        <?php endif; ?>
+        <?php if ($menuActivo === 'mascotas'): ?>
+            <script src="<?= APP_URL ?>/assets/js/mascotas.js"></script>
+        <?php endif; ?>
+        <?php if ($menuActivo === 'roles'): ?>
+            <script src="<?= APP_URL ?>/assets/js/roles.js"></script>
+        <?php endif; ?>
+    <?php endif; ?>
 
     <?php if (isset($extra_js)): ?>
         <?= $extra_js ?>
@@ -319,8 +352,6 @@ if (!isset($content)) {
             return false;
         };
     </script>
-    <script src="<?= APP_URL ?>/assets/js/roles.js"></script>
-
     <!-- Modal Genérico para Contenido Dinámico -->
     <div class="modal fade" id="modal-generico" tabindex="-1" aria-labelledby="modal-generico-label" aria-hidden="true">
       <div class="modal-dialog modal-lg">

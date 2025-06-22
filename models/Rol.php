@@ -1,74 +1,82 @@
 <?php
 require_once __DIR__ . '/../core/Model.php';
+
 class Rol extends Model {
     protected $table = 'roles';
     
     public function __construct() {
         parent::__construct();
     }
-    
-    /**
-     * Obtiene todos los roles
-     * @return array Array con los roles
-     */
+
     public function getAll() {
-        try {
-            $sql = "SELECT r.*, GROUP_CONCAT(DISTINCT p.nombre) as permisos, 
-                           GROUP_CONCAT(DISTINCT p.id_permiso) as permiso_ids
-                    FROM roles r
-                    LEFT JOIN roles_permisos rp ON r.id_rol = rp.rol_id
-                    LEFT JOIN permisos p ON rp.permiso_id = p.id_permiso
-                    GROUP BY r.id_rol
-                    ORDER BY r.id_rol";
-            
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute();
-            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Procesar los permisos
-            foreach ($roles as &$rol) {
-                $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
-                $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
-            }
-            
-            return is_array($roles) ? $roles : [];
-        } catch (PDOException $e) {
-            error_log("Error en getAll: " . $e->getMessage());
-            return [];
-        }
+        $sql = "SELECT r.*, (SELECT COUNT(*) FROM usuarios u WHERE u.rol_id = r.id_rol) as usuarios_count 
+                FROM {$this->table} r ORDER BY r.id_rol ASC";
+        return $this->query($sql);
     }
     
-    /**
-     * Obtiene un rol por su ID
-     * @param int $id_rol ID del rol
-     * @return array Datos del rol
-     */
-    public function getById($id_rol) {
-        try {
-            $sql = "SELECT r.*, GROUP_CONCAT(DISTINCT p.nombre) as permisos,
-                           GROUP_CONCAT(DISTINCT p.id_permiso) as permiso_ids
-                    FROM roles r
-                    LEFT JOIN roles_permisos rp ON r.id_rol = rp.rol_id
-                    LEFT JOIN permisos p ON rp.permiso_id = p.id_permiso
-                    WHERE r.id_rol = ?
-                    GROUP BY r.id_rol";
-            
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute([$id_rol]);
-            $rol = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($rol) {
-                $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
-                $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
-            }
-            
-            return is_array($rol) ? $rol : [];
-        } catch (PDOException $e) {
-            error_log("Error en getById: " . $e->getMessage());
-            return [];
-        }
+    public function getById($id) {
+        $sql = "SELECT * FROM {$this->table} WHERE id_rol = :id";
+        return $this->query($sql, [':id' => $id]);
+    }
+
+    public function getPermisosPorRol($rol_id) {
+        $sql = "SELECT p.id_permiso, p.nombre 
+                FROM permisos p
+                JOIN roles_permisos rp ON p.id_permiso = rp.permiso_id
+                WHERE rp.rol_id = :rol_id";
+        return $this->query($sql, [':rol_id' => $rol_id], true);
     }
     
+    public function getPermisos() {
+        $sql = "SELECT * FROM permisos";
+        return $this->query($sql, [], true);
+    }
+
+    public function getPaginated($start, $length, $searchValue, $orderColumn, $orderDir)
+    {
+        $query = "SELECT 
+                    r.id_rol, 
+                    r.nombre, 
+                    r.descripcion, 
+                    r.estado,
+                    (SELECT COUNT(*) FROM usuarios u WHERE u.rol_id = r.id_rol) as usuarios_count,
+                    (SELECT COUNT(*) FROM roles_permisos rp WHERE rp.rol_id = r.id_rol) as permisos_count,
+                    (SELECT GROUP_CONCAT(p.nombre SEPARATOR ', ') 
+                     FROM roles_permisos rp 
+                     JOIN permisos p ON rp.permiso_id = p.id_permiso 
+                     WHERE rp.rol_id = r.id_rol) as permisos_lista
+                  FROM {$this->table} r";
+
+        $params = [];
+        $whereClause = '';
+        if (!empty($searchValue)) {
+            $whereClause = " WHERE r.nombre LIKE :searchNombre OR r.descripcion LIKE :searchDesc";
+            $params[':searchNombre'] = "%$searchValue%";
+            $params[':searchDesc'] = "%$searchValue%";
+        }
+
+        // Conteo total de registros
+        $totalQuery = "SELECT COUNT(*) as total FROM {$this->table}";
+        $totalRecords = $this->query($totalQuery)[0]['total'];
+        
+        // Conteo de registros filtrados
+        $totalFiltered = $totalRecords;
+        if (!empty($whereClause)) {
+            $totalFilteredQuery = "SELECT COUNT(*) as total FROM {$this->table} r" . $whereClause;
+            $totalFiltered = $this->query($totalFilteredQuery, $params)[0]['total'];
+        }
+
+        $query .= $whereClause . " ORDER BY {$orderColumn} {$orderDir} LIMIT " . (int)$length . " OFFSET " . (int)$start;
+        
+        $results = $this->query($query, $params);
+
+        return [
+            'data' => $results,
+            'recordsTotal' => (int)$totalRecords,
+            'recordsFiltered' => (int)$totalFiltered
+        ];
+    }
+
     /**
      * Crea un nuevo rol
      * @param array $data Datos del rol
@@ -119,7 +127,7 @@ class Rol extends Model {
      * @param array $data Datos del rol
      * @return bool True si se actualizó correctamente
      */
-    public function update($id, $data) {
+    public function update($id, $data, $idField = null) {
         try {
             $this->db->getConnection()->beginTransaction();
             // Validar que el rol existe
@@ -162,36 +170,36 @@ class Rol extends Model {
     
     /**
      * Elimina un rol
-     * @param int $id_rol ID del rol
+     * @param int $id ID del rol
      * @return bool True si se eliminó correctamente
      */
-    public function delete($id_rol) {
+    public function delete($id, $idField = null) {
         try {
             $this->db->getConnection()->beginTransaction();
             // Validar que el rol existe
-            $rol = $this->getById($id_rol);
+            $rol = $this->getById($id);
             if (!$rol) {
                 throw new Exception('Rol no encontrado');
             }
             // Validar que no sea un rol protegido
-            if ($id_rol <= 3) {
+            if ($id <= 3) {
                 throw new Exception('No se puede eliminar un rol protegido');
             }
             // Validar que no tenga usuarios asociados
             $sql = "SELECT COUNT(*) FROM usuarios WHERE rol_id = ?";
             $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute([$id_rol]);
+            $stmt->execute([$id]);
             if ($stmt->fetchColumn() > 0) {
                 throw new Exception('No se puede eliminar un rol que tiene usuarios asociados');
             }
             // Eliminar permisos
             $sql = "DELETE FROM roles_permisos WHERE rol_id = ?";
             $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute([$id_rol]);
+            $stmt->execute([$id]);
             // Eliminar rol usando la columna correcta
             $sql = "DELETE FROM roles WHERE id_rol = ?";
             $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute([$id_rol]);
+            $stmt->execute([$id]);
             $this->db->getConnection()->commit();
             return true;
         } catch (Exception $e) {
@@ -225,17 +233,6 @@ class Rol extends Model {
             error_log("Error en nombreExiste: " . $e->getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Obtiene todos los permisos disponibles
-     * @return array Array con los permisos
-     */
-    public function getPermisos() {
-        $sql = "SELECT id_permiso, nombre, descripcion FROM permisos WHERE estado = 'activo' ORDER BY nombre";
-        $stmt = $this->db->getConnection()->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**
@@ -275,33 +272,12 @@ class Rol extends Model {
      */
     public function cambiarEstado($id_rol, $estado) {
         try {
-            // Validar que el rol existe
-            $rol = $this->getById($id_rol);
-            if (!$rol) {
-                throw new Exception('Rol no encontrado');
-            }
-            
-            // Validar que no sea un rol protegido
-            if ($id_rol <= 3) {
-                throw new Exception('No se puede modificar un rol protegido');
-            }
-            
-            $sql = "UPDATE roles SET estado = ? WHERE id_rol = ?";
+            $sql = "UPDATE {$this->table} SET estado = :estado WHERE id_rol = :id_rol";
             $stmt = $this->db->getConnection()->prepare($sql);
-            return $stmt->execute([$estado, $id_rol]);
+            return $stmt->execute([':estado' => $estado, ':id_rol' => $id_rol]);
         } catch (Exception $e) {
-            error_log("Error en cambiarEstado: " . $e->getMessage());
+            error_log("Error al cambiar estado del rol: " . $e->getMessage());
             return false;
         }
-    }
-    
-    public function getPermisosPorRol($id_rol) {
-        $sql = "SELECT p.id_permiso, p.nombre, p.descripcion
-                FROM permisos p
-                INNER JOIN roles_permisos rp ON p.id_permiso = rp.permiso_id
-                WHERE rp.rol_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
-        $stmt->execute([$id_rol]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } 

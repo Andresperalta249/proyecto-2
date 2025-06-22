@@ -5,9 +5,25 @@
  */
 class UsuarioModel extends Model {
     protected $table = 'usuarios';
+    protected $primaryKey = 'id_usuario'; // Clave primaria específica de esta tabla
 
     public function __construct() {
         parent::__construct();
+    }
+
+    /**
+     * Crea un nuevo usuario en la base de datos.
+     * @param array $data Los datos del usuario.
+     * @return mixed El ID del nuevo registro o false en caso de error.
+     */
+    public function create($data) {
+        // Asegurarse de que el estado esté presente
+        $data['estado'] = $data['estado'] ?? 'inactivo';
+        
+        // Quitar campos que no existen en la tabla o se manejan aparte
+        unset($data['confirm_password']);
+
+        return parent::create($data);
     }
 
     /**
@@ -74,65 +90,58 @@ class UsuarioModel extends Model {
 
     /**
      * Actualiza los datos de un usuario existente.
-     * @param int $id_usuario El ID del usuario a actualizar.
+     * @param int $id El ID del usuario a actualizar.
      * @param array $data Un array asociativo con los campos y nuevos valores.
+     * @param string|null $idField El nombre del campo ID (ignorado, se usa la clave primaria del modelo).
      * @return bool True en éxito, false en fallo.
      */
-    public function update($id_usuario, $data) {
+    public function update($id, $data, $idField = null) {
+        // Aseguramos que se usa la clave primaria correcta para este modelo
+        $idField = 'id_usuario';
+        
         try {
-            $sql = "UPDATE {$this->table} SET ";
-            $params = [];
-            $updates = [];
-
+            $setClauses = [];
             foreach ($data as $key => $value) {
-                $updates[] = "{$key} = :{$key}";
-                $params[":{$key}"] = $value;
+                $setClauses[] = "`$key` = :$key";
             }
+            
+            $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE `$idField` = :idValue";
+            $data['idValue'] = $id;
 
-            $sql .= implode(', ', $updates);
-            $sql .= " WHERE id_usuario = :id_usuario";
-            $params[':id_usuario'] = $id_usuario;
+            $stmt = $this->db->getConnection()->prepare($sql);
+            return $stmt->execute($data);
 
-            return $this->query($sql, $params);
         } catch (Exception $e) {
-            error_log("Error en update: " . $e->getMessage());
+            error_log("Error en update de Usuario: " . $e->getMessage());
             return false;
         }
     }
 
     /**
      * Elimina un usuario de la base de datos.
-     * @param int $id_usuario El ID del usuario a eliminar.
+     * @param int $id El ID del usuario a eliminar.
+     * @param string|null $idField El nombre del campo ID (ignorado, se usa la clave primaria del modelo).
      * @return bool True si se eliminó, false si no.
      */
-    public function delete($id_usuario) {
+    public function delete($id, $idField = null) {
         try {
-            $sql = "DELETE FROM {$this->table} WHERE id_usuario = :id_usuario";
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $result = $stmt->execute([':id_usuario' => $id_usuario]);
-            
-            // Verificar si se afectó al menos una fila
-            return $result && $stmt->rowCount() > 0;
+            // Llama al delete del padre, especificando la clave primaria de este modelo.
+            return parent::delete($id, 'id_usuario');
         } catch (Exception $e) {
-            error_log("Error en delete: " . $e->getMessage());
+            error_log("Error en delete de Usuario: " . $e->getMessage());
             return false;
         }
     }
 
     /**
      * Busca un usuario por su ID.
-     * @param int $id_usuario El ID del usuario.
+     * @param int $id El ID del usuario.
+     * @param string|null $idField El nombre del campo ID (ignorado, se usa la clave primaria del modelo).
      * @return array|null Los datos del usuario o null si no se encuentra.
      */
-    public function find($id_usuario) {
-        try {
-            $sql = "SELECT * FROM {$this->table} WHERE id_usuario = :id_usuario";
-            $result = $this->query($sql, [':id_usuario' => $id_usuario]);
-            return $result ? $result[0] : null;
-        } catch (Exception $e) {
-            error_log("Error en find: " . $e->getMessage());
-            return null;
-        }
+    public function find($id, $idField = null) {
+        // Llama al find del padre, especificando la clave primaria de este modelo.
+        return parent::find($id, 'id_usuario');
     }
 
     /**
@@ -255,23 +264,25 @@ class UsuarioModel extends Model {
 
     /**
      * Obtiene una lista paginada de usuarios para mostrar en DataTables.
-     * @param int $start El registro inicial desde el que empezar.
-     * @param int $length El número de registros a devolver.
-     * @param string $search El término de búsqueda.
+     * Une con la tabla de roles para obtener el nombre del rol.
+     * @param int $start El registro inicial desde donde empezar a obtener.
+     * @param int $length El número de registros a obtener.
+     * @param string $search El término de búsqueda opcional.
      * @return array La lista de usuarios.
      */
     public function obtenerUsuariosPaginados($start, $length, $search) {
         try {
-            $sql = "SELECT u.id_usuario, u.nombre, u.email, u.telefono, u.direccion, r.nombre as rol_nombre, u.estado 
+            $sql = "SELECT u.id_usuario, u.nombre, u.email, u.telefono, u.direccion, u.rol_id, r.nombre as rol_nombre, u.estado 
                     FROM {$this->table} u 
                     JOIN roles r ON u.rol_id = r.id_rol";
+            
             $params = [];
+            $searchValue = "%" . strtolower($search) . "%";
 
             if (!empty($search)) {
                 $sql .= " WHERE LOWER(u.nombre) LIKE :search1 
                           OR LOWER(u.email) LIKE :search2 
                           OR LOWER(r.nombre) LIKE :search3";
-                $searchValue = "%" . strtolower($search) . "%";
                 $params[':search1'] = $searchValue;
                 $params[':search2'] = $searchValue;
                 $params[':search3'] = $searchValue;
@@ -290,24 +301,26 @@ class UsuarioModel extends Model {
     }
     
     /**
-     * Verifica si un email ya existe en la base de datos.
+     * Verifica si un email ya existe en la base de datos, opcionalmente excluyendo un ID de usuario.
      * @param string $email El email a verificar.
-     * @param int|null $id_actual El ID del usuario actual, para ignorarlo en la comprobación.
+     * @param int|null $id_actual El ID del usuario a excluir de la búsqueda (para actualizaciones).
      * @return bool True si el email existe, false si no.
      */
     public function emailExiste($email, $id_actual = null) {
         try {
             $sql = "SELECT id_usuario FROM {$this->table} WHERE email = :email";
             $params = [':email' => $email];
-            if ($id_actual) {
+
+            if ($id_actual !== null) {
                 $sql .= " AND id_usuario != :id_usuario";
                 $params[':id_usuario'] = $id_actual;
             }
+
             $result = $this->query($sql, $params);
             return !empty($result);
         } catch (Exception $e) {
             error_log("Error en emailExiste: " . $e->getMessage());
-            return false;
+            return false; // Asumir que no existe en caso de error
         }
     }
 
@@ -367,15 +380,38 @@ class UsuarioModel extends Model {
      */
     public function cambiarEstado($id, $estado) {
         try {
-            $sql = "UPDATE {$this->table} SET estado = :estado WHERE id_usuario = :id_usuario";
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $result = $stmt->execute([':estado' => $estado, ':id_usuario' => $id]);
-            
-            // Verificar si se afectó al menos una fila
-            return $result && $stmt->rowCount() > 0;
+            $sql = "UPDATE {$this->table} SET estado = :estado WHERE id_usuario = :id";
+            return $this->query($sql, [':estado' => $estado, ':id' => $id]);
         } catch (Exception $e) {
             error_log("Error en cambiarEstado: " . $e->getMessage());
             return false;
         }
+    }
+
+    public function getLastError()
+    {
+        return $this->lastError;
+    }
+
+    public function findAll($conditions = []) {
+        $sql = "SELECT * FROM {$this->table}";
+        if (!empty($conditions)) {
+            $whereClauses = [];
+            foreach ($conditions as $key => $value) {
+                $whereClauses[] = "`$key` = :$key";
+            }
+            $sql .= " WHERE " . implode(' AND ', $whereClauses);
+        }
+        return $this->query($sql, $conditions);
+    }
+
+    public function getActiveUsers()
+    {
+        return $this->findAll(['estado' => 'activo']);
+    }
+
+    public function getUsuarioById($id)
+    {
+        return $this->find($id, 'id_usuario');
     }
 } 

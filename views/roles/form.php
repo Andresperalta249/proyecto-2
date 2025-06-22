@@ -1,225 +1,59 @@
 <?php
-$rol = $data['rol'] ?? null;
-$permisos = $data['permisos'] ?? [];
-$esEdicion = !empty($rol);
+// Define valores por defecto para el modo de creación
+$esEdicion = isset($rol) && $rol;
+$titulo = $esEdicion ? 'Editar Rol' : 'Nuevo Rol';
 
-// Agrupar permisos por tipo de gestión
-$grupos = [
-    'Gestión de Usuarios' => [],
-    'Gestión de Mascotas' => [],
-    'Gestión de Dispositivos' => [],
-    'Gestión de Notificaciones' => [],
-    'Reportes' => []
-];
-foreach ($permisos as $permiso) {
-    $nombre = $permiso['nombre'];
-    if (strpos($nombre, 'usuario') !== false) {
-        $grupos['Gestión de Usuarios'][] = $permiso;
-    } elseif (strpos($nombre, 'mascota') !== false) {
-        $grupos['Gestión de Mascotas'][] = $permiso;
-    } elseif (strpos($nombre, 'dispositivo') !== false) {
-        $grupos['Gestión de Dispositivos'][] = $permiso;
-    } elseif (strpos($nombre, 'notificacion') !== false) {
-        $grupos['Gestión de Notificaciones'][] = $permiso;
-    } elseif (strpos($nombre, 'reporte') !== false) {
-        $grupos['Reportes'][] = $permiso;
-    }
-}
+// Asegurarse de que $rol sea un array para evitar errores, incluso si es nuevo
+$rolData = $esEdicion ? $rol : ['id_rol' => null, 'nombre' => '', 'descripcion' => ''];
+$permisosAsignados = $esEdicion ? ($rol['permiso_ids'] ?? []) : [];
 ?>
 
-<div class="modal-header border-0 pb-0">
-    <h4 class="modal-title fw-bold text-primary title-h4"><i class="fas fa-user-tag text-primary me-2"></i><?= $esEdicion ? 'Editar Rol' : 'Nuevo Rol' ?></h4>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-</div>
+<form id="formRol" action="<?= htmlspecialchars($esEdicion ? APP_URL . '/roles/guardar/' . $rolData['id_rol'] : APP_URL . '/roles/guardar') ?>" method="POST">
+    <?php if ($esEdicion) : ?>
+        <input type="hidden" name="id_rol" value="<?= htmlspecialchars($rolData['id_rol']) ?>">
+    <?php endif; ?>
 
-<div class="modal-body pt-2 pb-0">
-    <form id="rolForm" class="needs-validation" novalidate autocomplete="off">
-        <input type="hidden" name="id_rol" value="<?= $rol['id_rol'] ?? '' ?>">
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="nombre" name="nombre" value="<?= htmlspecialchars($rol['nombre'] ?? '') ?>" required autocomplete="off" placeholder="Ingrese el nombre del rol">
-                    <label for="nombre"><i class="fas fa-id-badge me-1 text-primary"></i> Nombre del Rol</label>
-                    <div class="invalid-feedback" id="nombreFeedback">Por favor ingrese un nombre único para el rol.</div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
-                <div class="form-floating">
-                    <input type="text" class="form-control" id="descripcion" name="descripcion" value="<?= htmlspecialchars($rol['descripcion'] ?? '') ?>" autocomplete="off" placeholder="Ingrese una descripción">
-                    <label for="descripcion"><i class="fas fa-align-left me-1 text-secondary"></i> Descripción</label>
-                </div>
-            </div>
-            <?php if ($esEdicion && $rol['id_rol'] > 3): ?>
-            <div class="col-12 col-md-6">
-                <label class="form-label mb-1"><i class="fas fa-toggle-on me-1 text-success"></i> Estado</label>
-                <div class="d-flex gap-3 align-items-center">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="estado" id="estado_activo" value="activo" <?= ($rol['estado'] ?? '') == 'activo' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="estado_activo">Activo</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="estado" id="estado_inactivo" value="inactivo" <?= ($rol['estado'] ?? '') == 'inactivo' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="estado_inactivo">Inactivo</label>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
+    <div class="modal-header">
+        <h5 class="modal-title" id="modal-generico-titulo"><?= $titulo ?></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    </div>
+
+    <div class="modal-body">
+        <div class="form-group mb-3">
+            <label for="nombre" class="form-label">Nombre del Rol</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required 
+                   value="<?= htmlspecialchars($rolData['nombre']) ?>">
         </div>
-        <div class="mb-2">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <label class="form-label fw-bold mb-0"><i class="fas fa-key text-primary me-1"></i> Permisos</label>
-            </div>
-            <div class="accordion" id="acordeonPermisos">
-                <?php $i = 0; foreach ($grupos as $titulo => $permisosGrupo): ?>
-                    <?php if (count($permisosGrupo) > 0): ?>
-                        <div class="accordion-item mb-1">
-                            <h2 class="accordion-header" id="heading<?= $i ?>">
-                                <button class="accordion-button collapsed fw-semibold text-primary text-md" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?= $i ?>" aria-expanded="false" aria-controls="collapse<?= $i ?>">
-                                    <i class="fas fa-folder-open me-1"></i> <?= $titulo ?>
-                                </button>
-                            </h2>
-                            <div id="collapse<?= $i ?>" class="accordion-collapse collapse" aria-labelledby="heading<?= $i ?>" data-bs-parent="#acordeonPermisos">
-                                <div class="accordion-body py-2 px-2">
-                                    <div class="row g-2">
-                                        <?php foreach ($permisosGrupo as $permiso): ?>
-                                        <div class="col-12 col-md-6">
-                                            <div class="form-check permiso-item mb-1 small">
-                                                <input class="form-check-input" type="checkbox" name="permisos[]" value="<?= $permiso['id_permiso'] ?>" id="permiso_<?= $permiso['id_permiso'] ?>" <?= in_array($permiso['id_permiso'], $rol['permiso_ids'] ?? []) ? 'checked' : '' ?>>
-                                                <label class="form-check-label d-flex align-items-center gap-1" for="permiso_<?= $permiso['id_permiso'] ?>" data-bs-toggle="tooltip" data-bs-placement="top" title="<?= htmlspecialchars($permiso['descripcion']) ?>">
-                                                    <i class="fas fa-circle text-primary text-icon-sm"></i>
-                                                    <span class="text-sm"><?= htmlspecialchars($permiso['nombre']) ?></span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                            </div>
+
+        <div class="form-group mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars($rolData['descripcion']) ?></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Permisos</label>
+            <div class="permisos-container p-2 border rounded" style="max-height: 250px; overflow-y: auto;">
+                <?php if (empty($permisos)) : ?>
+                    <p class="text-muted">No hay permisos para asignar.</p>
+                <?php else : ?>
+                    <?php foreach ($permisos as $permiso) : ?>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="permisos[]" 
+                                   value="<?= $permiso['id_permiso'] ?>" 
+                                   id="permiso_<?= $permiso['id_permiso'] ?>"
+                                   <?= in_array($permiso['id_permiso'], $permisosAsignados) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="permiso_<?= $permiso['id_permiso'] ?>">
+                                <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $permiso['nombre']))) ?>
+                            </label>
                         </div>
-                    <?php endif; $i++; ?>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
-    </form>
-</div>
+    </div>
 
-<div class="modal-footer modal-footer--sticky">
-    <button type="button" class="btn btn--secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Cancelar</button>
-    <button type="button" class="btn btn--success" id="btnGuardarRol" onclick="guardarRol()"><i class="fas fa-save me-1"></i> Guardar</button>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Validación nombre único en tiempo real
-    const form = document.getElementById('rolForm');
-    const nombreInput = document.getElementById('nombre');
-    const nombreFeedback = document.getElementById('nombreFeedback');
-    let nombreValido = true;
-
-    nombreInput.addEventListener('input', function() {
-        const nombre = nombreInput.value.trim();
-        if (!nombre) return;
-        fetch('roles/validarNombre?nombre=' + encodeURIComponent(nombre) + '&id_rol=' + (form.id_rol?.value || ''))
-            .then(r => r.json())
-            .then(data => {
-                if (data.exists) {
-                    nombreInput.classList.add('is-invalid');
-                    nombreFeedback.textContent = 'Ya existe un rol con ese nombre.';
-                    nombreValido = false;
-                } else {
-                    nombreInput.classList.remove('is-invalid');
-                    nombreFeedback.textContent = 'Por favor ingrese un nombre único para el rol.';
-                    nombreValido = true;
-                }
-                actualizarEstadoBotonGuardar();
-            });
-    });
-
-    // Gestión de permisos
-    const checkboxes = document.querySelectorAll('.permiso-item input[type="checkbox"]');
-    const btnGuardar = document.getElementById('btnGuardarRol');
-
-    function actualizarEstadoBotonGuardar() {
-        const totalPermisos = parseInt(contadorTotal.textContent);
-        btnGuardar.disabled = totalPermisos === 0 || !nombreValido;
-    }
-
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', actualizarContadores);
-    });
-    actualizarContadores();
-
-    // Validación antes de guardar
-    form.addEventListener('submit', function(event) {
-        if (!form.checkValidity() || !nombreValido || parseInt(contadorTotal.textContent) === 0) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (parseInt(contadorTotal.textContent) === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Permisos requeridos',
-                    text: 'Selecciona al menos un permiso.'
-                });
-            }
-        }
-        form.classList.add('was-validated');
-    });
-});
-
-function guardarRol() {
-    const form = document.getElementById('rolForm');
-    if (!form.checkValidity() || document.getElementById('contadorTotal').textContent === '0') {
-        form.classList.add('was-validated');
-        Swal.fire({
-            icon: 'warning',
-            title: 'Permisos requeridos',
-            text: 'Selecciona al menos un permiso.'
-        });
-        return;
-    }
-    const formData = new FormData(form);
-    const idRol = formData.get('id_rol');
-    const nombre = formData.get('nombre');
-    const descripcion = formData.get('descripcion');
-    const esEdicion = idRol && idRol !== '0' && idRol !== '';
-    const url = esEdicion ? 'roles/update' : 'roles/create';
-    fetch(url, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: esEdicion ? `El rol "${nombre}" se actualizó con éxito` : `El rol "${nombre}" (${descripcion}) se creó con éxito`,
-                showConfirmButton: false,
-                timer: 1800
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.error || data.message || 'Ocurrió un error.'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Ha ocurrido un error al procesar la solicitud'
-        });
-    });
-}
-</script> 
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar Rol</button>
+    </div>
+</form> 
