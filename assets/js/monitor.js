@@ -32,18 +32,37 @@ $(function() {
     // Mascota dependiente del propietario
     $('#propietario').off('change.reportes').on('change.reportes', function() {
       const usuario_id = $(this).val();
+      console.log('Propietario seleccionado:', usuario_id);
+      
       if (!usuario_id) {
         $('#mascota').prop('disabled', true).val(null).trigger('change');
         return;
       }
-      $('#mascota').prop('disabled', false).val(null).trigger('change');
-      $('#mascota').select2('destroy').select2({
+      
+      // Habilitar y reinicializar el campo mascota
+      $('#mascota').prop('disabled', false);
+      
+      // Destruir select2 anterior si existe
+      if ($('#mascota').hasClass('select2-hidden-accessible')) {
+        $('#mascota').select2('destroy');
+      }
+      
+      // Crear nuevo select2 con las mascotas del propietario
+      $('#mascota').val(null).select2({
         ajax: {
           url: MONITOR_URL + 'getMascotasPorPropietario',
           dataType: 'json',
           delay: 250,
-          data: params => ({ usuario_id, q: params.term }),
-          processResults: data => data
+          data: function(params) {
+            return {
+              usuario_id: usuario_id,
+              q: params.term || ''
+            };
+          },
+          processResults: function(data) {
+            console.log('Mascotas recibidas:', data);
+            return data;
+          }
         },
         placeholder: 'Selecciona mascota...',
         allowClear: true,
@@ -78,8 +97,9 @@ $(function() {
       cargarRegistros(1, true); // true = mostrar todos según permisos
     });
 
-    // Cargar tabla al cambiar filtros
-    $('#propietario, #mascota, #mac').off('change.reportes').on('change.reportes', function() {
+    // Cargar tabla al cambiar filtros (después de configurar cada campo)
+    $(document).off('change.reportes', '#propietario, #mascota, #mac').on('change.reportes', '#propietario, #mascota, #mac', function() {
+      console.log('Cambio detectado en filtro:', $(this).attr('id'), 'valor:', $(this).val());
       cargarRegistros();
     });
 

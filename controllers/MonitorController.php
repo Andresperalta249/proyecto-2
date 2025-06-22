@@ -224,7 +224,8 @@ class MonitorController extends Controller {
         header('Content-Type: application/json');
         try {
             $q = $_GET['q'] ?? '';
-            $userModel = $this->loadModel('UsuarioModel');
+            require_once 'models/UsuarioModel.php';
+            $userModel = new UsuarioModel();
             
             // Filtrar propietarios según permisos
             if (verificarPermiso('ver_todas_mascotas')) {

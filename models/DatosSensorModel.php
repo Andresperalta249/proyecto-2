@@ -86,4 +86,162 @@ class DatosSensorModel {
             return [];
         }
     }
+
+    public function getUltimaUbicacion($dispositivoId) {
+        try {
+            $query = "SELECT latitud, longitud, fecha 
+                     FROM {$this->table} 
+                     WHERE dispositivo_id = :dispositivo_id 
+                     AND latitud IS NOT NULL 
+                     AND longitud IS NOT NULL 
+                     ORDER BY fecha DESC 
+                     LIMIT 1";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':dispositivo_id', $dispositivoId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DatosSensorModel::getUltimaUbicacion: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function buscarRegistrosAvanzado($usuario_id = null, $mascota_id = null, $mac = null, $page = 1, $perPage = 20, $fecha_inicio = null, $fecha_fin = null) {
+        try {
+            $conditions = [];
+            $params = [];
+            
+            // Construir WHERE clause
+            if ($usuario_id) {
+                $conditions[] = "m.usuario_id = :usuario_id";
+                $params[':usuario_id'] = $usuario_id;
+            }
+            
+            if ($mascota_id) {
+                $conditions[] = "m.id_mascota = :mascota_id";
+                $params[':mascota_id'] = $mascota_id;
+            }
+            
+            if ($mac) {
+                $conditions[] = "d.mac LIKE :mac";
+                $params[':mac'] = "%{$mac}%";
+            }
+            
+            if ($fecha_inicio) {
+                $conditions[] = "ds.fecha >= :fecha_inicio";
+                $params[':fecha_inicio'] = $fecha_inicio . ' 00:00:00';
+            }
+            
+            if ($fecha_fin) {
+                $conditions[] = "ds.fecha <= :fecha_fin";
+                $params[':fecha_fin'] = $fecha_fin . ' 23:59:59';
+            }
+            
+            $whereClause = '';
+            if (!empty($conditions)) {
+                $whereClause = 'WHERE ' . implode(' AND ', $conditions);
+            }
+            
+            // Consulta para contar total de registros
+            $countQuery = "SELECT COUNT(*) as total 
+                          FROM {$this->table} ds
+                          LEFT JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo  
+                          LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
+                          LEFT JOIN usuarios u ON m.usuario_id = u.id_usuario
+                          {$whereClause}";
+            
+            $stmt = $this->db->prepare($countQuery);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Consulta principal con paginación
+            $offset = ($page - 1) * $perPage;
+            $dataQuery = "SELECT 
+                            ds.fecha as fecha_hora,
+                            ds.temperatura,
+                            ds.ritmo_cardiaco,
+                            ds.bateria,
+                            ds.latitud,
+                            ds.longitud,
+                            CONCAT(ds.latitud, ', ', ds.longitud) as ubicacion,
+                            m.nombre as mascota_nombre,
+                            u.nombre as dueno_nombre,
+                            d.mac,
+                            d.nombre as dispositivo_nombre
+                          FROM {$this->table} ds
+                          LEFT JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo  
+                          LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
+                          LEFT JOIN usuarios u ON m.usuario_id = u.id_usuario
+                          {$whereClause}
+                          ORDER BY ds.fecha DESC
+                          LIMIT :offset, :perPage";
+            
+            $stmt = $this->db->prepare($dataQuery);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'data' => $data,
+                'total' => $total,
+                'page' => $page,
+                'perPage' => $perPage,
+                'totalPages' => ceil($total / $perPage)
+            ];
+            
+        } catch (PDOException $e) {
+            error_log("Error en DatosSensorModel::buscarRegistrosAvanzado: " . $e->getMessage());
+            return [
+                'data' => [],
+                'total' => 0,
+                'page' => 1,
+                'perPage' => $perPage,
+                'totalPages' => 0
+            ];
+        }
+    }
+
+    public function obtenerUltimasUbicacionesMascotas() {
+        try {
+            $query = "SELECT DISTINCT
+                        m.nombre as mascota_nombre,
+                        u.nombre as dueno_nombre,
+                        d.mac,
+                        ds.latitud as latitude,
+                        ds.longitud as longitude,
+                        ds.fecha
+                      FROM {$this->table} ds
+                      INNER JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo
+                      INNER JOIN mascotas m ON d.mascota_id = m.id_mascota
+                      INNER JOIN usuarios u ON m.usuario_id = u.id_usuario
+                      WHERE ds.latitud IS NOT NULL 
+                      AND ds.longitud IS NOT NULL
+                      AND ds.fecha = (
+                          SELECT MAX(ds2.fecha) 
+                          FROM {$this->table} ds2 
+                          WHERE ds2.dispositivo_id = ds.dispositivo_id 
+                          AND ds2.latitud IS NOT NULL 
+                          AND ds2.longitud IS NOT NULL
+                      )
+                      ORDER BY ds.fecha DESC";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DatosSensorModel::obtenerUltimasUbicacionesMascotas: " . $e->getMessage());
+            return [];
+        }
+    }
 } 
