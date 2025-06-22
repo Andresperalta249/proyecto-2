@@ -100,8 +100,6 @@ class MonitorController extends Controller {
         }
     }
 
-
-
     /**
      * Obtiene la última ubicación de un dispositivo
      */
@@ -134,15 +132,15 @@ class MonitorController extends Controller {
             $datosSensor = new DatosSensorModel();
             $ultimaUbicacion = $datosSensor->getUltimaUbicacion($id);
 
-            if (!$ultimaUbicacion || !isset($ultimaUbicacion['latitud']) || !isset($ultimaUbicacion['longitud'])) {
+            if (!$ultimaUbicacion || !isset($ultimaUbicacion['latitude']) || !isset($ultimaUbicacion['longitude'])) {
                 http_response_code(404);
                 echo json_encode(['error' => 'No se encontró ubicación para el dispositivo', 'latitud' => null, 'longitud' => null, 'fecha' => null]);
                 return;
             }
 
             echo json_encode([
-                'latitud' => (float)$ultimaUbicacion['latitud'],
-                'longitud' => (float)$ultimaUbicacion['longitud'],
+                'latitud' => (float)$ultimaUbicacion['latitude'],
+                'longitud' => (float)$ultimaUbicacion['longitude'],
                 'fecha' => $ultimaUbicacion['fecha']
             ]);
         } catch (Exception $e) {

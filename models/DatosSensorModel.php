@@ -48,17 +48,17 @@ class DatosSensorModel {
     public function insertarDato($datos) {
         try {
             $query = "INSERT INTO {$this->table} 
-                     (dispositivo_id, temperatura, ritmo_cardiaco, bateria, latitud, longitud, fecha) 
+                     (dispositivo_id, temperatura, bpm, bateria, latitude, longitude, fecha) 
                      VALUES 
-                     (:dispositivo_id, :temperatura, :ritmo_cardiaco, :bateria, :latitud, :longitud, NOW())";
+                     (:dispositivo_id, :temperatura, :bpm, :bateria, :latitude, :longitude, NOW())";
             
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':dispositivo_id', $datos['dispositivo_id'], PDO::PARAM_INT);
             $stmt->bindParam(':temperatura', $datos['temperatura'], PDO::PARAM_STR);
-            $stmt->bindParam(':ritmo_cardiaco', $datos['ritmo_cardiaco'], PDO::PARAM_INT);
+            $stmt->bindParam(':bpm', $datos['bpm'], PDO::PARAM_INT);
             $stmt->bindParam(':bateria', $datos['bateria'], PDO::PARAM_INT);
-            $stmt->bindParam(':latitud', $datos['latitud'], PDO::PARAM_STR);
-            $stmt->bindParam(':longitud', $datos['longitud'], PDO::PARAM_STR);
+            $stmt->bindParam(':latitude', $datos['latitude'], PDO::PARAM_STR);
+            $stmt->bindParam(':longitude', $datos['longitude'], PDO::PARAM_STR);
             
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -69,7 +69,7 @@ class DatosSensorModel {
 
     public function getDatosParaGrafica($dispositivoId, $horas = 24) {
         try {
-            $query = "SELECT temperatura, ritmo_cardiaco, bateria, fecha 
+            $query = "SELECT temperatura, bpm, bateria, fecha 
                      FROM {$this->table} 
                      WHERE dispositivo_id = :dispositivo_id 
                      AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR) 
@@ -89,11 +89,11 @@ class DatosSensorModel {
 
     public function getUltimaUbicacion($dispositivoId) {
         try {
-            $query = "SELECT latitud, longitud, fecha 
+            $query = "SELECT latitude, longitude, fecha 
                      FROM {$this->table} 
                      WHERE dispositivo_id = :dispositivo_id 
-                     AND latitud IS NOT NULL 
-                     AND longitud IS NOT NULL 
+                     AND latitude IS NOT NULL 
+                     AND longitude IS NOT NULL 
                      ORDER BY fecha DESC 
                      LIMIT 1";
             
@@ -164,11 +164,11 @@ class DatosSensorModel {
             $dataQuery = "SELECT 
                             ds.fecha as fecha_hora,
                             ds.temperatura,
-                            ds.ritmo_cardiaco,
+                            ds.bpm as ritmo_cardiaco,
                             ds.bateria,
-                            ds.latitud,
-                            ds.longitud,
-                            CONCAT(ds.latitud, ', ', ds.longitud) as ubicacion,
+                            ds.latitude as latitud,
+                            ds.longitude as longitud,
+                            CONCAT(ds.latitude, ', ', ds.longitude) as ubicacion,
                             m.nombre as mascota_nombre,
                             u.nombre as dueno_nombre,
                             d.mac,
@@ -217,21 +217,21 @@ class DatosSensorModel {
                         m.nombre as mascota_nombre,
                         u.nombre as dueno_nombre,
                         d.mac,
-                        ds.latitud as latitude,
-                        ds.longitud as longitude,
+                        ds.latitude,
+                        ds.longitude,
                         ds.fecha
                       FROM {$this->table} ds
                       INNER JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo
                       INNER JOIN mascotas m ON d.mascota_id = m.id_mascota
                       INNER JOIN usuarios u ON m.usuario_id = u.id_usuario
-                      WHERE ds.latitud IS NOT NULL 
-                      AND ds.longitud IS NOT NULL
+                      WHERE ds.latitude IS NOT NULL 
+                      AND ds.longitude IS NOT NULL
                       AND ds.fecha = (
                           SELECT MAX(ds2.fecha) 
                           FROM {$this->table} ds2 
                           WHERE ds2.dispositivo_id = ds.dispositivo_id 
-                          AND ds2.latitud IS NOT NULL 
-                          AND ds2.longitud IS NOT NULL
+                          AND ds2.latitude IS NOT NULL 
+                          AND ds2.longitude IS NOT NULL
                       )
                       ORDER BY ds.fecha DESC";
             
