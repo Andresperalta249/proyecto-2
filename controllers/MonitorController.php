@@ -306,19 +306,38 @@ class MonitorController extends Controller {
             $fecha_inicio = $_GET['fecha_inicio'] ?? null;
             $fecha_fin = $_GET['fecha_fin'] ?? null;
             
-            // Si se solicita mostrar todos, aplicar filtro según permisos
-            if ($mostrarTodos) {
+            // SIEMPRE aplicar filtros de permisos apropiados
+            if ($mostrarTodos || (!$usuario_id && !$mascota_id && !$mac)) {
+                // Si se solicita mostrar todos O si no hay filtros específicos, aplicar permisos
                 if (verificarPermiso('ver_todas_mascotas')) {
-                    // Puede ver todas las mascotas del sistema
-                    $usuario_id = null;
-                    $mascota_id = null;
+                    // Puede ver todas las mascotas del sistema - no filtrar por usuario
+                    // Mantener usuario_id, mascota_id y mac tal como vienen
                 } else if (verificarPermiso('ver_mascotas')) {
-                    // Solo puede ver sus propias mascotas
-                    $usuario_id = $_SESSION['user_id'];
-                    $mascota_id = null;
+                    // Solo puede ver sus propias mascotas - filtrar por usuario actual
+                    if (!$usuario_id) {
+                        $usuario_id = $_SESSION['user_id'];
+                    } else if ($usuario_id != $_SESSION['user_id']) {
+                        // Intenta ver datos de otro usuario sin permiso
+                        echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
+                        exit;
+                    }
                 } else {
+                    // No tiene permisos para ver datos
                     echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
                     exit;
+                }
+            } else {
+                // Hay filtros específicos - verificar permisos
+                if (!verificarPermiso('ver_todas_mascotas')) {
+                    if ($usuario_id && $usuario_id != $_SESSION['user_id']) {
+                        // Intenta filtrar por otro usuario sin permiso
+                        echo json_encode(['data' => [], 'total' => 0, 'page' => 1, 'totalPages' => 0]);
+                        exit;
+                    }
+                    // Si no especifica usuario, usar el actual
+                    if (!$usuario_id) {
+                        $usuario_id = $_SESSION['user_id'];
+                    }
                 }
             }
             
