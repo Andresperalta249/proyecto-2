@@ -1,4 +1,28 @@
 <?php
+/**
+ * Modelo Rol
+ * ----------
+ * Modelo para acceder y manipular la tabla de roles en la base de datos.
+ *
+ * Hereda de: Model (core/Model.php)
+ *
+ * Atributos:
+ *   - table: Nombre de la tabla ('roles')
+ *
+ * Métodos principales:
+ *   - obtenerTodos(): Obtiene todos los roles.
+ *   - obtenerPorId($id): Obtiene un rol por su ID.
+ *   - guardar($datos): Guarda o actualiza un rol.
+ *   - eliminar($id): Elimina un rol.
+ *
+ * Relación:
+ *   - Hereda de Model, por lo que puede usar todos los métodos genéricos de acceso a datos.
+ *   - Relación con Usuario (asignación de roles) y permisos.
+ *
+ * Ejemplo de uso:
+ *   $roles = $rolModel->obtenerTodos();
+ *   $rol = $rolModel->obtenerPorId($id);
+ */
 require_once __DIR__ . '/../core/Model.php';
 
 class Rol extends Model {
@@ -9,23 +33,15 @@ class Rol extends Model {
     }
 
     public function getAll() {
-        error_log("[DEBUG Rol::getAll] Obteniendo todos los roles");
-        error_log("[DEBUG Rol::getAll] Tabla: {$this->table}");
-        
         $sql = "SELECT r.*, (SELECT COUNT(*) FROM usuarios u WHERE u.rol_id = r.id_rol) as usuarios_count 
                 FROM {$this->table} r ORDER BY r.id_rol ASC";
         
-        error_log("[DEBUG Rol::getAll] SQL: $sql");
-        
         try {
             $result = $this->query($sql);
-            error_log("[DEBUG Rol::getAll] Roles obtenidos: " . count($result));
             if (!empty($result)) {
-                error_log("[DEBUG Rol::getAll] Primer rol: " . print_r($result[0], true));
             }
             return $result;
         } catch (Exception $e) {
-            error_log("[ERROR Rol::getAll] Error al obtener roles: " . $e->getMessage());
             return [];
         }
     }
@@ -44,8 +60,13 @@ class Rol extends Model {
     }
     
     public function getPermisos() {
-        $sql = "SELECT * FROM permisos ORDER BY nombre";
-        return $this->query($sql, []);
+        try {
+            $sql = "SELECT * FROM permisos ORDER BY nombre";
+            return $this->query($sql, []);
+        } catch (Exception $e) {
+            error_log('Error en getPermisos: ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function getPaginated($start, $length, $searchValue, $orderColumn, $orderDir)
@@ -99,42 +120,15 @@ class Rol extends Model {
      * @return bool True si se creó correctamente
      */
     public function create($data) {
-        try {
-            $this->db->getConnection()->beginTransaction();
-            
-            // Validar nombre único
-            if ($this->nombreExiste($data['nombre'])) {
-                throw new Exception('Ya existe un rol con ese nombre');
+        $sql = "INSERT INTO roles (nombre, descripcion, estado) VALUES (?, ?, 'activo')";
+        $this->query($sql, [$data['nombre'], $data['descripcion']]);
+        $idRol = $this->db->getConnection()->lastInsertId();
+        if (!empty($data['permisos'])) {
+            foreach ($data['permisos'] as $idPermiso) {
+                $this->query("INSERT INTO rol_permiso (id_rol, id_permiso) VALUES (?, ?)", [$idRol, $idPermiso]);
             }
-            
-            // Insertar rol
-            $sql = "INSERT INTO roles (nombre, descripcion, estado) VALUES (?, ?, ?)";
-            $stmt = $this->db->getConnection()->prepare($sql);
-            $stmt->execute([
-                $data['nombre'],
-                $data['descripcion'],
-                $data['estado'] ?? 'activo'
-            ]);
-            
-            $id_rol = $this->db->getConnection()->lastInsertId();
-            
-            // Asignar permisos
-            if (!empty($data['permisos'])) {
-                $sql = "INSERT INTO roles_permisos (rol_id, permiso_id) VALUES (?, ?)";
-                $stmt = $this->db->getConnection()->prepare($sql);
-                
-                foreach ($data['permisos'] as $id_permiso) {
-                    $stmt->execute([$id_rol, $id_permiso]);
-                }
-            }
-            
-            $this->db->getConnection()->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->getConnection()->rollBack();
-            error_log("Error en create: " . $e->getMessage());
-            return false;
         }
+        return $idRol;
     }
     
     /**
@@ -179,7 +173,6 @@ class Rol extends Model {
             return true;
         } catch (Exception $e) {
             $this->db->getConnection()->rollBack();
-            error_log("Error en update: " . $e->getMessage());
             return false;
         }
     }
@@ -220,7 +213,6 @@ class Rol extends Model {
             return true;
         } catch (Exception $e) {
             $this->db->getConnection()->rollBack();
-            error_log("Error en delete: " . $e->getMessage());
             return false;
         }
     }
@@ -246,7 +238,6 @@ class Rol extends Model {
             
             return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            error_log("Error en nombreExiste: " . $e->getMessage());
             return false;
         }
     }
@@ -264,7 +255,6 @@ class Rol extends Model {
             
             return $stmt->fetchColumn();
         } catch (Exception $e) {
-            error_log("Error en countUsuariosAsociados: " . $e->getMessage());
             throw new Exception('Error al contar usuarios asociados');
         }
     }
@@ -292,8 +282,13 @@ class Rol extends Model {
             $stmt = $this->db->getConnection()->prepare($sql);
             return $stmt->execute([':estado' => $estado, ':id_rol' => $id_rol]);
         } catch (Exception $e) {
-            error_log("Error al cambiar estado del rol: " . $e->getMessage());
             return false;
         }
+    }
+
+    public function getRolByNombre($nombre) {
+        $sql = "SELECT * FROM roles WHERE nombre = ? LIMIT 1";
+        $result = $this->query($sql, [$nombre]);
+        return $result ? $result[0] : null;
     }
 } 

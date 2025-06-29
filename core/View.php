@@ -2,7 +2,7 @@
 class View {
     private $title;
     private $data = [];
-    private $layout = 'default';
+    private $layout = 'main';
 
     public function setTitle($title) {
         $this->title = $title;
@@ -10,6 +10,15 @@ class View {
 
     public function setData($key, $value) {
         $this->data[$key] = $value;
+    }
+
+    /**
+     * Alias para setData para compatibilidad
+     * @param string $key
+     * @param mixed $value
+     */
+    public function set($key, $value) {
+        $this->setData($key, $value);
     }
 
     public function setLayout($layout) {

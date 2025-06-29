@@ -1,3 +1,20 @@
+<?php
+/**
+ * Vista: dashboard/index.php
+ * --------------------------
+ * Panel principal del dashboard con estadísticas y resumen del sistema.
+ *
+ * Variables recibidas:
+ *   - $estadisticas: Estadísticas generales del sistema.
+ *   - $dispositivos: Lista de dispositivos recientes.
+ *   - $mascotas: Lista de mascotas recientes.
+ *   - $usuarios: Lista de usuarios recientes.
+ *
+ * Uso:
+ *   Esta vista es llamada desde DashboardController para mostrar el panel principal.
+ *   Muestra un resumen de la actividad del sistema y acceso rápido a funciones.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

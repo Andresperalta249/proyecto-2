@@ -234,7 +234,8 @@ class AuthController extends Controller {
             }
         } catch (Exception $e) {
             $errorMsg = "Error al registrar usuario: " . $e->getMessage();
-            $this->view('auth/register', ['error' => $errorMsg]);
+            $this->view->set('error', $errorMsg);
+            $this->view->render('auth/register');
         }
     }
 
@@ -250,8 +251,10 @@ class AuthController extends Controller {
             }
             // Generar token y guardar
             $token = bin2hex(random_bytes(32));
+            date_default_timezone_set('America/Mexico_City'); // Ajusta a tu zona horaria real
+            $createdAt = date('Y-m-d H:i:s');
             $expiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
-            $this->usuarioModel->createPasswordReset($user['id_usuario'], $token, $expiresAt);
+            $this->usuarioModel->createPasswordReset($user['id_usuario'], $token, $expiresAt, $createdAt);
             // Enviar correo
             $resetUrl = APP_URL . "/auth/reset-password/" . $token;
             $subject = "Recupera tu contraseña - PetMonitoring IoT";
@@ -259,11 +262,10 @@ class AuthController extends Controller {
                 . "<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>"
                 . "<p><a href='$resetUrl'>$resetUrl</a></p>"
                 . "<p>Si no solicitaste este cambio, ignora este correo.</p>";
-            // Usa tu función real de envío de correo aquí:
+            $ok = false;
             if (function_exists('enviarCorreo')) {
                 $ok = enviarCorreo($user['email'], $subject, $body);
             } else {
-                // Simulación: guardar el enlace en el log
                 $logMsg = '['.date('Y-m-d H:i:s')."] Enlace de recuperación generado para {$user['email']}: $resetUrl\n";
                 file_put_contents(dirname(__DIR__) . '/logs/error.log', $logMsg, FILE_APPEND);
                 $ok = true;
@@ -290,7 +292,7 @@ class AuthController extends Controller {
 
         if (!$reset) {
             $this->view->set('error', 'Token inválido o expirado');
-            $this->render('auth/reset-password');
+            $this->view->render('auth/reset-password');
             return;
         }
 
@@ -300,7 +302,7 @@ class AuthController extends Controller {
 
             if ($password !== $confirmPassword) {
                 $this->view->set('error', 'Las contraseñas no coinciden');
-                $this->render('auth/new-password');
+                $this->view->render('auth/new-password');
                 return;
             }
 
@@ -311,13 +313,13 @@ class AuthController extends Controller {
             if ($this->usuarioModel->update($reset['user_id'], $data)) {
                 $this->usuarioModel->deletePasswordReset($token);
                 $this->view->set('success', 'Contraseña actualizada exitosamente');
-                $this->render('auth/login');
+                $this->view->render('auth/login');
             } else {
                 $this->view->set('error', 'Error al actualizar la contraseña');
-                $this->render('auth/new-password');
+                $this->view->render('auth/new-password');
             }
         } else {
-            $this->render('auth/new-password');
+            $this->view->render('auth/new-password');
         }
     }
 

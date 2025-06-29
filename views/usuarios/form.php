@@ -1,4 +1,17 @@
 <?php
+/**
+ * Vista: usuarios/form.php
+ * ------------------------
+ * Formulario para crear o editar un usuario.
+ *
+ * Variables recibidas:
+ *   - $usuario: Datos del usuario (si se está editando).
+ *   - $roles: Lista de roles disponibles.
+ *   - $permisos: Lista de permisos disponibles.
+ *
+ * Uso:
+ *   Esta vista es llamada desde UsuariosController para mostrar el formulario de alta/edición de usuarios.
+ */
 $esEditar = isset($usuario) && !empty($usuario);
 $url_action = BASE_URL . 'usuarios/guardar';
 ?>

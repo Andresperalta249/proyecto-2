@@ -1,3 +1,25 @@
+/**
+ * Utilidades para Tablas
+ * =====================
+ * 
+ * Archivo: assets/js/tables.js
+ * 
+ * Propósito:
+ *   - Funcionalidades comunes para todas las tablas del sistema.
+ *   - Configuración de DataTables.
+ *   - Funciones de utilidad para tablas.
+ * 
+ * Funciones principales:
+ *   - inicializarTabla(): Inicializa una tabla con DataTables.
+ *   - configurarDataTable(): Configura opciones de DataTables.
+ *   - formatearDatos(): Formatea datos para mostrar en tablas.
+ *   - exportarTabla(): Exporta datos de tabla a diferentes formatos.
+ * 
+ * Uso:
+ *   Este archivo proporciona funcionalidades comunes para todas las
+ *   tablas del sistema, especialmente las que usan DataTables.
+ */
+
 /// Configuración global de DataTables
 $(document).ready(function() {
     // Verificar si DataTables está disponible

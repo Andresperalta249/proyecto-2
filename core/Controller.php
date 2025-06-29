@@ -80,5 +80,33 @@ class Controller {
         echo json_encode($data);
         exit;
     }
+
+    /**
+     * Valida y sanitiza los datos de la petición
+     * @param array $requiredFields Campos requeridos
+     * @return array|false Datos validados o false si hay error
+     */
+    protected function validateRequest($requiredFields = []) {
+        $data = [];
+        $errors = [];
+
+        foreach ($requiredFields as $field) {
+            if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                $errors[] = "El campo {$field} es requerido";
+            } else {
+                $data[$field] = $this->sanitizeInput($_POST[$field]);
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->jsonResponse([
+                'success' => false,
+                'error' => implode(', ', $errors)
+            ], 400);
+            return false;
+        }
+
+        return $data;
+    }
 }
 ?> 

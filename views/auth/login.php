@@ -1,3 +1,18 @@
+<?php
+/**
+ * Vista: auth/login.php
+ * ---------------------
+ * Formulario de inicio de sesión para usuarios del sistema.
+ *
+ * Variables recibidas:
+ *   - $error: Mensaje de error (si existe).
+ *   - $success: Mensaje de éxito (si existe).
+ *
+ * Uso:
+ *   Esta vista es llamada desde AuthController para mostrar el formulario de login.
+ *   Los usuarios ingresan su email y contraseña para acceder al sistema.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

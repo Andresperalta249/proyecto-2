@@ -1,5 +1,26 @@
 <?php
-
+/**
+ * Clase base Model
+ * ----------------
+ * Esta clase es la base para todos los modelos del sistema. Permite realizar operaciones CRUD (crear, leer, actualizar, eliminar) sobre la base de datos de forma genérica.
+ *
+ * Atributos:
+ *   - db: Conexión a la base de datos (PDO)
+ *   - table: Nombre de la tabla asociada al modelo
+ *   - lastError: Último error ocurrido (string)
+ *   - primaryKey: Clave primaria de la tabla (por defecto 'id')
+ *
+ * Métodos principales:
+ *   - query($sql, $params): Ejecuta una consulta SQL y devuelve los resultados
+ *   - find($id, $idField): Busca un registro por su ID
+ *   - create($data): Inserta un nuevo registro
+ *   - update($id, $data, $idField): Actualiza un registro existente
+ *   - delete($id, $idField): Elimina un registro
+ *   - getLastError(): Devuelve el último error
+ *
+ * Relación:
+ *   - Es heredada por todos los modelos de entidades (UsuarioModel, Mascota, DispositivoModel, etc.)
+ */
 class Model {
     protected $db;
     protected $table;
@@ -10,49 +31,29 @@ class Model {
         try {
             $this->db = Database::getInstance();
         } catch (Exception $e) {
-            error_log("Error al inicializar Model: " . $e->getMessage());
             throw $e;
         }
     }
 
     protected function query($sql, $params = []) {
-        error_log("[DEBUG Model::query] Ejecutando consulta SQL");
-        error_log("[DEBUG Model::query] SQL: " . $sql);
-        error_log("[DEBUG Model::query] Params: " . print_r($params, true));
-        
         try {
             $connection = $this->db->getConnection();
-            error_log("[DEBUG Model::query] Conexión obtenida: " . ($connection ? 'SÍ' : 'NO'));
-            
             $stmt = $connection->prepare($sql);
-            error_log("[DEBUG Model::query] Statement preparado: " . ($stmt ? 'SÍ' : 'NO'));
-            
             if (!$stmt) {
                 $errorInfo = $connection->errorInfo();
-                error_log("[ERROR Model::query] Error al preparar statement: " . print_r($errorInfo, true));
                 throw new PDOException("Error al preparar statement: " . $errorInfo[2]);
             }
-            
             $executeResult = $stmt->execute($params);
-            error_log("[DEBUG Model::query] Execute result: " . ($executeResult ? 'SÍ' : 'NO'));
-            
             if (!$executeResult) {
                 $errorInfo = $stmt->errorInfo();
-                error_log("[ERROR Model::query] Error al ejecutar statement: " . print_r($errorInfo, true));
                 throw new PDOException("Error al ejecutar statement: " . $errorInfo[2]);
             }
-            
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            error_log("[DEBUG Model::query] Registros obtenidos: " . count($result));
-            
             return $result;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
-            error_log("[ERROR Model::query] Error en la consulta SQL: " . $e->getMessage());
-            error_log("[ERROR Model::query] SQL: " . $sql);
-            error_log("[ERROR Model::query] Params: " . print_r($params, true));
-            error_log("[ERROR Model::query] Stack trace: " . $e->getTraceAsString());
-            throw $e;
+            error_log('Error en Model::query: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -60,23 +61,10 @@ class Model {
         $idField = $idField ?? $this->primaryKey;
         $sql = "SELECT * FROM {$this->table} WHERE `$idField` = :idValue";
         $params = [":idValue" => $id];
-        
-        error_log("[DEBUG Model::find] Ejecutando consulta");
-        error_log("[DEBUG Model::find] Tabla: {$this->table}");
-        error_log("[DEBUG Model::find] ID Field: $idField");
-        error_log("[DEBUG Model::find] SQL: $sql");
-        error_log("[DEBUG Model::find] Params: " . print_r($params, true));
-        
         try {
             $result = $this->query($sql, $params);
-            error_log("[DEBUG Model::find] Resultado de query: " . (is_array($result) ? count($result) . ' registros' : 'null/false'));
-            if ($result && count($result) > 0) {
-                error_log("[DEBUG Model::find] Primer registro: " . print_r($result[0], true));
-            }
             return $result ? $result[0] : null;
         } catch (Exception $e) {
-            error_log("[ERROR Model::find] Error en find: " . $e->getMessage());
-            error_log("[ERROR Model::find] Stack trace: " . $e->getTraceAsString());
             return null;
         }
     }
@@ -85,31 +73,20 @@ class Model {
         try {
             $columns = implode(', ', array_keys($data));
             $placeholders = ':' . implode(', :', array_keys($data));
-            
             $sql = "INSERT INTO {$this->table} ($columns) VALUES ($placeholders)";
-            
-            error_log("SQL de inserción: " . $sql);
-            error_log("Datos a insertar: " . print_r($data, true));
-            
             $stmt = $this->db->getConnection()->prepare($sql);
             if (!$stmt) {
                 $error = $this->db->getConnection()->errorInfo();
-                error_log("Error al preparar la consulta: " . print_r($error, true));
                 throw new PDOException("Error al preparar la consulta: " . $error[2]);
             }
-            
             $result = $stmt->execute($data);
             if (!$result) {
                 $error = $stmt->errorInfo();
-                error_log("Error al ejecutar la consulta: " . print_r($error, true));
                 throw new PDOException("Error al ejecutar la consulta: " . $error[2]);
             }
-            
             return $this->db->getConnection()->lastInsertId();
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
-            error_log("Error al crear registro: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
     }
@@ -120,20 +97,14 @@ class Model {
             $setClauses[] = "`$key` = :$key";
         }
         $idField = $idField ?? $this->primaryKey;
-        
         $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE `$idField` = :idValue";
-        
-        // Usar un array de parámetros separado para evitar modificar el original
         $params = $data;
         $params['idValue'] = $id;
-
         try {
             $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute($params);
-            // Devolver true solo si se afectó al menos una fila
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
-            error_log("Error al actualizar registro: " . $e->getMessage());
             throw $e;
         }
     }
@@ -145,7 +116,6 @@ class Model {
             $stmt = $this->db->getConnection()->prepare($sql);
             return $stmt->execute([":idValue" => $id]);
         } catch (PDOException $e) {
-            error_log("Error al eliminar registro: " . $e->getMessage());
             throw $e;
         }
     }

@@ -1,3 +1,17 @@
+<?php
+/**
+ * Vista: errors/403.php
+ * ---------------------
+ * Página de error 403 - Acceso prohibido.
+ *
+ * Variables recibidas:
+ *   - $mensaje: Mensaje de error personalizado (opcional).
+ *
+ * Uso:
+ *   Esta vista se muestra cuando un usuario intenta acceder a una página sin permisos.
+ *   Es llamada automáticamente por el sistema cuando se detecta un error 403.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

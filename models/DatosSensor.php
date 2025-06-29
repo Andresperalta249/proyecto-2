@@ -1,4 +1,31 @@
 <?php
+/**
+ * Modelo DatosSensor
+ * ------------------
+ * Modelo para acceder y manipular la tabla de datos de sensores en la base de datos.
+ *
+ * Hereda de: Model (core/Model.php)
+ *
+ * Atributos:
+ *   - table: Nombre de la tabla ('datos_sensores')
+ *
+ * Métodos principales:
+ *   - getUltimosDatos($dispositivoId, $horas): Obtiene los datos recientes de un dispositivo.
+ *   - getRuta($dispositivoId, $horas): Obtiene la ruta (coordenadas) de un dispositivo.
+ *   - getDatosGrafica($dispositivoId, $tipo, $horas): Datos para gráficas.
+ *   - getEstadisticas($dispositivoId, $tipo, $horas): Estadísticas de un tipo de dato.
+ *   - getUltimaUbicacion($dispositivoId): Última ubicación registrada.
+ *   - getDatosPorDispositivo($dispositivoId, $horas): Datos completos recientes.
+ *   - buscarRegistrosAvanzado(...): Búsqueda avanzada y paginada de registros.
+ *
+ * Relación:
+ *   - Hereda de Model, por lo que puede usar todos los métodos genéricos de acceso a datos.
+ *   - Es usado por MonitorController y otros para mostrar datos en tiempo real y reportes.
+ *
+ * Ejemplo de uso:
+ *   $datos = $datosSensorModel->getUltimosDatos($id, 24);
+ *   $ubicacion = $datosSensorModel->getUltimaUbicacion($id);
+ */
 
 class DatosSensor extends Model {
     protected $table = 'datos_sensores';
@@ -24,7 +51,6 @@ class DatosSensor extends Model {
             ]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getUltimosDatos: " . $e->getMessage());
             return [];
         }
     }
@@ -39,23 +65,17 @@ class DatosSensor extends Model {
                     WHERE dispositivo_id = :dispositivo_id 
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
-            
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
             ]);
-            
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
             if (!$result) {
-                error_log("No se encontró ruta para el dispositivo ID: " . $dispositivoId);
                 return [];
             }
-            
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getRuta: " . $e->getMessage());
             return [];
         }
     }
@@ -67,32 +87,24 @@ class DatosSensor extends Model {
         try {
             $campo = $this->getCampoPorTipo($tipo);
             if (!$campo) {
-                error_log("Tipo de dato no válido: " . $tipo);
                 return [];
             }
-
             $sql = "SELECT fecha, {$campo} as valor 
                     FROM {$this->table} 
                     WHERE dispositivo_id = :dispositivo_id 
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
-            
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
             ]);
-            
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
             if (!$result) {
-                error_log("No se encontraron datos para la gráfica del dispositivo ID: " . $dispositivoId);
                 return [];
             }
-            
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getDatosGrafica: " . $e->getMessage());
             return [];
         }
     }
@@ -105,7 +117,6 @@ class DatosSensor extends Model {
         if (!$campo) {
             return null;
         }
-
         $sql = "SELECT 
                     MIN({$campo}) as minimo,
                     MAX({$campo}) as maximo,
@@ -113,7 +124,6 @@ class DatosSensor extends Model {
                 FROM {$this->table} 
                 WHERE dispositivo_id = :dispositivo_id 
                 AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)";
-        
         return $this->query($sql, [
             ':dispositivo_id' => $dispositivoId,
             ':horas' => $horas
@@ -129,7 +139,6 @@ class DatosSensor extends Model {
             'ritmoCardiaco' => 'bpm',
             'bateria' => 'bateria'
         ];
-
         return $campos[$tipo] ?? null;
     }
 
@@ -149,12 +158,10 @@ class DatosSensor extends Model {
             $stmt->execute([':dispositivo_id' => $dispositivoId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$result) {
-                error_log("No se encontró ubicación para el dispositivo ID: " . $dispositivoId);
                 return null;
             }
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getUltimaUbicacion: " . $e->getMessage());
             return null;
         }
     }
@@ -175,18 +182,14 @@ class DatosSensor extends Model {
                     WHERE dispositivo_id = :dispositivo_id
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
-            
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
             ]);
-            
             $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            error_log("Datos obtenidos para dispositivo {$dispositivoId}: " . print_r($datos, true));
             return $datos;
         } catch (Exception $e) {
-            error_log("Error en getDatosPorDispositivo: " . $e->getMessage());
             return [];
         }
     }

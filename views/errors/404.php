@@ -1,3 +1,17 @@
+<?php
+/**
+ * Vista: errors/404.php
+ * ---------------------
+ * Página de error 404 - Página no encontrada.
+ *
+ * Variables recibidas:
+ *   - $mensaje: Mensaje de error personalizado (opcional).
+ *
+ * Uso:
+ *   Esta vista se muestra cuando un usuario intenta acceder a una página que no existe.
+ *   Es llamada automáticamente por el sistema cuando se detecta un error 404.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

@@ -1,3 +1,25 @@
+/**
+ * Gestión de Dispositivos
+ * ======================
+ * 
+ * Archivo: assets/js/dispositivos.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para la gestión de dispositivos IoT.
+ *   - CRUD de dispositivos (crear, leer, actualizar, eliminar).
+ *   - Validación de formularios de dispositivos.
+ * 
+ * Funciones principales:
+ *   - inicializarDispositivos(): Configura la gestión de dispositivos.
+ *   - cargarDispositivos(): Carga la lista de dispositivos.
+ *   - guardarDispositivo(): Guarda un dispositivo nuevo o existente.
+ *   - eliminarDispositivo(): Elimina un dispositivo.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de gestión de dispositivos para
+ *   manejar todas las operaciones relacionadas con dispositivos IoT.
+ */
+
 $(document).ready(function() {
     // Obtener configuración desde el DOM
     const configElement = document.getElementById('dispositivos-config');
@@ -136,6 +158,9 @@ $(document).ready(function() {
             .then(html => {
                 modalContent.innerHTML = html;
                 modal.show();
+                if (window.inicializarFormularioDispositivo) {
+                    window.inicializarFormularioDispositivo();
+                }
             })
             .catch(error => Swal.fire('Error', error.toString(), 'error'));
     }
@@ -169,13 +194,13 @@ $(document).ready(function() {
 
     if (btnNuevoDispositivo) {
         btnNuevoDispositivo.addEventListener('click', () => {
-            loadFormInModal('/proyecto-2/dispositivos/cargarFormulario');
+            loadFormInModal('/proyecto-2/dispositivos/formulario');
         });
     }
 
     $('#tablaDispositivos tbody').on('click', '.btn-editar', function() {
         const id = $(this).data('id');
-        loadFormInModal(`/proyecto-2/dispositivos/cargarFormulario/${id}`);
+        loadFormInModal(`/proyecto-2/dispositivos/formulario/${id}`);
     });
 
     // Eliminar dispositivo

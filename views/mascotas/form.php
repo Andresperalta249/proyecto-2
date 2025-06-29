@@ -1,3 +1,18 @@
+<?php
+/**
+ * Vista: mascotas/form.php
+ * ------------------------
+ * Formulario para crear o editar una mascota.
+ *
+ * Variables recibidas:
+ *   - $mascota: Datos de la mascota (si se está editando).
+ *   - $usuarios: Lista de usuarios para asignar propietario.
+ *   - $permisos: Permisos del usuario actual.
+ *
+ * Uso:
+ *   Esta vista es llamada desde MascotasController para mostrar el formulario de alta/edición.
+ */
+?>
 <form id="formMascota" action="<?= BASE_URL ?>mascotas/guardar" method="post" autocomplete="off" data-puede-asignar-propietario="<?= $puedeAsignarPropietario ? 'true' : 'false' ?>">
     <input type="hidden" name="id_mascota" value="<?= htmlspecialchars($mascota['id_mascota'] ?? '') ?>">
     

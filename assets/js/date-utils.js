@@ -1,3 +1,25 @@
+/**
+ * Utilidades de Fecha y Hora
+ * =========================
+ * 
+ * Archivo: assets/js/date-utils.js
+ * 
+ * Propósito:
+ *   - Funciones para manipulación y formateo de fechas.
+ *   - Conversiones entre diferentes formatos de fecha.
+ *   - Cálculos de tiempo y rangos de fechas.
+ * 
+ * Funciones principales:
+ *   - formatearFecha(): Formatea una fecha en formato legible.
+ *   - formatearHora(): Formatea una hora en formato legible.
+ *   - calcularDiferencia(): Calcula la diferencia entre dos fechas.
+ *   - obtenerFechaActual(): Obtiene la fecha actual formateada.
+ * 
+ * Uso:
+ *   Este archivo proporciona utilidades para el manejo de fechas en toda
+ *   la aplicación. Se usa principalmente en tablas y formularios.
+ */
+
 // Importar date-fns desde CDN
 import { format, parseISO, differenceInMinutes, isAfter, isBefore } from 'https://cdn.jsdelivr.net/npm/date-fns@3.6.0/+esm';
 

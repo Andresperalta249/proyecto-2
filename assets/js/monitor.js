@@ -1,3 +1,25 @@
+/**
+ * Monitor del Sistema
+ * ==================
+ * 
+ * Archivo: assets/js/monitor.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para el monitoreo general del sistema.
+ *   - Visualización de datos en tiempo real.
+ *   - Gestión de gráficas y estadísticas.
+ * 
+ * Funciones principales:
+ *   - inicializarMonitor(): Configura el monitor del sistema.
+ *   - actualizarDatos(): Actualiza los datos del monitor.
+ *   - mostrarEstadisticas(): Muestra estadísticas del sistema.
+ *   - configurarGraficas(): Configura las gráficas del monitor.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de monitoreo para mostrar
+ *   información general del sistema y dispositivos.
+ */
+
 // JS integrado para Monitor IoT con funcionalidad de reportes
 $(function() {
   console.log('Monitor.js cargado correctamente');

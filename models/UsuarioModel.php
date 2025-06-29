@@ -1,7 +1,28 @@
 <?php
 /**
- * Modelo para la gestión de datos de usuarios.
- * Proporciona métodos para interactuar con la tabla `usuarios` en la base de datos.
+ * Modelo UsuarioModel
+ * -------------------
+ * Modelo para acceder y manipular la tabla de usuarios en la base de datos.
+ *
+ * Hereda de: Model (core/Model.php)
+ *
+ * Atributos:
+ *   - table: Nombre de la tabla ('usuarios')
+ *
+ * Métodos principales:
+ *   - obtenerPorId($id): Obtiene un usuario por su ID.
+ *   - obtenerPorEmail($email): Obtiene un usuario por su email.
+ *   - obtenerTodos(): Obtiene todos los usuarios.
+ *   - guardar($datos): Guarda o actualiza un usuario.
+ *   - eliminar($id): Elimina un usuario.
+ *
+ * Relación:
+ *   - Hereda de Model, por lo que puede usar todos los métodos genéricos de acceso a datos.
+ *   - Relación con Rol (asignación de roles) y Mascota (propietario de mascotas).
+ *
+ * Ejemplo de uso:
+ *   $usuario = $usuarioModel->obtenerPorId($id);
+ *   $usuarios = $usuarioModel->obtenerTodos();
  */
 class UsuarioModel extends Model {
     protected $table = 'usuarios';
@@ -10,28 +31,19 @@ class UsuarioModel extends Model {
     public function __construct() {
         parent::__construct();
         
-        // Logs de depuración para verificar la configuración del modelo
-        error_log("[DEBUG UsuarioModel::__construct] Inicializando UsuarioModel");
-        error_log("[DEBUG UsuarioModel::__construct] Tabla: {$this->table}");
-        error_log("[DEBUG UsuarioModel::__construct] Primary Key: {$this->primaryKey}");
-        
         // Verificar si la tabla existe y tiene datos
         try {
             $sql = "SELECT COUNT(*) as count FROM {$this->table}";
             $result = $this->query($sql);
             $count = $result[0]['count'] ?? 0;
-            error_log("[DEBUG UsuarioModel::__construct] Registros en tabla usuarios: $count");
         } catch (Exception $e) {
-            error_log("[ERROR UsuarioModel::__construct] Error al contar usuarios: " . $e->getMessage());
         }
         
         // Verificar estructura de la tabla
         try {
             $sql = "DESCRIBE {$this->table}";
             $structure = $this->query($sql);
-            error_log("[DEBUG UsuarioModel::__construct] Estructura de tabla usuarios: " . print_r($structure, true));
         } catch (Exception $e) {
-            error_log("[ERROR UsuarioModel::__construct] Error al obtener estructura: " . $e->getMessage());
         }
     }
 
@@ -61,7 +73,6 @@ class UsuarioModel extends Model {
             $result = $this->query($sql, [':email' => $email]);
             return $result ? $result[0] : null;
         } catch (Exception $e) {
-            error_log("Error en getUsuarioByEmail: " . $e->getMessage());
             return null;
         }
     }
@@ -89,8 +100,6 @@ class UsuarioModel extends Model {
             
             return $this->db->getConnection()->lastInsertId();
         } catch (PDOException $e) {
-            error_log("Error en crearUsuario: " . $e->getMessage());
-            // Devolver el mensaje de error específico de PDO
             return $e->getMessage();
         }
     }
@@ -107,7 +116,6 @@ class UsuarioModel extends Model {
                     WHERE id_usuario = :id_usuario";
             return $this->query($sql, [':id_usuario' => $id_usuario]);
         } catch (Exception $e) {
-            error_log("Error en registrarInicioSesion: " . $e->getMessage());
             return false;
         }
     }
@@ -136,7 +144,6 @@ class UsuarioModel extends Model {
             return $stmt->execute($data);
 
         } catch (Exception $e) {
-            error_log("Error en update de Usuario: " . $e->getMessage());
             return false;
         }
     }
@@ -152,7 +159,6 @@ class UsuarioModel extends Model {
             // Llama al delete del padre, especificando la clave primaria de este modelo.
             return parent::delete($id, 'id_usuario');
         } catch (Exception $e) {
-            error_log("Error en delete de Usuario: " . $e->getMessage());
             return false;
         }
     }
@@ -164,19 +170,10 @@ class UsuarioModel extends Model {
      * @return array|null Los datos del usuario o null si no se encuentra.
      */
     public function find($id, $idField = null) {
-        error_log("[DEBUG UsuarioModel::find] Buscando usuario con ID: " . var_export($id, true));
-        error_log("[DEBUG UsuarioModel::find] Tabla: {$this->table}, PrimaryKey: {$this->primaryKey}");
-        
         try {
             $result = parent::find($id, 'id_usuario');
-            error_log("[DEBUG UsuarioModel::find] Resultado: " . ($result ? 'ENCONTRADO' : 'NO ENCONTRADO'));
-            if ($result) {
-                error_log("[DEBUG UsuarioModel::find] Datos: " . print_r($result, true));
-            }
             return $result;
         } catch (Exception $e) {
-            error_log("[ERROR UsuarioModel::find] Excepción: " . $e->getMessage());
-            error_log("[ERROR UsuarioModel::find] Stack trace: " . $e->getTraceAsString());
             return null;
         }
     }
@@ -190,7 +187,6 @@ class UsuarioModel extends Model {
             $sql = "SELECT * FROM {$this->table} ORDER BY nombre";
             return $this->query($sql);
         } catch (Exception $e) {
-            error_log("Error en getAll: " . $e->getMessage());
             return [];
         }
     }
@@ -208,7 +204,6 @@ class UsuarioModel extends Model {
                     ORDER BY nombre";
             return $this->query($sql, [':termino' => "%{$termino}%"]);
         } catch (Exception $e) {
-            error_log("Error en buscar: " . $e->getMessage());
             return [];
         }
     }
@@ -226,7 +221,6 @@ class UsuarioModel extends Model {
             $result = $this->query($sql, [':token' => $token]);
             return $result ? $result[0] : null;
         } catch (Exception $e) {
-            error_log("Error en getPasswordReset: " . $e->getMessage());
             return null;
         }
     }
@@ -236,19 +230,23 @@ class UsuarioModel extends Model {
      * @param int $id_usuario ID del usuario.
      * @param string $token El token generado.
      * @param string $expiresAt La fecha de expiración.
+     * @param string|null $createdAt La fecha de creación (opcional, se usará la fecha actual si no se proporciona).
      * @return bool True en éxito, false en fallo.
      */
-    public function createPasswordReset($id_usuario, $token, $expiresAt) {
+    public function createPasswordReset($id_usuario, $token, $expiresAt, $createdAt = null) {
         try {
-            $sql = "INSERT INTO password_resets (user_id, token, expires_at) 
-                    VALUES (:user_id, :token, :expires_at)";
+            if (!$createdAt) {
+                $createdAt = date('Y-m-d H:i:s');
+            }
+            $sql = "INSERT INTO password_resets (user_id, token, expires_at, created_at) 
+                    VALUES (:user_id, :token, :expires_at, :created_at)";
             return $this->query($sql, [
                 ':user_id' => $id_usuario,
                 ':token' => $token,
-                ':expires_at' => $expiresAt
+                ':expires_at' => $expiresAt,
+                ':created_at' => $createdAt
             ]);
         } catch (Exception $e) {
-            error_log("Error en createPasswordReset: " . $e->getMessage());
             return false;
         }
     }
@@ -263,7 +261,6 @@ class UsuarioModel extends Model {
             $sql = "DELETE FROM password_resets WHERE token = :token";
             return $this->query($sql, [':token' => $token]);
         } catch (Exception $e) {
-            error_log("Error en deletePasswordReset: " . $e->getMessage());
             return false;
         }
     }
@@ -294,7 +291,6 @@ class UsuarioModel extends Model {
             $result = $this->query($sql, $params);
             return (int) $result[0]['total'];
         } catch (Exception $e) {
-            error_log("Error en contarUsuarios: " . $e->getMessage());
             return 0;
         }
     }
@@ -327,12 +323,8 @@ class UsuarioModel extends Model {
 
             $sql .= " ORDER BY u.id_usuario DESC LIMIT " . (int)$start . ", " . (int)$length;
             
-            error_log("SQL obtenerUsuariosPaginados: " . $sql);
-            error_log("Params: " . print_r($params, true));
-            
             return $this->query($sql, $params);
         } catch (Exception $e) {
-            error_log("Error en obtenerUsuariosPaginados: " . $e->getMessage());
             return [];
         }
     }
@@ -356,7 +348,6 @@ class UsuarioModel extends Model {
             $result = $this->query($sql, $params);
             return !empty($result);
         } catch (Exception $e) {
-            error_log("Error en emailExiste: " . $e->getMessage());
             return false; // Asumir que no existe en caso de error
         }
     }
@@ -386,16 +377,12 @@ class UsuarioModel extends Model {
 
             $sql .= " WHERE id_usuario = :id_usuario";
             
-            error_log("EDITAR USUARIO - SQL: " . $sql);
-            error_log("EDITAR USUARIO - PARAMS: " . print_r($params, true));
-
             $stmt = $this->db->getConnection()->prepare($sql);
             $result = $stmt->execute($params);
             
             // Verificar si se afectó al menos una fila
             return $result && $stmt->rowCount() > 0;
         } catch (Exception $e) {
-            error_log("Error en actualizarUsuario: " . $e->getMessage());
             return false;
         }
     }
@@ -460,7 +447,6 @@ class UsuarioModel extends Model {
             // Devolver un array plano con los códigos de los permisos
             return $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
         } catch (PDOException $e) {
-            error_log("Error al obtener permisos: " . $e->getMessage());
             return []; // Devolver un array vacío en caso de error
         }
     }

@@ -1,4 +1,18 @@
 <?php
+/**
+ * Vista: dispositivos/index.php
+ * -----------------------------
+ * Muestra la lista de dispositivos registrados y permite acciones como editar o eliminar.
+ *
+ * Variables recibidas:
+ *   - $dispositivos: Lista de dispositivos a mostrar.
+ *   - $mascotas: Lista de mascotas (para mostrar asignaciones).
+ *   - $usuarios: Lista de usuarios (si aplica).
+ *   - $permisos: Permisos del usuario actual.
+ *
+ * Uso:
+ *   Esta vista es llamada desde DispositivosController para mostrar el listado general de dispositivos.
+ */
 $titulo = "Gestión de Dispositivos";
 $subtitulo = "Administración de dispositivos IoT para monitoreo de mascotas.";
 ?>
@@ -65,7 +79,7 @@ $subtitulo = "Administración de dispositivos IoT para monitoreo de mascotas.";
 window.APP_URL = '<?= rtrim(BASE_URL, '/') ?>';
 </script>
 
-<!-- Incluir modales adicionales -->
+<!-- Incluir modales adicionales (solo detalles/asignar, NO edición) -->
 <?php include 'views/dispositivos/modals.php'; ?>
 
 <!-- Inclusión del script JS centralizado para la página de dispositivos -->

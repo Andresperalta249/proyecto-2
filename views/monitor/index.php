@@ -1,4 +1,16 @@
 <?php
+/**
+ * Vista: monitor/index.php
+ * ------------------------
+ * Muestra el panel principal de monitoreo de dispositivos y mascotas.
+ *
+ * Variables recibidas:
+ *   - $dispositivos: Lista de dispositivos a mostrar.
+ *   - $mascotas: Lista de mascotas asociadas.
+ *
+ * Uso:
+ *   Esta vista es llamada desde MonitorController para mostrar el panel de monitoreo general.
+ */
 $titulo = "Monitor IoT";
 $subtitulo = "Monitor IoT - Consulta datos históricos, ubicaciones y filtra por dispositivos y mascotas.";
 ?>

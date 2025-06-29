@@ -1,4 +1,25 @@
 <?php
+/**
+ * Modelo DatosSensorModel
+ * ----------------------
+ * Modelo para acceder y manipular datos de sensores, extendiendo funcionalidades de DatosSensor.
+ *
+ * Hereda de: Model (core/Model.php)
+ *
+ * Atributos:
+ *   - table: Nombre de la tabla ('datos_sensores')
+ *
+ * Métodos principales:
+ *   - Métodos heredados de Model y DatosSensor.
+ *   - Métodos personalizados para búsquedas avanzadas, estadísticas, etc.
+ *
+ * Relación:
+ *   - Hereda de Model y puede usar todos los métodos genéricos de acceso a datos.
+ *   - Es usado por controladores para mostrar datos de sensores en tiempo real y reportes.
+ *
+ * Ejemplo de uso:
+ *   $datos = $datosSensorModel->buscarRegistrosAvanzado(...);
+ */
 class DatosSensorModel {
     private $db;
     private $table = 'datos_sensores';

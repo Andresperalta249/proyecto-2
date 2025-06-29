@@ -1,4 +1,29 @@
 <?php
+/**
+ * Modelo Mascota
+ * --------------
+ * Modelo para acceder y manipular la tabla de mascotas en la base de datos.
+ *
+ * Hereda de: Model (core/Model.php)
+ *
+ * Atributos:
+ *   - table: Nombre de la tabla ('mascotas')
+ *
+ * Métodos principales:
+ *   - obtenerPorUsuario($usuarioId): Obtiene las mascotas de un usuario.
+ *   - obtenerPorId($id): Obtiene una mascota por su ID.
+ *   - buscarPorNombre($nombre): Busca mascotas por nombre.
+ *   - guardar($datos): Guarda o actualiza una mascota.
+ *   - eliminar($id): Elimina una mascota.
+ *
+ * Relación:
+ *   - Hereda de Model, por lo que puede usar todos los métodos genéricos de acceso a datos.
+ *   - Relación con Usuario (propietario) y Dispositivo (asignación de dispositivos).
+ *
+ * Ejemplo de uso:
+ *   $mascotas = $mascotaModel->obtenerPorUsuario($usuarioId);
+ *   $mascota = $mascotaModel->obtenerPorId($id);
+ */
 require_once __DIR__ . '/../core/Model.php';
 
 class Mascota extends Model {
@@ -193,8 +218,8 @@ class Mascota extends Model {
         }
         $sql .= " ORDER BY m.nombre ASC";
         // Log temporal para depuración
-        error_log('SQL Mascotas: ' . $sql);
-        error_log('PARAMS Mascotas: ' . json_encode($params));
+        // error_log('SQL Mascotas: ' . $sql);
+        // error_log('PARAMS Mascotas: ' . json_encode($params));
         return $this->query($sql, $params);
     }
 

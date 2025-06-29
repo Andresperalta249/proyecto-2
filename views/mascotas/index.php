@@ -1,4 +1,17 @@
 <?php
+/**
+ * Vista: mascotas/index.php
+ * -------------------------
+ * Muestra la lista de mascotas registradas y permite acciones como editar o eliminar.
+ *
+ * Variables recibidas:
+ *   - $mascotas: Lista de mascotas a mostrar.
+ *   - $usuarios: Lista de usuarios (para mostrar propietarios).
+ *   - $permisos: Permisos del usuario actual.
+ *
+ * Uso:
+ *   Esta vista es llamada desde MascotasController para mostrar el listado general de mascotas.
+ */
 // Test: Esto es un comentario de prueba
 $titulo = "Administración de mascotas";
 $subtitulo = "Administración de mascotas";

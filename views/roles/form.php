@@ -1,4 +1,16 @@
 <?php
+/**
+ * Vista: roles/form.php
+ * ---------------------
+ * Formulario para crear o editar un rol de usuario.
+ *
+ * Variables recibidas:
+ *   - $rol: Datos del rol (si se está editando).
+ *   - $permisos: Lista de permisos disponibles.
+ *
+ * Uso:
+ *   Esta vista es llamada desde RolesController para mostrar el formulario de alta/edición de roles.
+ */
 // Define valores por defecto para el modo de creación
 $esEdicion = isset($rol) && $rol;
 $titulo = $esEdicion ? 'Editar Rol' : 'Nuevo Rol';

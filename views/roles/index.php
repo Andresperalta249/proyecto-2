@@ -1,4 +1,16 @@
 <?php
+/**
+ * Vista: roles/index.php
+ * ----------------------
+ * Muestra la lista de roles registrados y permite acciones como editar o eliminar.
+ *
+ * Variables recibidas:
+ *   - $roles: Lista de roles a mostrar.
+ *   - $permisos: Lista de permisos disponibles.
+ *
+ * Uso:
+ *   Esta vista es llamada desde RolesController para mostrar el listado general de roles.
+ */
 $titulo = "Gestión de Roles";
 $subtitulo = "Administración de roles y permisos del sistema.";
 ?>
@@ -24,6 +36,7 @@ $subtitulo = "Administración de roles y permisos del sistema.";
                             <th>Nombre</th>
                             <th>Descripción</th>
                             <th>Usuarios</th>
+                            <th>Permisos</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>

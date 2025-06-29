@@ -1,3 +1,25 @@
+/**
+ * JavaScript Principal del Sistema
+ * ===============================
+ * 
+ * Archivo: assets/js/main.js
+ * 
+ * Propósito:
+ *   - Funciones JavaScript principales del sistema.
+ *   - Inicialización de componentes comunes.
+ *   - Funciones de utilidad reutilizables.
+ * 
+ * Funciones principales:
+ *   - inicializarSistema(): Configuración inicial del sistema.
+ *   - mostrarNotificacion(): Muestra notificaciones al usuario.
+ *   - confirmarAccion(): Solicita confirmación antes de acciones críticas.
+ *   - formatearFecha(): Formatea fechas para mostrar.
+ * 
+ * Uso:
+ *   Este archivo se carga en todas las páginas del sistema y proporciona
+ *   funcionalidades básicas de JavaScript.
+ */
+
 // Funciones de Utilidad
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString('es-ES', {
@@ -111,18 +133,6 @@ const createChart = (ctx, type, data, options = {}) => {
             ...options
         }
     });
-};
-
-// Funciones de Notificación
-const requestNotificationPermission = async () => {
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            showMessage('success', 'Notificaciones activadas');
-        }
-    } catch (error) {
-        console.error('Error al solicitar permisos de notificación:', error);
-    }
 };
 
 // Funciones de Sesión

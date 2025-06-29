@@ -1,4 +1,17 @@
 <?php
+/**
+ * Vista: usuarios/index.php
+ * -------------------------
+ * Muestra la lista de usuarios registrados y permite acciones como editar o eliminar.
+ *
+ * Variables recibidas:
+ *   - $usuarios: Lista de usuarios a mostrar.
+ *   - $roles: Lista de roles disponibles.
+ *   - $permisos: Lista de permisos disponibles.
+ *
+ * Uso:
+ *   Esta vista es llamada desde UsuariosController para mostrar el listado general de usuarios.
+ */
 $titulo = "Gestión de Usuarios";
 $subtitulo = "Administración de usuarios y sus roles en el sistema.";
 ?>

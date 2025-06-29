@@ -1,3 +1,18 @@
+<?php
+/**
+ * Vista: auth/forgot-password.php
+ * -------------------------------
+ * Formulario para solicitar restablecimiento de contraseña.
+ *
+ * Variables recibidas:
+ *   - $error: Mensaje de error (si existe).
+ *   - $success: Mensaje de éxito (si existe).
+ *
+ * Uso:
+ *   Esta vista es llamada desde AuthController para mostrar el formulario de recuperación.
+ *   Los usuarios ingresan su email para recibir un enlace de restablecimiento.
+ */
+?>
 <!-- Recuperar Contraseña Moderno PetMonitoring IoT -->
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
   <div class="card shadow-lg border-0 rounded-4 p-4 auth-card">

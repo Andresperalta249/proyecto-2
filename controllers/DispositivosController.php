@@ -1,4 +1,33 @@
 <?php
+/**
+ * Controlador DispositivosController
+ * ----------------------------------
+ * Controlador principal para la gestión de dispositivos IoT.
+ *
+ * Atributos:
+ *   - dispositivoModel: Modelo para acceder a la tabla de dispositivos.
+ *   - mascotaModel: Modelo para acceder a la tabla de mascotas.
+ *   - logModel: Modelo para registrar logs de acciones.
+ *
+ * Métodos principales:
+ *   - indexAction(): Muestra la vista principal de dispositivos.
+ *   - obtenerDispositivosAction(): Devuelve la lista de dispositivos (para DataTable).
+ *   - guardarAction(): Crea o actualiza un dispositivo según los datos recibidos.
+ *   - eliminarAction(): Elimina un dispositivo.
+ *   - formularioAction($id): Carga el formulario de crear/editar dispositivo.
+ *   - obtenerMascotasDisponiblesAction(): Devuelve mascotas disponibles para asignar a un dispositivo.
+ *   - Otros métodos auxiliares para cambiar estado, filtrar, etc.
+ *
+ * Relación:
+ *   - Usa los modelos DispositivoModel y Mascota para acceder a la base de datos.
+ *   - Interactúa con la vista para mostrar formularios y tablas.
+ *
+ * Flujo típico:
+ *   1. El usuario accede a la página de dispositivos (indexAction).
+ *   2. Se cargan los dispositivos vía AJAX (obtenerDispositivosAction).
+ *   3. Al crear/editar, se muestra un formulario (formularioAction) y se guardan los datos (guardarAction).
+ *   4. El controlador valida, llama al modelo y responde con éxito o error.
+ */
 class DispositivosController extends Controller {
     private $dispositivoModel;
     private $mascotaModel;
@@ -99,131 +128,24 @@ class DispositivosController extends Controller {
         }
 
         $userModel = new UsuarioModel();
-        $usuarios = $userModel->getActiveUsers(); // Obtener usuarios activos
+        $usuarios = $userModel->getActiveUsers();
         $mascotaModel = $this->mascotaModel;
         $mascotas = $mascotaModel->findAll();
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                // Log de los datos recibidos
-                error_log('Datos POST recibidos: ' . print_r($_POST, true));
-                
-                // Validar campos requeridos
-                $requiredFields = ['nombre', 'mac', 'estado'];
-                foreach ($requiredFields as $field) {
-                    if (empty($_POST[$field])) {
-                        $this->jsonResponse([
-                            'success' => false,
-                            'error' => "El campo {$field} es requerido"
-                        ], 400);
-                        return;
-                    }
-                }
-                
-                $data = [
-                    'nombre' => $_POST['nombre'],
-                    'mac' => $_POST['mac'],
-                    'estado' => $_POST['estado'],
-                    'usuario_id' => $_SESSION['user_id']
-                ];
-                
-                // Validar usuario_id si se proporciona
-                if (!empty($_POST['usuario_id'])) {
-                    $usuario = $userModel->getUsuarioById($_POST['usuario_id']);
-                    if (!$usuario) {
-                        $this->jsonResponse([
-                            'success' => false,
-                            'error' => 'Usuario no válido'
-                        ], 400);
-                        return;
-                    }
-                    $data['usuario_id'] = $_POST['usuario_id'];
-                }
-                
-                // Validar mascota_id si se proporciona
-                if (!empty($_POST['mascota_id'])) {
-                    $mascota = $mascotaModel->findById($_POST['mascota_id']);
-                    if (!$mascota) {
-                        $this->jsonResponse([
-                            'success' => false,
-                            'error' => 'Mascota no válida'
-                        ], 400);
-                        return;
-                    }
-                    $data['mascota_id'] = $_POST['mascota_id'];
-                }
-                
-                // Log de los datos validados
-                error_log('Datos validados: ' . print_r($data, true));
-                
-                // Validar formato de MAC
-                if (!preg_match('/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/', $data['mac'])) {
-                    $this->jsonResponse([
-                        'success' => false,
-                        'error' => 'Formato de MAC inválido'
-                    ], 400);
-                    return;
-                }
-                
-                // Validar unicidad de MAC
-                if ($this->dispositivoModel->existeMac($data['mac'])) {
-                    $this->jsonResponse([
-                        'success' => false,
-                        'error' => 'La MAC ya está registrada'
-                    ], 400);
-                    return;
-                }
-                
-                // Log antes de crear el dispositivo
-                error_log('Intentando crear dispositivo con datos: ' . print_r($data, true));
-                
-                try {
-                    $resultado = $this->dispositivoModel->createDispositivo($data);
-                    
-                    // Log del resultado
-                    error_log('Resultado de createDispositivo: ' . ($resultado ? 'éxito' : 'fallo'));
-                    
-                    if ($resultado) {
-                        $this->logModel->crearLog($_SESSION['user_id'], 'Creación de dispositivo: ' . $data['nombre']);
-                        $this->jsonResponse([
-                            'success' => true,
-                            'message' => 'Dispositivo registrado correctamente',
-                            'redirect' => BASE_URL . 'dispositivos'
-                        ]);
-                    } else {
-                        $error = $this->dispositivoModel->getLastError();
-                        error_log('Error al crear dispositivo: ' . $error);
-                        $this->jsonResponse([
-                            'success' => false,
-                            'error' => 'Error al registrar el dispositivo: ' . $error
-                        ], 500);
-                    }
-                } catch (PDOException $e) {
-                    error_log('Error PDO al crear dispositivo: ' . $e->getMessage());
-                    $this->jsonResponse([
-                        'success' => false,
-                        'error' => 'Error de base de datos: ' . $e->getMessage()
-                    ], 500);
-                }
-            } catch (Exception $e) {
-                error_log('Excepción en createAction: ' . $e->getMessage());
-                error_log('Stack trace: ' . $e->getTraceAsString());
-                $this->jsonResponse([
-                    'success' => false,
-                    'error' => 'Error interno del servidor: ' . $e->getMessage()
-                ], 500);
-            }
+        // Si es AJAX, solo devuelve el formulario
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        if ($isAjax) {
+            $dispositivo = null;
+            if (!isset($usuarios)) $usuarios = [];
+            if (!isset($mascotas)) $mascotas = [];
+            require ROOT_PATH . '/views/dispositivos/form.php';
+            return;
         }
 
-        $title = 'Nuevo Dispositivo';
-        $content = $this->render('dispositivos/create', [
-            'usuarios' => $usuarios,
-            'mascotas' => $mascotas
-        ]);
-        $GLOBALS['content'] = $content;
-        $GLOBALS['title'] = $title;
-        $GLOBALS['menuActivo'] = 'dispositivos';
-        require_once 'views/layouts/main.php';
+        // Si no es AJAX, mostrar 404
+        header('HTTP/1.0 404 Not Found');
+        echo 'Página no encontrada';
+        exit;
     }
 
     public function editAction($id = null) {
@@ -283,10 +205,10 @@ class DispositivosController extends Controller {
         }
 
         $title = 'Editar Dispositivo';
-        $content = $this->render('dispositivos/edit', [
+        $content = $this->view->render('dispositivos/edit', [
             'dispositivo' => $dispositivo,
             'mascotas' => $mascotas
-        ]);
+        ], true);
         $GLOBALS['content'] = $content;
         $GLOBALS['title'] = $title;
         $GLOBALS['menuActivo'] = 'dispositivos';
@@ -322,9 +244,9 @@ class DispositivosController extends Controller {
         }
 
         $title = 'Eliminar Dispositivo';
-        $content = $this->render('dispositivos/delete', [
+        $content = $this->view->render('dispositivos/delete', [
             'dispositivo' => $dispositivo
-        ]);
+        ], true);
         $GLOBALS['content'] = $content;
         $GLOBALS['title'] = $title;
         $GLOBALS['menuActivo'] = 'dispositivos';
@@ -397,6 +319,73 @@ class DispositivosController extends Controller {
             ]);
         } catch (Exception $e) {
             error_log('Error al obtener mascotas sin dispositivo: ' . $e->getMessage());
+            $this->jsonResponse([
+                'success' => false,
+                'error' => 'Error al cargar las mascotas'
+            ]);
+        }
+    }
+
+    public function obtenerMascotasDisponiblesAction($propietario_id, $dispositivo_id = null) {
+        error_log("DEBUG: obtenerMascotasDisponiblesAction llamado con propietario_id: $propietario_id, dispositivo_id: $dispositivo_id");
+        error_log("DEBUG: Método HTTP: " . $_SERVER['REQUEST_METHOD']);
+        error_log("DEBUG: Headers: " . print_r(getallheaders(), true));
+        
+        if (!isset($_SESSION['user_id']) || !verificarPermiso('editar_dispositivos')) {
+            $this->jsonResponse([
+                'success' => false,
+                'error' => 'No tienes permiso para realizar esta acción'
+            ], 403);
+            return;
+        }
+        
+        // Validar que el usuario consultado sea válido
+        $userModel = new UsuarioModel();
+        $usuario = $userModel->getUsuarioById($propietario_id);
+        if (!$usuario) {
+            $this->jsonResponse([
+                'success' => false,
+                'error' => 'Usuario no válido'
+            ]);
+            return;
+        }
+        
+        try {
+            // Obtener mascotas del usuario específico que no tengan dispositivo asignado
+            $mascotas = $this->mascotaModel->getMascotasSinDispositivos($propietario_id);
+            error_log("DEBUG: Mascotas sin dispositivo obtenidas: " . count($mascotas));
+            
+            // Si se está editando un dispositivo, incluir también la mascota actualmente asignada
+            if ($dispositivo_id) {
+                $dispositivo = $this->dispositivoModel->getDispositivoById($dispositivo_id);
+                error_log("DEBUG: Dispositivo encontrado: " . ($dispositivo ? 'SÍ' : 'NO'));
+                if ($dispositivo) {
+                    error_log("DEBUG: Dispositivo mascota_id: " . ($dispositivo['mascota_id'] ?? 'NULL'));
+                }
+                
+                if ($dispositivo && $dispositivo['mascota_id']) {
+                    $mascotaActual = $this->mascotaModel->findById($dispositivo['mascota_id']);
+                    error_log("DEBUG: Mascota actual encontrada: " . ($mascotaActual ? 'SÍ' : 'NO'));
+                    if ($mascotaActual) {
+                        error_log("DEBUG: Mascota actual: " . $mascotaActual['nombre']);
+                        // Quitar duplicados por id
+                        $mascotas = array_filter($mascotas, function($m) use ($mascotaActual) {
+                            return $m['id_mascota'] != $mascotaActual['id_mascota'];
+                        });
+                        // Insertar al principio para que aparezca primero
+                        array_unshift($mascotas, $mascotaActual);
+                        error_log("DEBUG: Mascota actual agregada al principio");
+                    }
+                }
+            }
+            
+            error_log("DEBUG: Total de mascotas a devolver: " . count($mascotas));
+            $this->jsonResponse([
+                'success' => true,
+                'data' => $mascotas
+            ]);
+        } catch (Exception $e) {
+            error_log('Error al obtener mascotas disponibles: ' . $e->getMessage());
             $this->jsonResponse([
                 'success' => false,
                 'error' => 'Error al cargar las mascotas'
@@ -634,145 +623,8 @@ class DispositivosController extends Controller {
         return $data;
     }
 
-    // AJAX: Cargar formulario de dispositivo
-    public function formularioAction() {
-        if (!verificarPermiso('crear_dispositivos') && !verificarPermiso('editar_dispositivos')) {
-            $this->view->render('partials/modal_error', [
-                'mensaje' => 'No tienes permiso para realizar esta acción.'
-            ]);
-            return;
-        }
-
-        $id = $_GET['id'] ?? null;
-        $dispositivo = null;
-        
-        if ($id) {
-            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-            if (!$dispositivo) {
-                $this->jsonResponse([
-                    'success' => false,
-                    'error' => 'Dispositivo no encontrado'
-                ], 404);
-                return;
-            }
-        }
-
-        $userModel = new UsuarioModel();
-        $usuarios = $userModel->getActiveUsers(); // Obtener usuarios activos
-        
-        $mascotas = [];
-        if ($dispositivo && $dispositivo['usuario_id']) {
-            $mascotaModel = $this->loadModel('Mascota');
-            $mascotas = $mascotaModel->getMascotasSinDispositivos($dispositivo['usuario_id']);
-            
-            // Agregar la mascota actual si existe
-            if ($dispositivo['mascota_id']) {
-                $mascotaActual = $mascotaModel->findById($dispositivo['mascota_id']);
-                if ($mascotaActual) {
-                    $mascotas[] = $mascotaActual;
-                }
-            }
-        }
-
-        $formulario = $this->render('dispositivos/form', [
-            'dispositivo' => $dispositivo,
-            'usuarios' => $usuarios,
-            'mascotas' => $mascotas
-        ]);
-
-        echo $formulario;
-    }
-
     private function isPostRequest() {
         return $_SERVER['REQUEST_METHOD'] === 'POST';
-    }
-
-    public function formAction($id = null) {
-        if (!verificarPermiso('crear_dispositivos') && !verificarPermiso('editar_dispositivos')) {
-            $this->jsonResponse(['error' => 'No tienes permisos para esta acción'], 403);
-            return;
-        }
-
-        $dispositivo = null;
-        $usuarios = [];
-        $mascotas = [];
-
-        // Cargar datos del dispositivo si es edición
-        if ($id) {
-            if (!verificarPermiso('editar_dispositivos')) {
-                $this->jsonResponse(['error' => 'No tienes permisos para editar dispositivos'], 403);
-                return;
-            }
-            
-            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-            if (!$dispositivo) {
-                $this->jsonResponse(['error' => 'Dispositivo no encontrado'], 404);
-                return;
-            }
-        }
-
-        // Cargar usuarios si tiene permisos para ver todos
-        if (verificarPermiso('ver_todos_dispositivos')) {
-            $userModel = new UsuarioModel();
-            $usuarios = $userModel->getAll();
-        }
-
-        // Cargar mascotas
-        $mascotas = $this->mascotaModel->findAll();
-
-        // Renderizar el formulario
-        $this->view->render('dispositivos/form', [
-            'dispositivo' => $dispositivo,
-            'usuarios' => $usuarios,
-            'mascotas' => $mascotas
-        ], false);
-    }
-
-    public function cargarFormularioAction($id = null) {
-        if (!verificarPermiso('crear_dispositivos') && !verificarPermiso('editar_dispositivos')) {
-            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.']);
-            return;
-        }
-
-        $dispositivo = null;
-        $usuarios = [];
-        $mascotas = [];
-
-        // Cargar datos del dispositivo si es edición
-        if ($id) {
-            if (!verificarPermiso('editar_dispositivos')) {
-                $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para editar dispositivos.']);
-                return;
-            }
-            
-            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-            if (!$dispositivo) {
-                $this->view->render('partials/modal_error', ['mensaje' => 'Dispositivo no encontrado.']);
-                return;
-            }
-        }
-
-        // Cargar usuarios si tiene permisos para ver todos
-        if (verificarPermiso('ver_todos_dispositivos')) {
-            $userModel = new UsuarioModel();
-            $usuarios = $userModel->getAll();
-        }
-
-        // Cargar mascotas - SIEMPRE cargar todas las mascotas disponibles
-        // La mascota NO es obligatoria, así que el usuario puede crear un dispositivo sin mascota
-        try {
-            $mascotas = $this->mascotaModel->findAll();
-        } catch (Exception $e) {
-            error_log('Error al cargar mascotas: ' . $e->getMessage());
-            $mascotas = []; // Array vacío si hay error, no es crítico
-        }
-
-        // Renderizar el formulario
-        $this->view->render('dispositivos/form', [
-            'dispositivo' => $dispositivo,
-            'usuarios' => $usuarios,
-            'mascotas' => $mascotas
-        ], false);
     }
 
     public function guardarAction() {
@@ -924,6 +776,50 @@ class DispositivosController extends Controller {
             error_log("Error al eliminar dispositivo: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => 'Error interno del servidor'], 500);
         }
+    }
+
+    public function formularioAction($id = null) {
+        error_log("DEBUG: formularioAction llamado con ID: " . ($id ?? 'null'));
+        
+        $permiso = $id ? 'editar_dispositivos' : 'crear_dispositivos';
+        if (!verificarPermiso($permiso)) {
+            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.'], false);
+            return;
+        }
+        $userModel = new UsuarioModel();
+        $usuarios = $userModel->getActiveUsers();
+        $dispositivo = null;
+        $mascotas = [];
+        if ($id) {
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
+            error_log("DEBUG: Dispositivo encontrado: " . ($dispositivo ? 'SÍ' : 'NO'));
+            if ($dispositivo) {
+                error_log("DEBUG: Dispositivo datos: " . print_r($dispositivo, true));
+            }
+            
+            if (!$dispositivo) {
+                $this->view->render('partials/modal_error', ['mensaje' => 'Dispositivo no encontrado.'], false);
+                return;
+            }
+            if ($dispositivo['usuario_id']) {
+                $mascotas = $this->mascotaModel->getMascotasSinDispositivos($dispositivo['usuario_id']);
+                if ($dispositivo['mascota_id']) {
+                    $mascotaActual = $this->mascotaModel->findById($dispositivo['mascota_id']);
+                    if ($mascotaActual) {
+                        // Quitar duplicados por id
+                        $mascotas = array_filter($mascotas, function($m) use ($mascotaActual) {
+                            return $m['id_mascota'] != $mascotaActual['id_mascota'];
+                        });
+                        // Insertar al principio
+                        array_unshift($mascotas, $mascotaActual);
+                    }
+                }
+            }
+        } else {
+            // Nuevo: traer todas las mascotas
+            $mascotas = $this->mascotaModel->findAll();
+        }
+        require ROOT_PATH . '/views/dispositivos/form.php';
     }
 }
 ?> 

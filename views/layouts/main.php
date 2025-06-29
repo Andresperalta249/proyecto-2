@@ -1,4 +1,17 @@
 <?php
+/**
+ * Layout: layouts/main.php
+ * ------------------------
+ * Plantilla principal del sistema. Incluye cabecera, menú lateral, contenido y pie de página.
+ *
+ * Variables recibidas:
+ *   - $contenido: Contenido principal de la página.
+ *   - $titulo: Título de la página.
+ *   - $subtitulo: Subtítulo de la página.
+ *
+ * Uso:
+ *   Este layout es utilizado por la mayoría de las vistas para mantener una estructura uniforme.
+ */
 $content = $GLOBALS['content'] ?? '';
 $title = $GLOBALS['title'] ?? '';
 $loginError = $GLOBALS['loginError'] ?? '';
@@ -392,6 +405,9 @@ if (!isset($content)) {
             
             return false;
         };
+
+        window.BASE_URL = '<?= rtrim(BASE_URL, "/") ?>/';
     </script>
+    <script src="<?= BASE_URL ?>assets/js/form-dispositivo.js"></script>
 </body>
 </html> 

@@ -1,3 +1,19 @@
+<?php
+/**
+ * Vista: auth/reset-password.php
+ * ------------------------------
+ * Formulario para establecer una nueva contraseña.
+ *
+ * Variables recibidas:
+ *   - $error: Mensaje de error (si existe).
+ *   - $success: Mensaje de éxito (si existe).
+ *   - $token: Token de validación para el restablecimiento.
+ *
+ * Uso:
+ *   Esta vista es llamada desde AuthController para mostrar el formulario de nueva contraseña.
+ *   Los usuarios establecen su nueva contraseña después de validar el token.
+ */
+?>
 <!-- Restablecer Contraseña Moderno PetMonitoring IoT -->
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
   <div class="card shadow-lg border-0 rounded-4 p-4 auth-card">

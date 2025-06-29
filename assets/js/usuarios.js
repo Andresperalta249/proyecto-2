@@ -1,3 +1,25 @@
+/**
+ * Gestión de Usuarios
+ * ==================
+ * 
+ * Archivo: assets/js/usuarios.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para la gestión de usuarios del sistema.
+ *   - CRUD de usuarios (crear, leer, actualizar, eliminar).
+ *   - Validación de formularios de usuarios.
+ * 
+ * Funciones principales:
+ *   - inicializarUsuarios(): Configura la gestión de usuarios.
+ *   - cargarUsuarios(): Carga la lista de usuarios.
+ *   - guardarUsuario(): Guarda un usuario nuevo o existente.
+ *   - eliminarUsuario(): Elimina un usuario.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de gestión de usuarios para
+ *   manejar todas las operaciones relacionadas con usuarios del sistema.
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
     // Obtenemos la instancia del modal UNA SOLA VEZ
     const mainModalEl = document.getElementById('mainModal');

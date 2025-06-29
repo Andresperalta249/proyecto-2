@@ -1,3 +1,25 @@
+/**
+ * Gestión de Mascotas
+ * ==================
+ * 
+ * Archivo: assets/js/mascotas.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para la gestión de mascotas.
+ *   - CRUD de mascotas (crear, leer, actualizar, eliminar).
+ *   - Validación de formularios de mascotas.
+ * 
+ * Funciones principales:
+ *   - inicializarMascotas(): Configura la gestión de mascotas.
+ *   - cargarMascotas(): Carga la lista de mascotas.
+ *   - guardarMascota(): Guarda una mascota nueva o existente.
+ *   - eliminarMascota(): Elimina una mascota.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de gestión de mascotas para
+ *   manejar todas las operaciones relacionadas con mascotas.
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
     // Obtener configuración desde el DOM
     const configElement = document.getElementById('mascotas-config');

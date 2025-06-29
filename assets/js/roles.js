@@ -1,3 +1,25 @@
+/**
+ * Gestión de Roles
+ * ===============
+ * 
+ * Archivo: assets/js/roles.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para la gestión de roles de usuario.
+ *   - CRUD de roles (crear, leer, actualizar, eliminar).
+ *   - Gestión de permisos asociados a roles.
+ * 
+ * Funciones principales:
+ *   - inicializarRoles(): Configura la gestión de roles.
+ *   - cargarRoles(): Carga la lista de roles.
+ *   - guardarRol(): Guarda un rol nuevo o existente.
+ *   - eliminarRol(): Elimina un rol.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de gestión de roles para
+ *   manejar todas las operaciones relacionadas con roles y permisos.
+ */
+
 $(function () {
     let tablaRoles;
     const configElement = $('#roles-config');
@@ -29,10 +51,11 @@ $(function () {
                 }
             },
             {
-                title: 'ESTADO',
-                orderable: false,
-                className: 'text-center',
-                render: function(data, type, row) {
+                "data": "estado",
+                "title": "ESTADO",
+                "orderable": false,
+                "className": "text-center",
+                "render": function(data, type, row) {
                     const isChecked = data === 'activo';
                     const isDisabled = row.is_protected;
                     return `
@@ -120,6 +143,63 @@ $(function () {
 
     function inicializarEventosFormulario() {
         $('#formRol').on('submit', function(e) {
+            const nombre = $('#nombre').val().trim();
+            const permisos = $("input[name='permisos[]']:checked");
+            const descripcion = $('#descripcion').val().trim();
+            let errores = [];
+
+            if (!nombre) {
+                errores.push('El nombre del rol es obligatorio.');
+            }
+            if (permisos.length === 0) {
+                errores.push('Debes seleccionar al menos un permiso.');
+            }
+            if (!descripcion) {
+                errores.push('La descripción es obligatoria.');
+            }
+
+            if (errores.length > 0) {
+                Swal.fire('Validación', errores.join('<br>'), 'warning');
+                e.preventDefault();
+                return false;
+            }
+
+            // Validación de nombre único por AJAX (sincrónica para bloquear el submit)
+            let esEdicion = $(this).find('input[name="id_rol"]').length > 0;
+            let idRol = esEdicion ? $(this).find('input[name="id_rol"]').val() : '';
+            let esUnico = true;
+            $.ajax({
+                url: APP_URL + '/roles/validar-nombre',
+                type: 'POST',
+                data: { nombre: nombre, id_rol: idRol },
+                async: false,
+                dataType: 'json',
+                success: function(resp) {
+                    if (!resp.success) {
+                        let mensaje = '';
+                        if (resp.errores && Array.isArray(resp.errores)) {
+                            mensaje = '<ul style="text-align:left">';
+                            resp.errores.forEach(function(err) { mensaje += '<li>' + err + '</li>'; });
+                            mensaje += '</ul>';
+                        } else if (resp.error) {
+                            mensaje = resp.error;
+                        } else {
+                            mensaje = 'Error desconocido.';
+                        }
+                        Swal.fire({ icon: 'error', title: 'Validación', html: mensaje });
+                        esUnico = false;
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo validar el nombre del rol.', 'error');
+                    esUnico = false;
+                }
+            });
+            if (!esUnico) {
+                e.preventDefault();
+                return false;
+            }
+
             e.preventDefault();
 
             const btnSubmit = $(this).find('button[type="submit"]');
@@ -199,8 +279,15 @@ $(function () {
             if (!response.success) {
                 Swal.fire('Error', response.message, 'error');
                 $(this).prop('checked', !this.checked); // Revertir
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message || 'Estado actualizado correctamente.',
+                    timer: 1200,
+                    showConfirmButton: false
+                });
             }
-            // No se necesita mensaje de éxito, el cambio visual es suficiente
         }.bind(this)).fail(function() {
             Swal.fire('Error', 'Ocurrió un problema con la solicitud.', 'error');
             $(this).prop('checked', !this.checked); // Revertir
@@ -216,5 +303,65 @@ $(function () {
     // Destruir tooltips antes de recargar la tabla para evitar duplicados
     $('#tablaRoles').on('preDraw.dt', function () {
         $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+    });
+
+    // Validación personalizada para el formulario de rol
+    $(document).on('submit', '#formRol', function(e) {
+        const nombre = $('#nombre').val().trim();
+        const permisos = $("input[name='permisos[]']:checked");
+        const descripcion = $('#descripcion').val().trim();
+        let errores = [];
+
+        if (!nombre) {
+            errores.push('El nombre del rol es obligatorio.');
+        }
+        if (permisos.length === 0) {
+            errores.push('Debes seleccionar al menos un permiso.');
+        }
+        if (!descripcion) {
+            errores.push('La descripción es obligatoria.');
+        }
+
+        if (errores.length > 0) {
+            Swal.fire('Validación', errores.join('<br>'), 'warning');
+            e.preventDefault();
+            return false;
+        }
+
+        // Validación de nombre único por AJAX (sincrónica para bloquear el submit)
+        let esEdicion = $(this).find('input[name="id_rol"]').length > 0;
+        let idRol = esEdicion ? $(this).find('input[name="id_rol"]').val() : '';
+        let esUnico = true;
+        $.ajax({
+            url: APP_URL + '/roles/validar-nombre',
+            type: 'POST',
+            data: { nombre: nombre, id_rol: idRol },
+            async: false,
+            dataType: 'json',
+            success: function(resp) {
+                if (!resp.success) {
+                    let mensaje = '';
+                    if (resp.errores && Array.isArray(resp.errores)) {
+                        mensaje = '<ul style="text-align:left">';
+                        resp.errores.forEach(function(err) { mensaje += '<li>' + err + '</li>'; });
+                        mensaje += '</ul>';
+                    } else if (resp.error) {
+                        mensaje = resp.error;
+                    } else {
+                        mensaje = 'Error desconocido.';
+                    }
+                    Swal.fire({ icon: 'error', title: 'Validación', html: mensaje });
+                    esUnico = false;
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'No se pudo validar el nombre del rol.', 'error');
+                esUnico = false;
+            }
+        });
+        if (!esUnico) {
+            e.preventDefault();
+            return false;
+        }
     });
 }); 

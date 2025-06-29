@@ -1,3 +1,17 @@
+<?php
+/**
+ * Vista: errors/500.php
+ * ---------------------
+ * Página de error 500 - Error interno del servidor.
+ *
+ * Variables recibidas:
+ *   - $mensaje: Mensaje de error personalizado (opcional).
+ *
+ * Uso:
+ *   Esta vista se muestra cuando ocurre un error interno en el servidor.
+ *   Es llamada automáticamente por el sistema cuando se detecta un error 500.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

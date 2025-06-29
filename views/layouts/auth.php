@@ -1,3 +1,18 @@
+<?php
+/**
+ * Layout: layouts/auth.php
+ * ------------------------
+ * Plantilla para páginas de autenticación (login, registro, recuperación de contraseña).
+ *
+ * Variables recibidas:
+ *   - $contenido: Contenido principal de la página de autenticación.
+ *   - $titulo: Título de la página.
+ *
+ * Uso:
+ *   Este layout es utilizado por las vistas de autenticación para mantener una estructura uniforme.
+ *   Incluye estilos y scripts específicos para formularios de autenticación.
+ */
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

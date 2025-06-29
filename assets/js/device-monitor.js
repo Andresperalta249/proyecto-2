@@ -1,3 +1,25 @@
+/**
+ * Monitor de Dispositivos
+ * ======================
+ * 
+ * Archivo: assets/js/device-monitor.js
+ * 
+ * Propósito:
+ *   - Funcionalidades para el monitoreo en tiempo real de dispositivos.
+ *   - Actualización automática de datos de sensores.
+ *   - Visualización de gráficas y estadísticas.
+ * 
+ * Funciones principales:
+ *   - inicializarMonitor(): Configura el monitor de dispositivos.
+ *   - actualizarDatos(): Actualiza los datos de los dispositivos.
+ *   - mostrarGrafica(): Muestra gráficas de datos de sensores.
+ *   - configurarActualizacion(): Configura actualización automática.
+ * 
+ * Uso:
+ *   Este archivo se usa en las páginas de monitoreo para mostrar datos
+ *   en tiempo real de los dispositivos IoT.
+ */
+
 // Importar utilidades de fecha
 import { formatDate, formatRelativeTime } from './date-utils.js';
 

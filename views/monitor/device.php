@@ -1,4 +1,17 @@
 <?php
+/**
+ * Vista: monitor/device.php
+ * -------------------------
+ * Muestra los datos en tiempo real de un dispositivo y su historial.
+ *
+ * Variables recibidas:
+ *   - $dispositivo: Información del dispositivo.
+ *   - $datos: Datos recientes del sensor.
+ *   - $ubicacion: Última ubicación conocida.
+ *
+ * Uso:
+ *   Esta vista es llamada desde MonitorController para mostrar el detalle de un dispositivo.
+ */
 // Obtener el tipo de mascota para el icono
 $tipoMascota = isset($dispositivo['tipo_mascota']) ? $dispositivo['tipo_mascota'] : 'perro';
 $iconoMascota = $tipoMascota === 'gato' ? '🐱' : '🐕';

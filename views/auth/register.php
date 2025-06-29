@@ -1,3 +1,19 @@
+<?php
+/**
+ * Vista: auth/register.php
+ * ------------------------
+ * Formulario de registro de nuevos usuarios en el sistema.
+ *
+ * Variables recibidas:
+ *   - $error: Mensaje de error (si existe).
+ *   - $success: Mensaje de éxito (si existe).
+ *   - $roles: Lista de roles disponibles para asignar.
+ *
+ * Uso:
+ *   Esta vista es llamada desde AuthController para mostrar el formulario de registro.
+ *   Los usuarios pueden crear una nueva cuenta con sus datos personales.
+ */
+?>
 <!-- Registro Moderno PetMonitoring IoT -->
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
   <div class="card shadow-lg border-0 rounded-4 p-4 auth-card">

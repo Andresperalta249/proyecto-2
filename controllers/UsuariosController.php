@@ -1,4 +1,31 @@
 <?php
+/**
+ * Controlador UsuariosController
+ * -----------------------------
+ * Controlador para la gestión de usuarios del sistema.
+ *
+ * Atributos:
+ *   - usuarioModel: Modelo para acceder a la tabla de usuarios.
+ *   - rolModel: Modelo para acceder a los roles de usuario.
+ *
+ * Métodos principales:
+ *   - indexAction(): Muestra la vista principal de usuarios.
+ *   - guardarAction(): Crea o actualiza un usuario.
+ *   - eliminarAction(): Elimina un usuario.
+ *   - cargarFormularioAction($id): Carga el formulario de crear/editar usuario.
+ *   - toggleEstadoAction(): Cambia el estado (activo/inactivo) de un usuario.
+ *   - Otros métodos auxiliares para roles, permisos, etc.
+ *
+ * Relación:
+ *   - Usa UsuarioModel y Rol para acceder a la base de datos.
+ *   - Interactúa con la vista para mostrar formularios y tablas.
+ *
+ * Flujo típico:
+ *   1. El usuario accede a la página de usuarios (indexAction).
+ *   2. Se cargan los usuarios vía AJAX.
+ *   3. Al crear/editar, se muestra un formulario y se guardan los datos (guardarAction).
+ *   4. El controlador valida, llama al modelo y responde con éxito o error.
+ */
 require_once 'core/Controller.php';
 require_once 'models/UsuarioModel.php';
 require_once 'models/Rol.php';
@@ -89,46 +116,34 @@ class UsuariosController extends Controller {
     }
 
     public function cargarFormularioAction($id = null) {
-        error_log("[DEBUG] cargarFormularioAction llamado con ID: " . var_export($id, true));
-        
+        // Comentar o eliminar todos los error_log de depuración, deja solo los de error real.
+        // error_log("[DEBUG] cargarFormularioAction llamado con ID: " . var_export($id, true));
         $permisoRequerido = $id ? 'editar_usuarios' : 'crear_usuarios';
         if (!verificarPermiso($permisoRequerido)) {
-            error_log("[ERROR] Sin permiso para $permisoRequerido");
-            
-            // Verificar si el archivo modal_error existe
             $modalErrorPath = ROOT_PATH . '/views/partials/modal_error.php';
-            error_log("[DEBUG] Buscando archivo modal_error en: $modalErrorPath");
-            error_log("[DEBUG] ¿Existe modal_error.php? " . (file_exists($modalErrorPath) ? 'SÍ' : 'NO'));
-            
             if (!file_exists($modalErrorPath)) {
-                error_log("[WARNING] modal_error.php no existe, enviando mensaje directo");
                 echo '<div class="alert alert-danger">No tienes permiso para realizar esta acción.</div>';
                 return;
             }
-            
-            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.']);
+            $this->view->render('partials/modal_error', ['mensaje' => 'No tienes permiso para realizar esta acción.'], false);
             return;
         }
-
         $usuario = null;
         if ($id) {
             $usuario = $this->usuarioModel->find($id);
-            error_log("[DEBUG] Usuario encontrado: " . ($usuario ? 'SÍ' : 'NO'));
-            if ($usuario) {
-                error_log("[DEBUG] Datos del usuario: " . print_r($usuario, true));
-            }
         }
-        
         $roles = $this->rolModel->getAll();
-        error_log("[DEBUG] Roles obtenidos: " . count($roles) . " roles");
-        
         $viewData = [
             'usuario' => $usuario,
             'roles' => $roles
         ];
-        error_log("[DEBUG] Datos que se pasan a la vista: " . print_r($viewData, true));
-        
-        $this->view->render('usuarios/form', $viewData, false);
+        // Detectar si es petición AJAX
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        if ($isAjax) {
+            require ROOT_PATH . '/views/usuarios/form.php';
+        } else {
+            $this->view->render('usuarios/form', $viewData, false);
+        }
     }
 
     public function guardarAction() {
@@ -187,33 +202,34 @@ class UsuariosController extends Controller {
     }
 
     public function toggleEstadoAction() {
-        error_log("[DEBUG] toggleEstadoAction llamado");
-        error_log("[DEBUG] POST recibido: " . print_r($_POST, true));
+        // Comentar o eliminar todos los error_log de depuración, deja solo los de error real.
+        // error_log("[DEBUG] toggleEstadoAction llamado");
+        // error_log("[DEBUG] POST recibido: " . print_r($_POST, true));
 
         if (!$this->isPostRequest() || !verificarPermiso('editar_usuarios')) {
-            error_log("[ERROR] Acción no permitida o método no es POST");
+            // error_log("[ERROR] Acción no permitida o método no es POST");
             return $this->jsonResponse(['status' => 'error', 'message' => 'Acción no permitida.'], 403);
         }
 
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        error_log("[DEBUG] ID filtrado: " . var_export($id, true));
-        error_log("[DEBUG] Estado filtrado: " . var_export($estado, true));
+        // error_log("[DEBUG] ID filtrado: " . var_export($id, true));
+        // error_log("[DEBUG] Estado filtrado: " . var_export($estado, true));
 
         if (!$id || !$estado) {
-            error_log("[ERROR] Datos incompletos: id o estado no válidos");
+            // error_log("[ERROR] Datos incompletos: id o estado no válidos");
             return $this->jsonResponse(['status' => 'error', 'message' => 'Datos incompletos.'], 400);
         }
 
         $resultado = $this->usuarioModel->cambiarEstado($id, $estado);
-        error_log("[DEBUG] Resultado cambiarEstado: " . var_export($resultado, true));
+        // error_log("[DEBUG] Resultado cambiarEstado: " . var_export($resultado, true));
 
         if ($resultado) {
-            error_log("[INFO] Estado actualizado correctamente para usuario $id");
+            // error_log("[INFO] Estado actualizado correctamente para usuario $id");
             $this->jsonResponse(['status' => 'success', 'message' => 'Estado actualizado correctamente.']);
         } else {
-            error_log("[ERROR] No se pudo actualizar el estado para usuario $id");
+            // error_log("[ERROR] No se pudo actualizar el estado para usuario $id");
             $this->jsonResponse(['status' => 'error', 'message' => 'No se pudo actualizar el estado.'], 500);
         }
     }

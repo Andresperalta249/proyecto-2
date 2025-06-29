@@ -77,9 +77,14 @@ class RolesController extends Controller
             'rol' => null,
             'permisos' => $this->rolModel->getPermisos()
         ];
-        
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
         $view = new View();
-        $view->render('roles/form', $data, false);
+        if ($isAjax) {
+            extract($data);
+            require ROOT_PATH . '/views/roles/form.php';
+        } else {
+            $view->render('roles/form', $data, false);
+        }
     }
 
     public function editarAction($id)
@@ -102,14 +107,18 @@ class RolesController extends Controller
 
         $permisosAsignados = $this->rolModel->getPermisosPorRol($id);
         $rol['permiso_ids'] = array_column($permisosAsignados, 'id_permiso');
-        
         $data = [
             'rol' => $rol,
             'permisos' => $this->rolModel->getPermisos()
         ];
-
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
         $view = new View();
-        $view->render('roles/form', $data, false);
+        if ($isAjax) {
+            extract($data);
+            require ROOT_PATH . '/views/roles/form.php';
+        } else {
+            $view->render('roles/form', $data, false);
+        }
     }
     
     public function guardarAction()
@@ -131,21 +140,44 @@ class RolesController extends Controller
         }
 
         try {
-            $data = [
-                'nombre' => trim($_POST['nombre'] ?? ''),
-                'descripcion' => trim($_POST['descripcion'] ?? ''),
-                'permisos' => $_POST['permisos'] ?? []
-            ];
+            $nombre = trim($_POST['nombre'] ?? '');
+            $descripcion = trim($_POST['descripcion'] ?? '');
+            $permisos = $_POST['permisos'] ?? [];
 
-            if (empty($data['nombre'])) {
-                 return $this->jsonResponse(['success' => false, 'message' => 'El nombre del rol es obligatorio.']);
+            $errores = [];
+
+            // Validaciones backend
+            if (!$nombre) {
+                $errores[] = 'El nombre del rol es obligatorio.';
+            }
+            if (!$descripcion) {
+                $errores[] = 'La descripción es obligatoria.';
+            }
+            if (empty($permisos)) {
+                $errores[] = 'Debes seleccionar al menos un permiso.';
+            }
+            $rolExistente = $this->rolModel->getRolByNombre($nombre);
+            if ($rolExistente && (!$id || $rolExistente['id_rol'] != $id)) {
+                $errores[] = 'El nombre del rol ya existe.';
+            }
+
+            if (!empty($errores)) {
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                    echo json_encode(['success' => false, 'errores' => $errores]);
+                    exit;
+                } else {
+                    // Renderizar la vista con errores
+                    $data = compact('nombre', 'descripcion', 'permisos', 'errores');
+                    $this->view->render('roles/form', $data);
+                    return;
+                }
             }
 
             if ($isEdit) {
-                $success = $this->rolModel->update($id, $data);
+                $success = $this->rolModel->update($id, ['nombre' => $nombre, 'descripcion' => $descripcion, 'permisos' => $permisos]);
                 $message = 'Rol actualizado correctamente.';
             } else {
-                $success = $this->rolModel->create($data);
+                $success = $this->rolModel->create(['nombre' => $nombre, 'descripcion' => $descripcion, 'permisos' => $permisos]);
                 $message = 'Rol creado correctamente.';
             }
 
@@ -214,6 +246,18 @@ class RolesController extends Controller
         } catch (Exception $e) {
             $this->jsonResponse(['success' => false, 'message' => 'Error al actualizar el estado.'], 500);
         }
+    }
+
+    public function validarNombreAction() {
+        $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+        $idRol = isset($_POST['id_rol']) ? intval($_POST['id_rol']) : 0;
+        $rolExistente = $this->rolModel->getRolByNombre($nombre);
+        if ($rolExistente && (!$idRol || $rolExistente['id_rol'] != $idRol)) {
+            echo json_encode(['success' => false, 'error' => 'El nombre del rol ya existe.']);
+            exit;
+        }
+        echo json_encode(['success' => true]);
+        exit;
     }
 
     private function isPostRequest()
