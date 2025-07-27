@@ -213,6 +213,10 @@ $subtitulo = isset($subtitulo) ? $subtitulo : 'Monitorea en tiempo real todos lo
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Definir BASE_URL para el JavaScript
+window.BASE_URL = '<?= BASE_URL ?>';
+</script>
 <script src="<?= BASE_URL ?>assets/js/monitor-dashboard.js"></script>
 
 <script>
