@@ -3,6 +3,56 @@
 echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 ?>
 
+<style>
+/* Estilos para optimizar la tabla */
+#tablaDatos {
+    width: 100% !important;
+    table-layout: fixed;
+    font-size: 13px;
+}
+
+#tablaDatos th,
+#tablaDatos td {
+    padding: 8px 4px;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#tablaDatos .text-truncate {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-responsive {
+    width: 100% !important;
+    overflow-x: auto;
+}
+
+.card {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Optimizar espacio de filtros */
+.card-body {
+    padding: 15px !important;
+}
+
+/* Hacer la tabla más compacta */
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(0,0,0,.02);
+}
+
+.fila-dato:hover {
+    background-color: rgba(0,123,255,.1) !important;
+    cursor: pointer;
+}
+</style>
+
 <h2 class="mb-4">
     <i class="fas fa-desktop"></i> Monitor IoT de Mascotas
 </h2>
@@ -94,13 +144,13 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 </div>
 
 <!-- Tabla de Datos de Sensores -->
-<div class="card" style="margin: 0; border-radius: 0;">
-    <div class="card-header d-flex justify-content-between align-items-center" style="border-radius: 0;">
+<div class="card" style="margin: 0; border-radius: 0; width: 100%;">
+    <div class="card-header d-flex justify-content-between align-items-center" style="border-radius: 0; padding: 15px 20px;">
         <h5 class="card-title mb-0">
             <i class="fas fa-table"></i> Historial de Datos de Sensores
         </h5>
         <div class="d-flex gap-2">
-            <div class="input-group" style="width: 200px;">
+            <div class="input-group" style="width: 250px;">
                 <input type="text" class="form-control form-control-sm" id="busquedaTabla" placeholder="Buscar en tabla...">
                 <button class="btn btn-outline-secondary btn-sm" type="button">
                     <i class="fas fa-search"></i>
@@ -111,36 +161,36 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
             </button>
         </div>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-responsive" style="margin: 0;">
-            <table class="table table-striped table-hover mb-0" id="tablaDatos" style="margin: 0;">
+    <div class="card-body" style="padding: 0; width: 100%;">
+        <div class="table-responsive" style="margin: 0; width: 100%;">
+            <table class="table table-striped table-hover mb-0" id="tablaDatos" style="margin: 0; width: 100%; font-size: 14px;">
                 <thead class="table-dark">
                     <tr>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(0)">
+                        <th style="cursor: pointer; width: 5%;" onclick="ordenarTabla(0)">
                             ID <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(1)">
+                        <th style="cursor: pointer; width: 15%;" onclick="ordenarTabla(1)">
                             Dispositivo <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(2)">
+                        <th style="cursor: pointer; width: 12%;" onclick="ordenarTabla(2)">
                             Mascota <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(3)">
+                        <th style="cursor: pointer; width: 12%;" onclick="ordenarTabla(3)">
                             Propietario <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(4)">
-                            Temperatura <i class="fas fa-sort"></i>
+                        <th style="cursor: pointer; width: 8%;" onclick="ordenarTabla(4)">
+                            Temp. <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(5)">
+                        <th style="cursor: pointer; width: 8%;" onclick="ordenarTabla(5)">
                             BPM <i class="fas fa-sort"></i>
                         </th>
-                        <th>Latitud</th>
-                        <th>Longitud</th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(8)">
+                        <th style="width: 10%;">Latitud</th>
+                        <th style="width: 10%;">Longitud</th>
+                        <th style="cursor: pointer; width: 15%;" onclick="ordenarTabla(8)">
                             Fecha <i class="fas fa-sort"></i>
                         </th>
-                        <th style="cursor: pointer;" onclick="ordenarTabla(9)">
-                            Batería <i class="fas fa-sort"></i>
+                        <th style="cursor: pointer; width: 5%;" onclick="ordenarTabla(9)">
+                            Bat. <i class="fas fa-sort"></i>
                         </th>
                     </tr>
                 </thead>
@@ -376,51 +426,45 @@ function renderizarTablaDatos(datos) {
     }
     
     tbody.innerHTML = datos.map(dato => `
-        <tr class="fila-dato" data-id="${dato.id}">
-            <td class="text-center">
+        <tr class="fila-dato" data-id="${dato.id}" style="font-size: 13px;">
+            <td class="text-center" style="width: 5%;">
                 <span class="badge bg-secondary">${dato.id || 'N/A'}</span>
             </td>
-            <td>
+            <td style="width: 15%;">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-microchip text-primary me-2"></i>
-                    <span class="fw-medium">${dato.dispositivo_nombre || 'N/A'}</span>
+                    <i class="fas fa-microchip text-primary me-1"></i>
+                    <span class="fw-medium text-truncate">${dato.dispositivo_nombre || 'N/A'}</span>
                 </div>
             </td>
-            <td>
+            <td style="width: 12%;">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-paw text-warning me-2"></i>
-                    <span>${dato.mascota_nombre || 'Sin asignar'}</span>
+                    <i class="fas fa-paw text-warning me-1"></i>
+                    <span class="text-truncate">${dato.mascota_nombre || 'Sin asignar'}</span>
                 </div>
             </td>
-            <td>
+            <td style="width: 12%;">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-user text-info me-2"></i>
-                    <span>${dato.usuario_nombre || 'N/A'}</span>
+                    <i class="fas fa-user text-info me-1"></i>
+                    <span class="text-truncate">${dato.usuario_nombre || 'N/A'}</span>
                 </div>
             </td>
-            <td class="text-center">
+            <td class="text-center" style="width: 8%;">
                 <span class="badge bg-${dato.temperatura > 30 ? 'danger' : dato.temperatura > 25 ? 'warning' : 'success'}">
-                    ${dato.temperatura ? dato.temperatura + '°C' : 'N/A'}
+                    ${dato.temperatura ? dato.temperatura + '°' : 'N/A'}
                 </span>
             </td>
-            <td class="text-center">
+            <td class="text-center" style="width: 8%;">
                 <span class="badge bg-info">
-                    ${dato.bpm ? dato.bpm + ' BPM' : 'N/A'}
+                    ${dato.bpm ? dato.bpm : 'N/A'}
                 </span>
             </td>
-            <td class="text-muted small">${dato.latitude ? parseFloat(dato.latitude).toFixed(6) : 'N/A'}</td>
-            <td class="text-muted small">${dato.longitude ? parseFloat(dato.longitude).toFixed(6) : 'N/A'}</td>
-            <td class="text-muted small">${formatearFecha(dato.fecha)}</td>
-            <td class="text-center">
-                <div class="d-flex align-items-center justify-content-center">
-                    <div class="progress me-2" style="width: 40px; height: 6px;">
-                        <div class="progress-bar bg-${dato.bateria > 80 ? 'success' : dato.bateria > 20 ? 'warning' : 'danger'}" 
-                             style="width: ${dato.bateria || 0}%"></div>
-                    </div>
-                    <span class="badge bg-${dato.bateria > 80 ? 'success' : dato.bateria > 20 ? 'warning' : 'danger'}">
-                        ${dato.bateria ? dato.bateria + '%' : 'N/A'}
-                    </span>
-                </div>
+            <td class="text-muted small" style="width: 10%; font-size: 11px;">${dato.latitude ? parseFloat(dato.latitude).toFixed(4) : 'N/A'}</td>
+            <td class="text-muted small" style="width: 10%; font-size: 11px;">${dato.longitude ? parseFloat(dato.longitude).toFixed(4) : 'N/A'}</td>
+            <td class="text-muted small" style="width: 15%; font-size: 11px;">${formatearFecha(dato.fecha)}</td>
+            <td class="text-center" style="width: 5%;">
+                <span class="badge bg-${dato.bateria > 80 ? 'success' : dato.bateria > 20 ? 'warning' : 'danger'}">
+                    ${dato.bateria ? dato.bateria + '%' : 'N/A'}
+                </span>
             </td>
         </tr>
     `).join('');
