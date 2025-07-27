@@ -1,206 +1,223 @@
 <?php 
-$titulo = isset($titulo) ? $titulo : 'Monitor IoT';
-$subtitulo = isset($subtitulo) ? $subtitulo : 'Monitorea en tiempo real los dispositivos y mascotas asociados.';
+$titulo = isset($titulo) ? $titulo : 'Monitor IoT Avanzado';
+$subtitulo = isset($subtitulo) ? $subtitulo : 'Monitorea en tiempo real todos los dispositivos y mascotas con filtros avanzados.';
 ?>
-<h1 class="titulo-pagina"><?= htmlspecialchars($titulo) ?></h1>
-<p class="subtitulo-pagina">
-  <?= htmlspecialchars($subtitulo) ?>
-</p>
 
 <div class="contenedor-sistema">
+    <!-- Header con título -->
     <div class="contenedor-sistema-header">
-        <i class="fas fa-chart-line"></i>
-        Dispositivos Disponibles
-    </div>
-    <div class="contenedor-sistema-body">
-        <?php if (empty($dispositivos)): ?>
-            <div class="alert alert-info text-center">
-                No tienes dispositivos registrados. Por favor, agrega uno para comenzar a monitorear.
+        <div class="header-content">
+            <div class="header-title">
+                <i class="fas fa-chart-line"></i>
+                <?= htmlspecialchars($titulo) ?>
             </div>
-        <?php endif; ?>
-        
-        <div class="dispositivos-grid">
-            <?php foreach ($dispositivos as $dispositivo): ?>
-            <div class="dispositivo-card">
-                <div class="dispositivo-header">
-                    <h5 class="dispositivo-title">
-                        <?= $dispositivo['nombre'] ?>
-                        <span class="badge bg-<?= $dispositivo['estado'] === 'activo' ? 'success' : 'danger' ?> float-end">
-                            <?= ucfirst($dispositivo['estado']) ?>
-                        </span>
-                    </h5>
-                </div>
-                <div class="dispositivo-body">
-                    <div class="dispositivo-info">
-                        <p class="mb-2">
-                            <strong>MAC:</strong> <?= $dispositivo['mac'] ?><br>
-                            <strong>ID:</strong> <?= $dispositivo['id_dispositivo'] ?><br>
-                            <strong>Mascota:</strong> <?= $dispositivo['mascota_nombre'] ?: 'Sin mascota asignada' ?><br>
-                            <strong>Usuario:</strong> <?= $dispositivo['usuario_nombre'] ?>
-                        </p>
-                    </div>
-                    <div class="dispositivo-actions">
-                        <a href="<?= BASE_URL ?>monitor/device/<?= $dispositivo['id_dispositivo'] ?>" class="btn btn-primary">
-                            <i class="fas fa-chart-line"></i> Ver Monitor
-                        </a>
-                        <?php if (verificarPermiso('gestionar_alertas')): ?>
-                            <button class="btn btn-warning btn-sm ms-2" onclick="abrirConfigAlerta(<?= $dispositivo['mascota_id'] ?>, <?= $dispositivo['id_dispositivo'] ?>)">
-                                <i class="bi bi-bell"></i> Configurar alerta
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </div>
+            <div class="header-actions">
+                <button class="btn btn-outline-primary btn-sm" onclick="actualizarDatos()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+                    <i class="fas fa-filter"></i> Limpiar Filtros
+                </button>
             </div>
-            <?php endforeach; ?>
         </div>
+        <p class="header-subtitle"><?= htmlspecialchars($subtitulo) ?></p>
+    </div>
+
+    <!-- Filtros Avanzados -->
+    <div class="filtros-avanzados">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="filtroPropietario" class="form-label">Propietario</label>
+                <select class="form-select" id="filtroPropietario" onchange="cargarMascotas()">
+                    <option value="">Todos los propietarios</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtroMascota" class="form-label">Mascota</label>
+                <select class="form-select" id="filtroMascota" onchange="aplicarFiltros()">
+                    <option value="">Todas las mascotas</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtroMAC" class="form-label">Dirección MAC</label>
+                <input type="text" class="form-control" id="filtroMAC" 
+                       placeholder="Buscar por MAC..." onkeyup="aplicarFiltros()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="filtroSoloActivos" onchange="aplicarFiltros()">
+                    <label class="form-check-label" for="filtroSoloActivos">
+                        Solo dispositivos activos
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mapa Interactivo -->
+    <div class="mapa-container">
+        <div class="mapa-header">
+            <h5><i class="fas fa-map-marked-alt"></i> Mapa de Dispositivos Activos</h5>
+            <div class="mapa-controls">
+                <button class="btn btn-sm btn-outline-primary" onclick="centrarMapa()">
+                    <i class="fas fa-crosshairs"></i> Centrar
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i> Pantalla Completa
+                </button>
+            </div>
+        </div>
+        <div id="mapaMonitor" class="mapa-monitor"></div>
+    </div>
+
+    <!-- Tabla de Datos en Tiempo Real -->
+    <div class="tabla-datos-container">
+        <div class="tabla-header">
+            <h5><i class="fas fa-table"></i> Datos de Sensores en Tiempo Real</h5>
+            <div class="tabla-controls">
+                <select class="form-select form-select-sm" id="limiteDatos" onchange="cargarTablaDatos()">
+                    <option value="25">25 registros</option>
+                    <option value="50" selected>50 registros</option>
+                    <option value="100">100 registros</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary" onclick="cargarTablaDatos()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="tabla-sistema" id="tablaDatos">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Dispositivo</th>
+                        <th>Mascota</th>
+                        <th>Fecha</th>
+                        <th>Ubicación</th>
+                        <th>Altitud</th>
+                        <th>Velocidad</th>
+                        <th>BPM</th>
+                        <th>Temperatura</th>
+                        <th>Batería</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaDatosBody">
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            Cargando datos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="tabla-paginacion" id="paginacionTabla"></div>
     </div>
 </div>
-<?php if (verificarPermiso('gestionar_alertas')): ?>
-<!-- Modal Configuración de Alerta Específica -->
-<div class="modal fade" id="modalConfigAlertaEspecifica" tabindex="-1" aria-labelledby="modalConfigAlertaEspecificaLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalConfigAlertaEspecificaLabel">Configurar Alerta Específica</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <form id="formConfigAlertaEspecifica">
-        <div class="modal-body">
-          <input type="hidden" name="mascota_id" id="inputMascotaId">
-          <input type="hidden" name="dispositivo_id" id="inputDispositivoId">
-          <!-- Temperatura -->
-          <div class="card mb-3">
-            <div class="card-header bg-danger text-white">
-              <h6 class="mb-0">Temperatura</h6>
-            </div>
-            <div class="card-body row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Mínimo (°C)</label>
-                <input type="number" class="form-control" name="temperatura[min]" step="0.1" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Máximo (°C)</label>
-                <input type="number" class="form-control" name="temperatura[max]" step="0.1" required>
-              </div>
-            </div>
-          </div>
-          <!-- Ritmo Cardíaco -->
-          <div class="card mb-3">
-            <div class="card-header bg-warning text-dark">
-              <h6 class="mb-0">Ritmo Cardíaco</h6>
-            </div>
-            <div class="card-body row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Mínimo (bpm)</label>
-                <input type="number" class="form-control" name="ritmo_cardiaco[min]" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Máximo (bpm)</label>
-                <input type="number" class="form-control" name="ritmo_cardiaco[max]" required>
-              </div>
-            </div>
-          </div>
-          <!-- Batería -->
-          <div class="card mb-3">
-            <div class="card-header bg-info text-white">
-              <h6 class="mb-0">Batería</h6>
-            </div>
-            <div class="card-body row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Mínimo (%)</label>
-                <input type="number" class="form-control" name="bateria[min]" min="0" max="100" required>
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Valor Máximo (%)</label>
-                <input type="number" class="form-control" name="bateria[max]" min="0" max="100" required>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Configuración</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<script>
-function abrirConfigAlerta(mascotaId, dispositivoId = null) {
-  document.getElementById('inputMascotaId').value = mascotaId;
-  if (dispositivoId) document.getElementById('inputDispositivoId').value = dispositivoId;
-  // Limpiar campos
-  const campos = [
-    ['temperatura[min]', ''], ['temperatura[max]', ''],
-    ['ritmo_cardiaco[min]', ''], ['ritmo_cardiaco[max]', ''],
-    ['bateria[min]', ''], ['bateria[max]', '']
-  ];
-  campos.forEach(([name, def]) => {
-    const el = document.querySelector(`[name='${name}']`);
-    if (el) el.value = def;
-  });
-  // Cargar configuración actual si hay dispositivoId
-  if (dispositivoId) {
-    fetch(`/proyecto-2/configuracion-alerta/obtener-especifica?dispositivo_id=${dispositivoId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.configuraciones) {
-          for (const tipo in data.configuraciones) {
-            const conf = data.configuraciones[tipo];
-            if (conf.min !== undefined) document.querySelector(`[name='${tipo}[min]']`).value = conf.min;
-            if (conf.max !== undefined) document.querySelector(`[name='${tipo}[max]']`).value = conf.max;
-          }
-        }
-        var modal = new bootstrap.Modal(document.getElementById('modalConfigAlertaEspecifica'));
-        modal.show();
-      });
-  } else {
-    var modal = new bootstrap.Modal(document.getElementById('modalConfigAlertaEspecifica'));
-    modal.show();
-  }
+
+<!-- Estilos específicos para el monitor -->
+<style>
+.filtros-avanzados {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-document.getElementById('formConfigAlertaEspecifica').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const form = this;
-  const formData = new FormData(form);
-  // Validación simple de rangos
-  const tempMin = parseFloat(form['temperatura[min]'].value);
-  const tempMax = parseFloat(form['temperatura[max]'].value);
-  const ritmoMin = parseFloat(form['ritmo_cardiaco[min]'].value);
-  const ritmoMax = parseFloat(form['ritmo_cardiaco[max]'].value);
-  const batMin = parseFloat(form['bateria[min]'].value);
-  const batMax = parseFloat(form['bateria[max]'].value);
-  if (tempMin >= tempMax) {
-    alert('El valor mínimo de temperatura debe ser menor que el máximo.');
-    return;
-  }
-  if (ritmoMin >= ritmoMax) {
-    alert('El valor mínimo de ritmo cardíaco debe ser menor que el máximo.');
-    return;
-  }
-  if (batMin >= batMax) {
-    alert('El valor mínimo de batería debe ser menor que el máximo.');
-    return;
-  }
-  fetch('/proyecto-2/configuracion-alerta/guardar-especifica', {
-    method: 'POST',
-    body: formData,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert('Configuración guardada correctamente');
-      const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfigAlertaEspecifica'));
-      if (modal) modal.hide();
-    } else {
-      alert(data.error || 'Error al guardar la configuración');
+.mapa-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.mapa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-elevated);
+}
+
+.mapa-monitor {
+    height: 500px;
+    width: 100%;
+}
+
+.tabla-datos-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.tabla-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-elevated);
+}
+
+.tabla-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.tabla-paginacion {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.header-subtitle {
+    margin: 0.5rem 0 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .mapa-monitor {
+        height: 300px;
     }
-  })
-  .catch(() => {
-    alert('Error al guardar la configuración');
-  });
+    
+    .mapa-header, .tabla-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .tabla-controls {
+        justify-content: center;
+    }
+}
+</style>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= BASE_URL ?>assets/js/monitor-dashboard.js"></script>
+
+<script>
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarMonitor();
 });
-</script>
-<?php endif; ?> 
+</script> 

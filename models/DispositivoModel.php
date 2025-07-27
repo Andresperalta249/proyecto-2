@@ -236,4 +236,144 @@ class DispositivoModel {
             return 0;
         }
     }
+
+    /**
+     * Obtiene dispositivos con filtros avanzados
+     */
+    public function getDispositivosFiltrados($usuarioId, $propietarioId = null, $mascotaId = null, $mac = '', $soloActivos = false) {
+        try {
+            $query = "SELECT d.id_dispositivo, d.nombre, d.mac, d.estado, d.bateria,
+                            d.usuario_id, d.mascota_id,
+                            m.nombre as mascota_nombre, m.especie as mascota_especie,
+                            u.nombre as usuario_nombre,
+                            ds.latitude, ds.longitude, ds.fecha as ultima_fecha,
+                            ds.temperatura, ds.bpm, ds.bateria as bateria_sensor
+                     FROM {$this->table} d 
+                     LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota 
+                     LEFT JOIN usuarios u ON d.usuario_id = u.id_usuario 
+                     LEFT JOIN datos_sensores ds ON d.id_dispositivo = ds.dispositivo_id 
+                     AND ds.fecha = (SELECT MAX(fecha) FROM datos_sensores WHERE dispositivo_id = d.id_dispositivo)";
+            
+            $conditions = [];
+            $params = [];
+
+            // Verificar permisos
+            if (!function_exists('verificarPermiso') || !verificarPermiso('ver_todos_dispositivos')) {
+                $conditions[] = "d.usuario_id = :usuario_id";
+                $params[':usuario_id'] = $usuarioId;
+            }
+
+            // Filtro por propietario
+            if ($propietarioId) {
+                $conditions[] = "d.usuario_id = :propietario_id";
+                $params[':propietario_id'] = $propietarioId;
+            }
+
+            // Filtro por mascota
+            if ($mascotaId) {
+                $conditions[] = "d.mascota_id = :mascota_id";
+                $params[':mascota_id'] = $mascotaId;
+            }
+
+            // Filtro por MAC
+            if (!empty($mac)) {
+                $conditions[] = "(d.mac LIKE :mac_inicio OR d.mac LIKE :mac_fin)";
+                $params[':mac_inicio'] = $mac . '%';
+                $params[':mac_fin'] = '%' . $mac;
+            }
+
+            // Filtro solo activos
+            if ($soloActivos) {
+                $conditions[] = "d.estado = 'activo'";
+            }
+
+            if (!empty($conditions)) {
+                $query .= " WHERE " . implode(" AND ", $conditions);
+            }
+
+            $query .= " ORDER BY d.id_dispositivo DESC";
+            
+            $stmt = $this->db->getConnection()->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::getDispositivosFiltrados: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene lista de propietarios para filtros
+     */
+    public function getPropietariosDispositivos($usuarioId) {
+        try {
+            $query = "SELECT DISTINCT u.id_usuario, u.nombre 
+                     FROM usuarios u 
+                     INNER JOIN {$this->table} d ON u.id_usuario = d.usuario_id";
+            
+            $params = [];
+            if (!function_exists('verificarPermiso') || !verificarPermiso('ver_todos_dispositivos')) {
+                $query .= " WHERE d.usuario_id = :usuario_id";
+                $params[':usuario_id'] = $usuarioId;
+            }
+            
+            $query .= " ORDER BY u.nombre";
+            
+            $stmt = $this->db->getConnection()->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::getPropietariosDispositivos: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene mascotas por propietario para filtros
+     */
+    public function getMascotasPorPropietario($usuarioId, $propietarioId = null) {
+        try {
+            $query = "SELECT m.id_mascota, m.nombre, m.especie 
+                     FROM mascotas m 
+                     INNER JOIN {$this->table} d ON m.id_mascota = d.mascota_id";
+            
+            $conditions = [];
+            $params = [];
+
+            if (!function_exists('verificarPermiso') || !verificarPermiso('ver_todos_dispositivos')) {
+                $conditions[] = "d.usuario_id = :usuario_id";
+                $params[':usuario_id'] = $usuarioId;
+            }
+
+            if ($propietarioId) {
+                $conditions[] = "d.usuario_id = :propietario_id";
+                $params[':propietario_id'] = $propietarioId;
+            }
+
+            if (!empty($conditions)) {
+                $query .= " WHERE " . implode(" AND ", $conditions);
+            }
+            
+            $query .= " ORDER BY m.nombre";
+            
+            $stmt = $this->db->getConnection()->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::getMascotasPorPropietario: " . $e->getMessage());
+            return [];
+        }
+    }
 } 

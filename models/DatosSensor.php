@@ -158,4 +158,57 @@ class DatosSensor extends Model {
             return null;
         }
     }
+
+    /**
+     * Obtiene datos para tabla en tiempo real
+     */
+    public function getDatosTabla($usuarioId, $dispositivoId = null, $limite = 50, $pagina = 1) {
+        try {
+            $offset = ($pagina - 1) * $limite;
+            
+            $query = "SELECT ds.id, ds.dispositivo_id, ds.fecha, ds.latitude, ds.longitude, 
+                            ds.altitude, ds.speed, ds.bpm, ds.temperatura, ds.bateria,
+                            d.nombre as dispositivo_nombre, d.mac,
+                            m.nombre as mascota_nombre, m.especie as mascota_especie,
+                            u.nombre as usuario_nombre
+                     FROM {$this->table} ds
+                     INNER JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo
+                     LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
+                     LEFT JOIN usuarios u ON d.usuario_id = u.id_usuario";
+            
+            $conditions = [];
+            $params = [];
+
+            // Verificar permisos
+            if (!function_exists('verificarPermiso') || !verificarPermiso('ver_todos_dispositivos')) {
+                $conditions[] = "d.usuario_id = :usuario_id";
+                $params[':usuario_id'] = $usuarioId;
+            }
+
+            // Filtro por dispositivo específico
+            if ($dispositivoId) {
+                $conditions[] = "ds.dispositivo_id = :dispositivo_id";
+                $params[':dispositivo_id'] = $dispositivoId;
+            }
+
+            if (!empty($conditions)) {
+                $query .= " WHERE " . implode(" AND ", $conditions);
+            }
+
+            $query .= " ORDER BY ds.fecha DESC LIMIT :limite OFFSET :offset";
+            
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getDatosTabla: " . $e->getMessage());
+            return [];
+        }
+    }
 } 

@@ -306,4 +306,96 @@ class MonitorController extends Controller {
         echo json_encode($data);
         exit;
     }
+
+    /**
+     * Obtiene dispositivos con filtros avanzados
+     */
+    public function getDatosFiltradosAction() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['error' => 'No autorizado'], 401);
+                return;
+            }
+
+            $propietarioId = isset($_GET['propietario_id']) ? intval($_GET['propietario_id']) : null;
+            $mascotaId = isset($_GET['mascota_id']) ? intval($_GET['mascota_id']) : null;
+            $mac = isset($_GET['mac']) ? trim($_GET['mac']) : '';
+            $soloActivos = isset($_GET['solo_activos']) && $_GET['solo_activos'] === 'true';
+
+            // Obtener dispositivos filtrados
+            $dispositivos = $this->dispositivoModel->getDispositivosFiltrados(
+                $_SESSION['user_id'],
+                $propietarioId,
+                $mascotaId,
+                $mac,
+                $soloActivos
+            );
+
+            $this->jsonResponse(['success' => true, 'dispositivos' => $dispositivos]);
+        } catch (Exception $e) {
+            error_log("Error en getDatosFiltrados: " . $e->getMessage());
+            $this->jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Obtiene lista de propietarios para filtros
+     */
+    public function getPropietariosAction() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['error' => 'No autorizado'], 401);
+                return;
+            }
+
+            $propietarios = $this->dispositivoModel->getPropietariosDispositivos($_SESSION['user_id']);
+            $this->jsonResponse(['success' => true, 'propietarios' => $propietarios]);
+        } catch (Exception $e) {
+            error_log("Error en getPropietarios: " . $e->getMessage());
+            $this->jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Obtiene mascotas por propietario para filtros
+     */
+    public function getMascotasPorPropietarioAction() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['error' => 'No autorizado'], 401);
+                return;
+            }
+
+            $propietarioId = isset($_GET['propietario_id']) ? intval($_GET['propietario_id']) : null;
+            $mascotas = $this->dispositivoModel->getMascotasPorPropietario($_SESSION['user_id'], $propietarioId);
+            $this->jsonResponse(['success' => true, 'mascotas' => $mascotas]);
+        } catch (Exception $e) {
+            error_log("Error en getMascotasPorPropietario: " . $e->getMessage());
+            $this->jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Obtiene datos de sensores para tabla en tiempo real
+     */
+    public function getDatosTablaAction() {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['error' => 'No autorizado'], 401);
+                return;
+            }
+
+            $dispositivoId = isset($_GET['dispositivo_id']) ? intval($_GET['dispositivo_id']) : null;
+            $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 50;
+            $pagina = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
+
+            $datosSensor = new DatosSensor();
+            $datos = $datosSensor->getDatosTabla($_SESSION['user_id'], $dispositivoId, $limite, $pagina);
+
+            $this->jsonResponse(['success' => true, 'datos' => $datos]);
+        } catch (Exception $e) {
+            error_log("Error en getDatosTabla: " . $e->getMessage());
+            $this->jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 }
