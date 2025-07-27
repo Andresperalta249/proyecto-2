@@ -90,15 +90,6 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 </select>
             </div>
             <div class="col-md-1">
-                <label for="filtroBateria" class="form-label small mb-1">Batería</label>
-                <select class="form-select form-select-sm" id="filtroBateria">
-                    <option value="">Todas</option>
-                    <option value="alta">Alta</option>
-                    <option value="media">Media</option>
-                    <option value="baja">Baja</option>
-                </select>
-            </div>
-            <div class="col-md-2">
                 <label for="filtroMAC" class="form-label small mb-1">MAC</label>
                 <input type="text" class="form-control form-control-sm" id="filtroMAC" placeholder="MAC...">
             </div>
@@ -110,7 +101,7 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 <label for="filtroFechaFin" class="form-label small mb-1">Hasta</label>
                 <input type="date" class="form-control form-control-sm" id="filtroFechaFin">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label for="filtroBusqueda" class="form-label small mb-1">Buscar</label>
                 <input type="text" class="form-control form-control-sm" id="filtroBusqueda" placeholder="Nombre...">
             </div>
@@ -298,7 +289,6 @@ let filtrosActuales = {
     propietario: '',
     mascota: '',
     especie: '',
-    bateria: '',
     mac: '',
     fechaInicio: '',
     fechaFin: '',
@@ -313,7 +303,6 @@ function aplicarFiltros() {
         propietario: document.getElementById('filtroPropietario').value,
         mascota: document.getElementById('filtroMascota').value,
         especie: document.getElementById('filtroEspecie').value,
-        bateria: document.getElementById('filtroBateria').value,
         mac: document.getElementById('filtroMAC').value,
         fechaInicio: document.getElementById('filtroFechaInicio').value,
         fechaFin: document.getElementById('filtroFechaFin').value,
@@ -496,7 +485,6 @@ function configurarEventos() {
         document.getElementById('filtroPropietario').value = '';
         document.getElementById('filtroMascota').value = '';
         document.getElementById('filtroEspecie').value = '';
-        document.getElementById('filtroBateria').value = '';
         document.getElementById('filtroMAC').value = '';
         document.getElementById('filtroFechaInicio').value = '';
         document.getElementById('filtroFechaFin').value = '';
@@ -532,7 +520,7 @@ function configurarEventos() {
     });
     
     // Filtros automáticos (se aplican automáticamente)
-    ['filtroEspecie', 'filtroBateria', 'filtroMAC', 'filtroFechaInicio', 'filtroFechaFin', 'filtroBusqueda'].forEach(id => {
+    ['filtroEspecie', 'filtroMAC', 'filtroFechaInicio', 'filtroFechaFin', 'filtroBusqueda'].forEach(id => {
         document.getElementById(id).addEventListener('change', aplicarFiltros);
     });
 }
