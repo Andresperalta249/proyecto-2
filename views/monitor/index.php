@@ -83,14 +83,8 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
         </div>
         <div class="row mt-3">
             <div class="col-12">
-                <button type="button" class="btn btn-success" id="btnAplicarFiltros">
-                    <i class="fas fa-search"></i> Aplicar Filtros
-                </button>
                 <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                    <i class="fas fa-times"></i> Limpiar
-                </button>
-                <button type="button" class="btn btn-info" id="btnCentrarMapa">
-                    <i class="fas fa-crosshairs"></i> Centrar Mapa
+                    <i class="fas fa-times"></i> Limpiar Filtros
                 </button>
             </div>
         </div>
@@ -98,20 +92,20 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 </div>
 
 <!-- Mapa Interactivo -->
-<div class="card mb-4">
+<div class="card mb-3">
     <div class="card-header">
         <h5 class="card-title mb-0">
             <i class="fas fa-map"></i> Mapa de Ubicaciones
         </h5>
     </div>
     <div class="card-body">
-        <div id="mapaMonitor" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+        <div id="mapaMonitor" style="height: 300px; width: 100%; border-radius: 8px;"></div>
     </div>
 </div>
 
 <!-- Tabla de Datos de Sensores -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
+<div class="card" style="margin: 0; border-radius: 0;">
+    <div class="card-header d-flex justify-content-between align-items-center" style="border-radius: 0;">
         <h5 class="card-title mb-0">
             <i class="fas fa-table"></i> Historial de Datos de Sensores
         </h5>
@@ -127,9 +121,9 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
             </button>
         </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover" id="tablaDatos">
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive" style="margin: 0;">
+            <table class="table table-striped table-hover mb-0" id="tablaDatos" style="margin: 0;">
                 <thead class="table-dark">
                     <tr>
                         <th style="cursor: pointer;" onclick="ordenarTabla(0)">
@@ -457,9 +451,6 @@ function configurarEventos() {
         cargarMascotas(this.value);
     });
     
-    // Botón aplicar filtros
-    document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltros);
-    
     // Botón limpiar filtros
     document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
         // Limpiar todos los filtros
@@ -490,15 +481,6 @@ function configurarEventos() {
         aplicarFiltros();
     });
     
-    // Botón centrar mapa
-    document.getElementById('btnCentrarMapa').addEventListener('click', function() {
-        if (marcadores.length > 0) {
-            const bounds = L.latLngBounds();
-            marcadores.forEach(marker => bounds.extend(marker.getLatLng()));
-            mapa.fitBounds(bounds, { padding: [20, 20] });
-        }
-    });
-    
     // Botón actualizar tabla
     document.getElementById('btnActualizarTabla').addEventListener('click', cargarTablaDatos);
     
@@ -510,7 +492,7 @@ function configurarEventos() {
         buscarEnTabla(this.value);
     });
     
-    // Filtros automáticos
+    // Filtros automáticos (se aplican automáticamente)
     ['filtroEspecie', 'filtroBateria', 'filtroMAC', 'filtroFechaInicio', 'filtroFechaFin', 'filtroBusqueda'].forEach(id => {
         document.getElementById(id).addEventListener('change', aplicarFiltros);
     });
