@@ -276,7 +276,19 @@ class RolesController {
                 echo '<td class="celda-id">' . htmlspecialchars($rol['id_rol']) . '</td>';
                 echo '<td>' . htmlspecialchars($rol['nombre']) . '</td>';
                 echo '<td>' . htmlspecialchars($rol['descripcion']) . '</td>';
-                echo '<td class="celda-estado"><span class="badge-estado badge-' . ($rol['estado'] === 'activo' ? 'activo' : 'inactivo') . '">' . ucfirst($rol['estado']) . '</span></td>';
+                echo '<td class="celda-estado">';
+                
+                // Mostrar switch solo si tiene permisos y no es rol por defecto
+                if (verificarPermiso('editar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_por_defecto']) {
+                    echo '<div class="form-check form-switch d-flex align-items-center mb-0">';
+                    echo '<input class="form-check-input cambiar-estado-rol" type="checkbox" data-id="' . $rol['id_rol'] . '" ' . ($rol['estado'] === 'activo' ? 'checked' : '') . '>';
+                    echo '<label class="form-check-label ms-2">' . ucfirst($rol['estado']) . '</label>';
+                    echo '</div>';
+                } else {
+                    echo '<span class="badge-estado badge-' . ($rol['estado'] === 'activo' ? 'activo' : 'inactivo') . '">' . ucfirst($rol['estado']) . '</span>';
+                }
+                
+                echo '</td>';
                 echo '<td class="celda-acciones">';
                 
                 // Solo mostrar botones de edición/eliminación si puede gestionar roles

@@ -60,6 +60,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Delegación de eventos para cambiar estado
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('cambiar-estado-rol')) {
+            const id = e.target.dataset.id;
+            const nuevoEstado = e.target.checked ? 'activo' : 'inactivo';
+            cambiarEstadoRol(id, nuevoEstado);
+        }
+    });
+
     // Manejar cierre del modal
     const rolModal = document.getElementById('rolModal');
     if (rolModal) {
@@ -169,6 +178,49 @@ function eliminarRol(id) {
                 });
             });
         }
+    });
+}
+
+function cambiarEstadoRol(id, estado) {
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('estado', estado);
+
+    fetch('<?= APP_URL ?>/roles/cambiarEstado', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Estado actualizado correctamente',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                cargarTablaRoles();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'Error al cambiar el estado'
+            });
+            // Revertir el switch si hay error
+            cargarTablaRoles();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cambiar el estado'
+        });
+        // Revertir el switch si hay error
+        cargarTablaRoles();
     });
 }
 </script> 
