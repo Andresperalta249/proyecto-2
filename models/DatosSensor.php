@@ -17,7 +17,7 @@ class DatosSensor extends Model {
                     WHERE dispositivo_id = :dispositivo_id
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
@@ -40,7 +40,7 @@ class DatosSensor extends Model {
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
             
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
@@ -77,7 +77,7 @@ class DatosSensor extends Model {
                     AND fecha >= DATE_SUB(NOW(), INTERVAL :horas HOUR)
                     ORDER BY fecha ASC";
             
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute([
                 ':dispositivo_id' => $dispositivoId,
                 ':horas' => $horas
@@ -145,7 +145,7 @@ class DatosSensor extends Model {
                     AND longitude IS NOT NULL 
                     ORDER BY fecha DESC 
                     LIMIT 1";
-            $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute([':dispositivo_id' => $dispositivoId]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$result) {
@@ -197,7 +197,7 @@ class DatosSensor extends Model {
 
             $query .= " ORDER BY ds.fecha DESC LIMIT :limite OFFSET :offset";
             
-            $stmt = $this->db->prepare($query);
+            $stmt = $this->db->getConnection()->prepare($query);
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value);
             }
