@@ -253,9 +253,31 @@ class UsuariosController extends Controller {
                 return;
             }
 
-            // No permitir eliminar el propio usuario
-            if ($id == $_SESSION['user_id']) {
-                echo json_encode(['success' => false, 'error' => 'No puedes eliminar tu propia cuenta']);
+            // Obtener información del usuario a eliminar
+            $usuarioAEliminar = $this->userModel->getUsuarioById($id);
+            if (!$usuarioAEliminar) {
+                echo json_encode(['success' => false, 'error' => 'Usuario no encontrado']);
+                return;
+            }
+
+            // Obtener información del usuario actual
+            $usuarioActual = $this->userModel->getUsuarioById($_SESSION['user_id']);
+            if (!$usuarioActual) {
+                echo json_encode(['success' => false, 'error' => 'Error al obtener información del usuario actual']);
+                return;
+            }
+
+            // Verificar permisos de eliminación usando el modelo de roles
+            $rolModel = new Rol();
+            $puedeEliminar = $rolModel->puedeEliminarUsuario(
+                $usuarioActual['rol_id'],
+                $usuarioAEliminar['rol_id'],
+                $id,
+                $_SESSION['user_id']
+            );
+
+            if (!$puedeEliminar) {
+                echo json_encode(['success' => false, 'error' => 'No tienes permisos para eliminar este usuario']);
                 return;
             }
 
@@ -306,6 +328,34 @@ class UsuariosController extends Controller {
             $id = $_POST['id_usuario'] ?? null;
             if (!$id) {
                 echo json_encode(['success' => false, 'error' => 'ID de usuario no proporcionado']);
+                return;
+            }
+
+            // Obtener información del usuario a eliminar
+            $usuarioAEliminar = $this->userModel->getUsuarioById($id);
+            if (!$usuarioAEliminar) {
+                echo json_encode(['success' => false, 'error' => 'Usuario no encontrado']);
+                return;
+            }
+
+            // Obtener información del usuario actual
+            $usuarioActual = $this->userModel->getUsuarioById($_SESSION['user_id']);
+            if (!$usuarioActual) {
+                echo json_encode(['success' => false, 'error' => 'Error al obtener información del usuario actual']);
+                return;
+            }
+
+            // Verificar permisos de eliminación usando el modelo de roles
+            $rolModel = new Rol();
+            $puedeEliminar = $rolModel->puedeEliminarUsuario(
+                $usuarioActual['rol_id'],
+                $usuarioAEliminar['rol_id'],
+                $id,
+                $_SESSION['user_id']
+            );
+
+            if (!$puedeEliminar) {
+                echo json_encode(['success' => false, 'error' => 'No tienes permisos para eliminar este usuario']);
                 return;
             }
 

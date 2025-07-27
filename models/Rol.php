@@ -3,20 +3,20 @@ require_once __DIR__ . '/../core/Model.php';
 class Rol extends Model {
     protected $table = 'roles';
     
-    // Roles del sistema que tienen control total
-    private $rolesSistema = [1, 2, 3]; // Super Admin, Admin, Moderador
+    // Roles del sistema que son por defecto y no se pueden eliminar
+    private $rolesPorDefecto = [1, 2, 3]; // Administrador, Usuario, Super Administrador
     
     public function __construct() {
         parent::__construct();
     }
     
     /**
-     * Verifica si un rol es un rol del sistema (con control total)
+     * Verifica si un rol es un rol por defecto del sistema
      * @param int $id_rol ID del rol
-     * @return bool True si es rol del sistema
+     * @return bool True si es rol por defecto
      */
-    public function esRolSistema($id_rol) {
-        return in_array($id_rol, $this->rolesSistema);
+    public function esRolPorDefecto($id_rol) {
+        return in_array($id_rol, $this->rolesPorDefecto);
     }
     
     /**
@@ -25,7 +25,56 @@ class Rol extends Model {
      * @return bool True si puede gestionar roles
      */
     public function puedeGestionarRoles($id_rol) {
-        return $this->esRolSistema($id_rol);
+        // Solo Super Admin (ID 3) y Admin (ID 1) pueden gestionar roles
+        return in_array($id_rol, [1, 3]);
+    }
+    
+    /**
+     * Verifica si un rol puede eliminar otro rol específico
+     * @param int $rolActual ID del rol que intenta eliminar
+     * @param int $rolAEliminar ID del rol a eliminar
+     * @return bool True si puede eliminar
+     */
+    public function puedeEliminarRol($rolActual, $rolAEliminar) {
+        // No se pueden eliminar roles por defecto
+        if ($this->esRolPorDefecto($rolAEliminar)) {
+            return false;
+        }
+        
+        // Solo Super Admin puede eliminar roles personalizados
+        return $rolActual === 3;
+    }
+    
+    /**
+     * Verifica si un rol puede eliminar un usuario específico
+     * @param int $rolActual ID del rol que intenta eliminar
+     * @param int $rolUsuario ID del rol del usuario a eliminar
+     * @param int $idUsuario ID del usuario a eliminar
+     * @param int $idUsuarioActual ID del usuario actual
+     * @return bool True si puede eliminar
+     */
+    public function puedeEliminarUsuario($rolActual, $rolUsuario, $idUsuario, $idUsuarioActual) {
+        // No se puede eliminar a sí mismo
+        if ($idUsuario === $idUsuarioActual) {
+            return false;
+        }
+        
+        // No se pueden eliminar usuarios con rol por defecto
+        if ($this->esRolPorDefecto($rolUsuario)) {
+            return false;
+        }
+        
+        // Super Admin puede eliminar usuarios con rol inferior
+        if ($rolActual === 3) {
+            return $rolUsuario > 3;
+        }
+        
+        // Admin puede eliminar usuarios con rol inferior (solo ID 2)
+        if ($rolActual === 1) {
+            return $rolUsuario === 2;
+        }
+        
+        return false;
     }
     
     /**
@@ -50,8 +99,8 @@ class Rol extends Model {
             foreach ($roles as &$rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
-                // Agregar información de si es rol del sistema
-                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                // Agregar información de permisos
+                $rol['es_rol_por_defecto'] = $this->esRolPorDefecto($rol['id_rol']);
                 $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
@@ -106,8 +155,8 @@ class Rol extends Model {
             foreach ($roles as &$rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
-                // Agregar información de si es rol del sistema
-                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                // Agregar información de permisos
+                $rol['es_rol_por_defecto'] = $this->esRolPorDefecto($rol['id_rol']);
                 $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
@@ -140,8 +189,8 @@ class Rol extends Model {
             if ($rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
-                // Agregar información de si es rol del sistema
-                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                // Agregar información de permisos
+                $rol['es_rol_por_defecto'] = $this->esRolPorDefecto($rol['id_rol']);
                 $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
@@ -256,9 +305,9 @@ class Rol extends Model {
             if (!$rol) {
                 throw new Exception('Rol no encontrado');
             }
-            // Validar que no sea un rol protegido del sistema
-            if ($this->esRolSistema($id_rol)) {
-                throw new Exception('No se puede eliminar un rol del sistema');
+            // Validar que no sea un rol por defecto
+            if ($this->esRolPorDefecto($id_rol)) {
+                throw new Exception('No se puede eliminar un rol por defecto del sistema');
             }
             // Validar que no tenga usuarios asociados
             $sql = "SELECT COUNT(*) FROM usuarios WHERE rol_id = ?";
@@ -364,9 +413,9 @@ class Rol extends Model {
                 throw new Exception('Rol no encontrado');
             }
             
-            // Validar que no sea un rol protegido del sistema
-            if ($this->esRolSistema($id_rol)) {
-                throw new Exception('No se puede modificar un rol del sistema');
+            // Validar que no sea un rol por defecto
+            if ($this->esRolPorDefecto($id_rol)) {
+                throw new Exception('No se puede modificar un rol por defecto del sistema');
             }
             
             $sql = "UPDATE roles SET estado = ? WHERE id_rol = ?";

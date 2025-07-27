@@ -44,7 +44,7 @@ class RolesController {
         
         // Verificar si puede gestionar roles
         if (!$this->puedeGestionarRoles()) {
-            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden gestionar roles']);
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores pueden gestionar roles']);
             exit;
         }
         
@@ -76,7 +76,7 @@ class RolesController {
         
         // Verificar si puede gestionar roles
         if (!$this->puedeGestionarRoles()) {
-            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden crear roles']);
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores pueden crear roles']);
             exit;
         }
         
@@ -107,7 +107,7 @@ class RolesController {
         
         // Verificar si puede gestionar roles
         if (!$this->puedeGestionarRoles()) {
-            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden editar roles']);
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores pueden editar roles']);
             exit;
         }
         
@@ -117,9 +117,9 @@ class RolesController {
             exit;
         }
         
-        // Verificar que no esté intentando editar un rol del sistema
-        if ($this->model->esRolSistema($id)) {
-            echo json_encode(['success' => false, 'error' => 'No se puede editar un rol del sistema']);
+        // Verificar que no esté intentando editar un rol por defecto
+        if ($this->model->esRolPorDefecto($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede editar un rol por defecto del sistema']);
             exit;
         }
         
@@ -157,7 +157,7 @@ class RolesController {
         
         // Verificar si puede gestionar roles
         if (!$this->puedeGestionarRoles()) {
-            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden eliminar roles']);
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores pueden eliminar roles']);
             exit;
         }
         
@@ -167,9 +167,15 @@ class RolesController {
             exit;
         }
         
-        // Verificar que no esté intentando eliminar un rol del sistema
-        if ($this->model->esRolSistema($id)) {
-            echo json_encode(['success' => false, 'error' => 'No se puede eliminar un rol del sistema']);
+        // Verificar que no esté intentando eliminar un rol por defecto
+        if ($this->model->esRolPorDefecto($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede eliminar un rol por defecto del sistema']);
+            exit;
+        }
+        
+        // Verificar si el usuario actual puede eliminar este rol específico
+        if (!$this->model->puedeEliminarRol($_SESSION['user_role'], $id)) {
+            echo json_encode(['success' => false, 'error' => 'No tienes permisos para eliminar este rol']);
             exit;
         }
         
@@ -189,7 +195,7 @@ class RolesController {
         
         // Verificar si puede gestionar roles
         if (!$this->puedeGestionarRoles()) {
-            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden cambiar el estado de roles']);
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores pueden cambiar el estado de roles']);
             exit;
         }
         
@@ -201,9 +207,9 @@ class RolesController {
             exit;
         }
         
-        // Verificar que no esté intentando cambiar el estado de un rol del sistema
-        if ($this->model->esRolSistema($id)) {
-            echo json_encode(['success' => false, 'error' => 'No se puede cambiar el estado de un rol del sistema']);
+        // Verificar que no esté intentando cambiar el estado de un rol por defecto
+        if ($this->model->esRolPorDefecto($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede cambiar el estado de un rol por defecto del sistema']);
             exit;
         }
         
@@ -274,17 +280,20 @@ class RolesController {
                 echo '<td class="celda-acciones">';
                 
                 // Solo mostrar botones de edición/eliminación si puede gestionar roles
-                if (verificarPermiso('editar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_sistema']) {
+                if (verificarPermiso('editar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_por_defecto']) {
                     echo '<button type="button" class="btn-accion btn-editar" data-id="' . $rol['id_rol'] . '" title="Editar"><i class="fas fa-edit"></i></button>';
                 }
                 
-                if (verificarPermiso('eliminar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_sistema']) {
-                    echo '<button type="button" class="btn-accion btn-eliminar" data-id="' . $rol['id_rol'] . '" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                if (verificarPermiso('eliminar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_por_defecto']) {
+                    // Verificar si puede eliminar este rol específico
+                    if ($this->model->puedeEliminarRol($_SESSION['user_role'], $rol['id_rol'])) {
+                        echo '<button type="button" class="btn-accion btn-eliminar" data-id="' . $rol['id_rol'] . '" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                    }
                 }
                 
-                // Mostrar indicador de rol del sistema
-                if ($rol['es_rol_sistema']) {
-                    echo '<span class="text-muted" title="Rol del sistema"><i class="fas fa-shield-alt"></i> Sistema</span>';
+                // Mostrar indicador de rol por defecto
+                if ($rol['es_rol_por_defecto']) {
+                    echo '<span class="text-muted" title="Rol por defecto del sistema"><i class="fas fa-shield-alt"></i> Sistema</span>';
                 }
                 
                 echo '</td>';
@@ -313,8 +322,8 @@ class RolesController {
         $rol = null;
         if ($id) {
             $rol = $this->model->getById($id);
-            // Verificar que no esté intentando editar un rol del sistema
-            if ($rol && $rol['es_rol_sistema']) {
+            // Verificar que no esté intentando editar un rol por defecto
+            if ($rol && $rol['es_rol_por_defecto']) {
                 header('Location: ' . APP_URL . '/error/403');
                 exit;
             }

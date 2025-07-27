@@ -70,7 +70,7 @@ function cargarRoles() {
                         <td class="id-azul">${rol.id_rol}</td>
                         <td>${rol.nombre}</td>
                         <td>
-                            ${!rol.es_rol_sistema ? 
+                            ${!rol.es_rol_por_defecto ? 
                                 `<div class="form-check form-switch d-flex align-items-center mb-0">
                                     <input class="form-check-input cambiar-estado-rol" type="checkbox" 
                                            data-id="${rol.id_rol}" ${rol.estado === 'activo' ? 'checked' : ''}>
@@ -96,7 +96,7 @@ function cargarRoles() {
                             </button>
                         </td>
                         <td>
-                            ${!rol.es_rol_sistema && rol.puede_gestionar_roles ? 
+                            ${!rol.es_rol_por_defecto && rol.puede_gestionar_roles ? 
                                 `<button class="btn-accion btn-info editar-rol" data-id="${rol.id_rol}" 
                                          data-bs-toggle="modal" data-bs-target="#modalRol">
                                     <i class="fas fa-edit"></i>
@@ -104,8 +104,8 @@ function cargarRoles() {
                                 <button class="btn-accion btn-danger eliminar-rol" data-id="${rol.id_rol}">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>` :
-                                rol.es_rol_sistema ?
-                                `<span class="text-muted" title="Rol del sistema"><i class="fas fa-shield-alt"></i> Sistema</span>` :
+                                rol.es_rol_por_defecto ?
+                                `<span class="text-muted" title="Rol por defecto del sistema"><i class="fas fa-shield-alt"></i> Sistema</span>` :
                                 `<span class="text-muted" title="Sin permisos de gestión"><i class="fas fa-lock"></i> No editable</span>`
                             }
                         </td>
@@ -199,9 +199,9 @@ $(document).on('click', '.editar-rol', function() {
             if (response.success) {
                 const rol = response.data;
                 
-                // Verificar que no sea un rol del sistema
-                if (rol.es_rol_sistema) {
-                    utils.mostrarError('No se puede editar un rol del sistema');
+                // Verificar que no sea un rol por defecto
+                if (rol.es_rol_por_defecto) {
+                    utils.mostrarError('No se puede editar un rol por defecto del sistema');
                     return;
                 }
                 
