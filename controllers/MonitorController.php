@@ -102,7 +102,7 @@ class MonitorController extends Controller {
             $dispositivoId = $_GET['dispositivoId'] ?? null;
 
             $datosSensorModel = new DatosSensor();
-            $datos = $datosSensorModel->getDatosTabla($pagina, $porPagina, $dispositivoId);
+            $datos = $datosSensorModel->getDatosTabla($_SESSION['user_id'], $dispositivoId, $porPagina, $pagina);
             echo json_encode(['success' => true, 'data' => $datos]);
         } catch (Exception $e) {
             http_response_code(500);
