@@ -6,6 +6,19 @@ class RolesController {
         $this->model = new Rol();
     }
     
+    /**
+     * Verifica si el usuario actual puede gestionar roles
+     * @return bool True si puede gestionar roles
+     */
+    private function puedeGestionarRoles() {
+        // Verificar si el usuario tiene el rol del sistema
+        if (!isset($_SESSION['user_role'])) {
+            return false;
+        }
+        
+        return $this->model->puedeGestionarRoles($_SESSION['user_role']);
+    }
+    
     public function indexAction() {
         // Verificar permisos
         if (!verificarPermiso('ver_roles')) {
@@ -26,6 +39,12 @@ class RolesController {
         // Verificar permisos
         if (!verificarPermiso('editar_roles')) {
             echo json_encode(['success' => false, 'error' => 'No tienes permiso para editar roles']);
+            exit;
+        }
+        
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden gestionar roles']);
             exit;
         }
         
@@ -54,6 +73,13 @@ class RolesController {
             echo json_encode(['success' => false, 'error' => 'No tienes permiso para crear roles']);
             exit;
         }
+        
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden crear roles']);
+            exit;
+        }
+        
         $data = [
             'nombre' => $_POST['nombre'] ?? '',
             'descripcion' => $_POST['descripcion'] ?? '',
@@ -78,11 +104,25 @@ class RolesController {
             echo json_encode(['success' => false, 'error' => 'No tienes permiso para editar roles']);
             exit;
         }
+        
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden editar roles']);
+            exit;
+        }
+        
         $id = $_POST['id_rol'] ?? null;
         if (!$id) {
             echo json_encode(['success' => false, 'error' => 'ID de rol no proporcionado']);
             exit;
         }
+        
+        // Verificar que no esté intentando editar un rol del sistema
+        if ($this->model->esRolSistema($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede editar un rol del sistema']);
+            exit;
+        }
+        
         $data = [
             'nombre' => $_POST['nombre'] ?? '',
             'descripcion' => $_POST['descripcion'] ?? '',
@@ -115,9 +155,21 @@ class RolesController {
             exit;
         }
         
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden eliminar roles']);
+            exit;
+        }
+        
         $id = $_POST['id'] ?? null;
         if (!$id) {
             echo json_encode(['success' => false, 'error' => 'ID de rol no proporcionado']);
+            exit;
+        }
+        
+        // Verificar que no esté intentando eliminar un rol del sistema
+        if ($this->model->esRolSistema($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede eliminar un rol del sistema']);
             exit;
         }
         
@@ -135,11 +187,23 @@ class RolesController {
             exit;
         }
         
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            echo json_encode(['success' => false, 'error' => 'Solo los administradores del sistema pueden cambiar el estado de roles']);
+            exit;
+        }
+        
         $id = $_POST['id'] ?? null;
         $estado = $_POST['estado'] ?? null;
         
         if (!$id || !$estado) {
             echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
+            exit;
+        }
+        
+        // Verificar que no esté intentando cambiar el estado de un rol del sistema
+        if ($this->model->esRolSistema($id)) {
+            echo json_encode(['success' => false, 'error' => 'No se puede cambiar el estado de un rol del sistema']);
             exit;
         }
         
@@ -209,12 +273,18 @@ class RolesController {
                 echo '<td class="celda-estado"><span class="badge-estado badge-' . ($rol['estado'] === 'activo' ? 'activo' : 'inactivo') . '">' . ucfirst($rol['estado']) . '</span></td>';
                 echo '<td class="celda-acciones">';
                 
-                if (verificarPermiso('editar_roles')) {
+                // Solo mostrar botones de edición/eliminación si puede gestionar roles
+                if (verificarPermiso('editar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_sistema']) {
                     echo '<button type="button" class="btn-accion btn-editar" data-id="' . $rol['id_rol'] . '" title="Editar"><i class="fas fa-edit"></i></button>';
                 }
                 
-                if (verificarPermiso('eliminar_roles')) {
+                if (verificarPermiso('eliminar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_sistema']) {
                     echo '<button type="button" class="btn-accion btn-eliminar" data-id="' . $rol['id_rol'] . '" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                }
+                
+                // Mostrar indicador de rol del sistema
+                if ($rol['es_rol_sistema']) {
+                    echo '<span class="text-muted" title="Rol del sistema"><i class="fas fa-shield-alt"></i> Sistema</span>';
                 }
                 
                 echo '</td>';
@@ -233,10 +303,21 @@ class RolesController {
             exit;
         }
         
+        // Verificar si puede gestionar roles
+        if (!$this->puedeGestionarRoles()) {
+            header('Location: ' . APP_URL . '/error/403');
+            exit;
+        }
+        
         $id = $_GET['id'] ?? null;
         $rol = null;
         if ($id) {
             $rol = $this->model->getById($id);
+            // Verificar que no esté intentando editar un rol del sistema
+            if ($rol && $rol['es_rol_sistema']) {
+                header('Location: ' . APP_URL . '/error/403');
+                exit;
+            }
         }
         $permisos = $this->model->getPermisos();
         $data = [

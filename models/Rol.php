@@ -3,8 +3,29 @@ require_once __DIR__ . '/../core/Model.php';
 class Rol extends Model {
     protected $table = 'roles';
     
+    // Roles del sistema que tienen control total
+    private $rolesSistema = [1, 2, 3]; // Super Admin, Admin, Moderador
+    
     public function __construct() {
         parent::__construct();
+    }
+    
+    /**
+     * Verifica si un rol es un rol del sistema (con control total)
+     * @param int $id_rol ID del rol
+     * @return bool True si es rol del sistema
+     */
+    public function esRolSistema($id_rol) {
+        return in_array($id_rol, $this->rolesSistema);
+    }
+    
+    /**
+     * Verifica si un rol puede gestionar otros roles
+     * @param int $id_rol ID del rol
+     * @return bool True si puede gestionar roles
+     */
+    public function puedeGestionarRoles($id_rol) {
+        return $this->esRolSistema($id_rol);
     }
     
     /**
@@ -29,6 +50,9 @@ class Rol extends Model {
             foreach ($roles as &$rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
+                // Agregar información de si es rol del sistema
+                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
             return is_array($roles) ? $roles : [];
@@ -82,6 +106,9 @@ class Rol extends Model {
             foreach ($roles as &$rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
+                // Agregar información de si es rol del sistema
+                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
             return is_array($roles) ? $roles : [];
@@ -113,6 +140,9 @@ class Rol extends Model {
             if ($rol) {
                 $rol['permisos'] = $rol['permisos'] ? explode(',', $rol['permisos']) : [];
                 $rol['permiso_ids'] = $rol['permiso_ids'] ? explode(',', $rol['permiso_ids']) : [];
+                // Agregar información de si es rol del sistema
+                $rol['es_rol_sistema'] = $this->esRolSistema($rol['id_rol']);
+                $rol['puede_gestionar_roles'] = $this->puedeGestionarRoles($rol['id_rol']);
             }
             
             return is_array($rol) ? $rol : [];
@@ -226,9 +256,9 @@ class Rol extends Model {
             if (!$rol) {
                 throw new Exception('Rol no encontrado');
             }
-            // Validar que no sea un rol protegido
-            if ($id_rol <= 3) {
-                throw new Exception('No se puede eliminar un rol protegido');
+            // Validar que no sea un rol protegido del sistema
+            if ($this->esRolSistema($id_rol)) {
+                throw new Exception('No se puede eliminar un rol del sistema');
             }
             // Validar que no tenga usuarios asociados
             $sql = "SELECT COUNT(*) FROM usuarios WHERE rol_id = ?";
@@ -334,9 +364,9 @@ class Rol extends Model {
                 throw new Exception('Rol no encontrado');
             }
             
-            // Validar que no sea un rol protegido
-            if ($id_rol <= 3) {
-                throw new Exception('No se puede modificar un rol protegido');
+            // Validar que no sea un rol protegido del sistema
+            if ($this->esRolSistema($id_rol)) {
+                throw new Exception('No se puede modificar un rol del sistema');
             }
             
             $sql = "UPDATE roles SET estado = ? WHERE id_rol = ?";
