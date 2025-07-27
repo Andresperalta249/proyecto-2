@@ -8,6 +8,13 @@
                     </h4>
                 </div>
                 <div class="card-body">
+                    <!-- Debug info -->
+                    <div class="alert alert-info">
+                        <strong>Debug:</strong> Dispositivos encontrados: <?= count($dispositivos ?? []) ?>
+                        <br>
+                        <strong>Datos:</strong> <pre><?= print_r($dispositivos ?? [], true) ?></pre>
+                    </div>
+                    
                     <?php if (empty($dispositivos)): ?>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> No hay dispositivos disponibles para mostrar.
@@ -64,7 +71,7 @@
                                                 <button class="btn btn-sm btn-outline-primary" onclick="verDetalles(<?= $dispositivo['id_dispositivo'] ?>)">
                                                     <i class="fas fa-eye"></i> Ver Detalles
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-info" onclick="verUbicacion(<?= $dispositivo['id_dispositivo'] ?>, <?= $dispositivo['latitud'] ?>, <?= $dispositivo['longitud'] ?>)">
+                                                <button class="btn btn-sm btn-outline-info" onclick="verUbicacion(<?= $dispositivo['id_dispositivo'] ?>, <?= $dispositivo['latitud'] ?? 'null' ?>, <?= $dispositivo['longitud'] ?? 'null' ?>)">
                                                     <i class="fas fa-map-marker-alt"></i> Ubicación
                                                 </button>
                                             </div>
