@@ -424,4 +424,18 @@ class MonitorController extends Controller {
         $this->view->setData('menuActivo', 'monitor');
         $this->view->render('monitor/test');
     }
+
+    /**
+     * Página de debug muy simple
+     */
+    public function debugAction() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . 'auth/login');
+            exit;
+        }
+
+        $this->view->setTitle('Debug Monitor');
+        $this->view->setData('menuActivo', 'monitor');
+        $this->view->render('monitor/debug');
+    }
 }
