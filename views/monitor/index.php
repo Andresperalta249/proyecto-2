@@ -67,22 +67,43 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 <!-- Filtros Avanzados Compactos -->
 <div class="card mb-4">
     <div class="card-body py-2">
-        <div class="row g-1 align-items-end">
+        <style>
+            .filtros-container .form-select,
+            .filtros-container .form-control,
+            .filtros-container .btn {
+                height: 32px !important;
+                line-height: 1.2 !important;
+                padding: 4px 8px !important;
+                font-size: 12px !important;
+                border-radius: 4px !important;
+            }
+            .filtros-container .form-label {
+                font-size: 11px !important;
+                margin-bottom: 4px !important;
+                font-weight: 500 !important;
+            }
+            .filtros-container .btn {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+        </style>
+        <div class="row g-1 align-items-end filtros-container">
             <div class="col-md-1">
-                <label for="filtroPropietario" class="form-label small mb-1">Propietario</label>
-                <select class="form-select form-select-sm" id="filtroPropietario" style="height: 31px;">
+                <label for="filtroPropietario" class="form-label">Propietario</label>
+                <select class="form-select" id="filtroPropietario">
                     <option value="">Todos</option>
                 </select>
             </div>
             <div class="col-md-1">
-                <label for="filtroMascota" class="form-label small mb-1">Mascota</label>
-                <select class="form-select form-select-sm" id="filtroMascota" style="height: 31px;">
+                <label for="filtroMascota" class="form-label">Mascota</label>
+                <select class="form-select" id="filtroMascota">
                     <option value="">Todas</option>
                 </select>
             </div>
             <div class="col-md-1">
-                <label for="filtroEspecie" class="form-label small mb-1">Especie</label>
-                <select class="form-select form-select-sm" id="filtroEspecie" style="height: 31px;">
+                <label for="filtroEspecie" class="form-label">Especie</label>
+                <select class="form-select" id="filtroEspecie">
                     <option value="">Todas</option>
                     <option value="perro">Perro</option>
                     <option value="gato">Gato</option>
@@ -90,31 +111,31 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 </select>
             </div>
             <div class="col-md-1">
-                <label for="filtroMAC" class="form-label small mb-1">MAC</label>
-                <input type="text" class="form-control form-control-sm" id="filtroMAC" placeholder="MAC..." style="height: 31px;">
+                <label for="filtroMAC" class="form-label">MAC</label>
+                <input type="text" class="form-control" id="filtroMAC" placeholder="MAC...">
             </div>
             <div class="col-md-1">
-                <label for="filtroFechaInicio" class="form-label small mb-1">Desde</label>
-                <input type="date" class="form-control form-control-sm" id="filtroFechaInicio" style="height: 31px;">
+                <label for="filtroFechaInicio" class="form-label">Desde</label>
+                <input type="date" class="form-control" id="filtroFechaInicio">
             </div>
             <div class="col-md-1">
-                <label for="filtroFechaFin" class="form-label small mb-1">Hasta</label>
-                <input type="date" class="form-control form-control-sm" id="filtroFechaFin" style="height: 31px;">
+                <label for="filtroFechaFin" class="form-label">Hasta</label>
+                <input type="date" class="form-control" id="filtroFechaFin">
             </div>
             <div class="col-md-1">
-                <label for="filtroBusqueda" class="form-label small mb-1">Buscar</label>
-                <input type="text" class="form-control form-control-sm" id="filtroBusqueda" placeholder="Nombre..." style="height: 31px;">
+                <label for="filtroBusqueda" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="filtroBusqueda" placeholder="Nombre...">
             </div>
             <div class="col-md-2">
-                <label class="form-label small mb-1">&nbsp;</label>
+                <label class="form-label">&nbsp;</label>
                 <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-primary btn-sm px-2" id="btnSoloActivos" style="font-size: 11px; height: 31px;">
+                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
                         <i class="fas fa-filter"></i> Activos
                     </button>
-                    <button type="button" class="btn btn-warning btn-sm px-2" id="btnExportar" style="font-size: 11px; height: 31px;">
+                    <button type="button" class="btn btn-warning" id="btnExportar">
                         <i class="fas fa-download"></i>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm px-2" id="btnLimpiarFiltros" style="font-size: 11px; height: 31px;">
+                    <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
