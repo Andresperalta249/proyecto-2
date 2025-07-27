@@ -36,6 +36,11 @@ class View {
 
         // Cargar el layout solo si está definido
         if ($this->layout) {
+            // Pasar datos al layout usando variables globales
+            $GLOBALS['content'] = $content;
+            $GLOBALS['title'] = $this->title;
+            $GLOBALS['menuActivo'] = $this->data['menuActivo'] ?? null;
+            
             $layoutPath = 'views/layouts/' . $this->layout . '.php';
             if (file_exists($layoutPath)) {
                 require $layoutPath;
