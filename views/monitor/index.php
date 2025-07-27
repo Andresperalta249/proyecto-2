@@ -50,17 +50,33 @@
                                                     <div class="fw-bold"><?= htmlspecialchars($dispositivo['usuario_nombre'] ?? 'N/A') ?></div>
                                                 </div>
                                                 <div class="col-6">
-                                                    <small class="text-muted">Última Conexión</small>
-                                                    <div class="fw-bold"><?= $dispositivo['ultima_conexion'] ?? 'N/A' ?></div>
+                                                    <small class="text-muted">Última Fecha</small>
+                                                    <div class="fw-bold"><?= $dispositivo['ultima_fecha'] ?? 'N/A' ?></div>
                                                 </div>
                                             </div>
-                                            <?php if ($dispositivo['latitud'] && $dispositivo['longitud']): ?>
+                                            <?php if ($dispositivo['temperatura'] || $dispositivo['bpm']): ?>
+                                            <div class="row mt-2">
+                                                <div class="col-4">
+                                                    <small class="text-muted">Temperatura</small>
+                                                    <div class="fw-bold"><?= $dispositivo['temperatura'] ? $dispositivo['temperatura'] . '°C' : 'N/A' ?></div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">BPM</small>
+                                                    <div class="fw-bold"><?= $dispositivo['bpm'] ?? 'N/A' ?></div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <small class="text-muted">Batería</small>
+                                                    <div class="fw-bold"><?= $dispositivo['bateria_sensor'] ? $dispositivo['bateria_sensor'] . '%' : 'N/A' ?></div>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
+                                            <?php if ($dispositivo['latitude'] && $dispositivo['longitude']): ?>
                                                 <div class="row mt-2">
                                                     <div class="col-12">
                                                         <small class="text-muted">Ubicación</small>
                                                         <div class="fw-bold">
-                                                            <?= number_format($dispositivo['latitud'], 6) ?>, 
-                                                            <?= number_format($dispositivo['longitud'], 6) ?>
+                                                            <?= number_format($dispositivo['latitude'], 6) ?>, 
+                                                            <?= number_format($dispositivo['longitude'], 6) ?>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -71,7 +87,7 @@
                                                 <button class="btn btn-sm btn-outline-primary" onclick="verDetalles(<?= $dispositivo['id_dispositivo'] ?>)">
                                                     <i class="fas fa-eye"></i> Ver Detalles
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-info" onclick="verUbicacion(<?= $dispositivo['id_dispositivo'] ?>, <?= $dispositivo['latitud'] ?? 'null' ?>, <?= $dispositivo['longitud'] ?? 'null' ?>)">
+                                                <button class="btn btn-sm btn-outline-info" onclick="verUbicacion(<?= $dispositivo['id_dispositivo'] ?>, <?= $dispositivo['latitude'] ?? 'null' ?>, <?= $dispositivo['longitude'] ?? 'null' ?>)">
                                                     <i class="fas fa-map-marker-alt"></i> Ubicación
                                                 </button>
                                             </div>

@@ -19,11 +19,11 @@ class MonitorController extends Controller {
             exit;
         }
 
-        // Obtener dispositivos según permisos
+        // Obtener dispositivos según permisos con datos de ubicación
         if (function_exists('verificarPermiso') && verificarPermiso('ver_todos_dispositivos')) {
-            $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
+            $dispositivos = $this->dispositivoModel->getDispositivosFiltrados($_SESSION['user_id']);
         } else {
-            $dispositivos = $this->dispositivoModel->getDispositivosWithMascotas($_SESSION['user_id']);
+            $dispositivos = $this->dispositivoModel->getDispositivosFiltrados($_SESSION['user_id']);
         }
 
         $this->view->setTitle('Monitor de Dispositivos');
