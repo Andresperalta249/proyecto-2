@@ -35,8 +35,8 @@ $subtitulo = isset($subtitulo) ? $subtitulo : 'Monitorea en tiempo real los disp
                         <p class="mb-2">
                             <strong>MAC:</strong> <?= $dispositivo['mac'] ?><br>
                             <strong>ID:</strong> <?= $dispositivo['id_dispositivo'] ?><br>
-                            <strong>Mascota:</strong> <?= $dispositivo['nombre_mascota'] ?><br>
-                            <strong>Especie:</strong> <?= $dispositivo['especie_mascota'] ?>
+                            <strong>Mascota:</strong> <?= $dispositivo['mascota_nombre'] ?: 'Sin mascota asignada' ?><br>
+                            <strong>Usuario:</strong> <?= $dispositivo['usuario_nombre'] ?>
                         </p>
                     </div>
                     <div class="dispositivo-actions">
