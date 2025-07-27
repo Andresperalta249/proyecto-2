@@ -60,7 +60,7 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 <!-- Mapa Interactivo -->
 <div class="card mb-3">
     <div class="card-body">
-        <div id="mapaMonitor" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+        <div id="mapaMonitor" style="height: 250px; width: 100%; border-radius: 8px;"></div>
     </div>
 </div>
 
@@ -346,6 +346,7 @@ function actualizarMapaConDispositivos(dispositivos) {
     }
     
     const bounds = L.latLngBounds();
+    let hayMarcadores = false;
     
     dispositivos.forEach(dispositivo => {
         if (dispositivo.latitude && dispositivo.longitude) {
@@ -388,12 +389,18 @@ function actualizarMapaConDispositivos(dispositivos) {
             marker.bindPopup(popupContent);
             marcadores.push(marker);
             bounds.extend([lat, lng]);
+            hayMarcadores = true;
         }
     });
     
-    // Ajustar vista del mapa
-    if (marcadores.length > 0) {
-        mapa.fitBounds(bounds, { padding: [20, 20] });
+    // Solo ajustar vista si hay marcadores y no es la primera carga
+    if (hayMarcadores && marcadores.length > 0) {
+        // Mantener el zoom actual si ya hay marcadores, solo ajustar si es necesario
+        if (marcadores.length === 1) {
+            mapa.setView(bounds.getCenter(), Math.max(mapa.getZoom(), 10));
+        } else {
+            mapa.fitBounds(bounds, { padding: [20, 20] });
+        }
     }
 }
 
