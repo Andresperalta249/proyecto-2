@@ -280,10 +280,10 @@ class RolesController {
                 
                 // Mostrar switch solo si tiene permisos y no es rol por defecto
                 if (verificarPermiso('editar_roles') && $this->puedeGestionarRoles() && !$rol['es_rol_por_defecto']) {
-                    echo '<div class="form-check form-switch d-flex align-items-center mb-0">';
-                    echo '<input class="form-check-input cambiar-estado-rol" type="checkbox" data-id="' . $rol['id_rol'] . '" ' . ($rol['estado'] === 'activo' ? 'checked' : '') . '>';
-                    echo '<label class="form-check-label ms-2">' . ucfirst($rol['estado']) . '</label>';
-                    echo '</div>';
+                    echo '<label class="switch-estado">';
+                    echo '<input class="cambiar-estado-rol" type="checkbox" data-id="' . $rol['id_rol'] . '" ' . ($rol['estado'] === 'activo' ? 'checked' : '') . '>';
+                    echo '<span class="slider-estado"></span>';
+                    echo '</label>';
                 } else {
                     echo '<span class="badge-estado badge-' . ($rol['estado'] === 'activo' ? 'activo' : 'inactivo') . '">' . ucfirst($rol['estado']) . '</span>';
                 }
