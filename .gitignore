@@ -1,0 +1,35 @@
+# Archivos de configuración sensibles
+config/config.php
+config/php.ini
+
+# Logs
+logs/*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+*.cache
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de prueba
+test_*.php
+debug_*.php
+hash_test.php
+phpinfo_hash.html
+
+# Archivos de base de datos
+*.sql
+*.db
+
+# Archivos de backup
+*.bak
+*.backup 

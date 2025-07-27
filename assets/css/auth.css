@@ -1,0 +1,123 @@
+body {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f8fafc 0%, #e8ecf3 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-primary);
+  font-size: var(--body-normal-size);
+}
+
+body > div:first-child {
+  margin-bottom: 12px;
+}
+body h1 {
+  font-size: var(--heading-1-size);
+  font-weight: var(--heading-1-weight);
+  margin-bottom: 0.15em;
+  letter-spacing: var(--heading-1-letter-spacing);
+}
+body p {
+  color: #4b5563;
+  margin-bottom: 0.4em;
+  font-size: var(--body-normal-size);
+}
+
+#loginForm, #forgotForm, #resetPasswordForm, #registerForm {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.06);
+  padding: 22px 18px 16px 18px;
+  max-width: 350px;
+  width: 100%;
+  margin: 0 auto;
+}
+#loginForm h2, #forgotForm h2, #resetPasswordForm h2, #registerForm h2 {
+  font-size: var(--heading-2-size);
+  font-weight: var(--heading-2-weight);
+  margin-bottom: 0.4em;
+}
+#loginForm p, #forgotForm p, #resetPasswordForm p, #registerForm p {
+  color: #6b7280;
+  font-size: var(--body-small-size);
+  margin-bottom: 1em;
+}
+
+.form-label {
+  font-weight: var(--ui-label-weight);
+  color: #222;
+  font-size: var(--ui-label-size);
+}
+.form-control {
+  border-radius: 6px;
+  border: 1.2px solid #d1d5db;
+  background: #f3f4f6;
+  color: #222;
+  font-size: var(--ui-input-size);
+  padding: 8px 10px;
+  margin-bottom: 7px;
+  transition: border-color 0.2s;
+}
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb22;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  border-radius: 6px;
+  font-weight: var(--ui-button-weight);
+  font-size: var(--ui-button-size);
+  padding: 8px 0;
+  margin-top: 7px;
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: #174ea6;
+}
+
+.invalid-feedback {
+  color: #e53935;
+  font-size: var(--body-xs-size);
+  margin-bottom: 5px;
+  display: none;
+}
+.form-control.is-invalid ~ .invalid-feedback {
+  display: block;
+}
+
+.alert-danger {
+  border-radius: 6px;
+  font-size: var(--body-small-size);
+  padding: 8px 12px;
+  margin-bottom: 0.8em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+#loginForm a, #forgotForm a, #resetPasswordForm a, #registerForm a {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: var(--body-small-size);
+  transition: color 0.2s;
+}
+#loginForm a:hover, #forgotForm a:hover, #resetPasswordForm a:hover, #registerForm a:hover {
+  text-decoration: underline;
+  color: #174ea6;
+}
+
+@media (max-width: 600px) {
+  #loginForm, #forgotForm, #resetPasswordForm, #registerForm {
+    padding: 12px 2vw 10px 2vw;
+    max-width: 98vw;
+  }
+  body > div:first-child {
+    margin-bottom: 7px;
+  }
+  body h1 {
+    font-size: var(--heading-2-size);
+  }
+}

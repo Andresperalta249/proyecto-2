@@ -1,0 +1,164 @@
+/* Variables específicas del dashboard que extienden el sistema de colores moderno */
+:root {
+    --dashboard-primary: var(--primary-600);
+    --dashboard-warning: var(--warning-500);
+    --dashboard-light: var(--neutral-50);
+}
+
+.dashboard-container {
+    height: 100%;
+    padding: 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 1.5rem;
+}
+
+.kpi-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+    transition: var(--transition-fast);
+    border: 1px solid var(--border-light);
+}
+
+.kpi-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-icon {
+    font-size: var(--icon-large-size);
+    color: var(--blue);
+}
+
+.chart-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    line-height: var(--line-height-tight);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.chart-container {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    height: 280px;
+    max-height: 320px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid var(--border-light);
+}
+
+.chart-container canvas {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.activity-list {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    max-height: 300px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.activity-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.alert-badge {
+    background-color: var(--orange);
+    color: var(--text-inverse);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+}
+
+.bateria-label {
+    font-weight: 600;
+    color: var(--blue);
+}
+
+@media (max-width: 900px) {
+    .chart-container {
+        height: 200px;
+        min-height: 150px;
+        max-height: 250px;
+        padding: 0.5rem;
+    }
+    
+    .dashboard-container {
+        padding: 0.5rem;
+        gap: 1rem;
+    }
+    
+    .kpi-card {
+        padding: 1rem;
+    }
+    
+    .kpi-value {
+        font-size: var(--heading-4-size) !important;
+    }
+    
+    .kpi-label {
+        font-size: var(--ui-caption-size) !important;
+    }
+}
+
+/* Eliminar scroll horizontal en todos los dispositivos */
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.col, .col-md-3, .col-md-4, .col-md-6, .col-12 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+/* Asegurar que el contenido no cause scroll innecesario */
+.dashboard-container .row:last-child {
+    margin-bottom: 0;
+}
+
+/* Optimizar espaciado */
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+} 

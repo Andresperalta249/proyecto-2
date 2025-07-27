@@ -1,0 +1,107 @@
+# Desactivar errores en producción
+php_flag display_errors off
+php_value error_reporting 0
+
+RewriteEngine On
+RewriteBase /proyecto-2/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+RewriteRule ^configuracion-alerta/?$ index.php?controller=configuracionAlerta&action=index [L]
+RewriteRule ^configuracion-alerta/crear/?$ index.php?controller=configuracionAlerta&action=crear [L]
+RewriteRule ^configuracion-alerta/actualizar/?$ index.php?controller=configuracionAlerta&action=actualizar [L]
+RewriteRule ^configuracion-alerta/actualizar-general/?$ index.php?controller=configuracionAlerta&action=actualizarGeneral [L]
+RewriteRule ^configuracion-alerta/eliminar/([0-9]+)/?$ index.php?controller=configuracionAlerta&action=eliminar&id=$1 [L]
+RewriteRule ^configuracion-alerta/validar/?$ index.php?controller=configuracionAlerta&action=validar [L]
+
+# Reglas para el dashboard
+RewriteRule ^dashboard/?$ index.php?controller=dashboard&action=indexAction [QSA,L]
+RewriteRule ^dashboard/getKPIData/?$ index.php?controller=dashboard&action=getKPIDataAction [QSA,L]
+RewriteRule ^dashboard/getAlertasPorDia/?$ index.php?controller=dashboard&action=getAlertasPorDiaAction [QSA,L]
+RewriteRule ^dashboard/getDistribucionEspecies/?$ index.php?controller=dashboard&action=getDistribucionEspeciesAction [QSA,L]
+RewriteRule ^dashboard/getEstadoBateria/?$ index.php?controller=dashboard&action=getEstadoBateriaAction [QSA,L]
+RewriteRule ^dashboard/getActividadReciente/?$ index.php?controller=dashboard&action=getActividadRecienteAction [QSA,L]
+
+# Reglas para roles
+RewriteRule ^roles/?$ index.php?controller=roles&action=index [L]
+RewriteRule ^roles/get/?$ index.php?controller=roles&action=get [L]
+RewriteRule ^roles/create/?$ index.php?controller=roles&action=create [L]
+RewriteRule ^roles/update/?$ index.php?controller=roles&action=update [L]
+RewriteRule ^roles/delete/?$ index.php?controller=roles&action=delete [L]
+RewriteRule ^roles/cambiarEstado/?$ index.php?controller=roles&action=cambiarEstado [L]
+RewriteRule ^roles/getPermisos/?$ index.php?controller=roles&action=getPermisos [L]
+RewriteRule ^roles/tabla/?$ index.php?controller=roles&action=tabla [L]
+RewriteRule ^roles/form/?$ index.php?controller=roles&action=form [L]
+
+# Reglas para el monitor
+RewriteRule ^monitor/?$ index.php?controller=monitor&action=indexAction [QSA,L]
+RewriteRule ^monitor/device/([0-9]+)/?$ index.php?controller=monitor&action=deviceAction&id=$1 [QSA,L]
+RewriteRule ^api/datos_sensores/([0-9]+)/?$ index.php?controller=monitor&action=getDatosAction&id=$1 [QSA,L]
+RewriteRule ^api/ruta/([0-9]+)/?$ index.php?controller=monitor&action=getRutaAction&id=$1 [QSA,L]
+RewriteRule ^api/grafica/([0-9]+)/?$ index.php?controller=monitor&action=getGraficaAction&id=$1 [QSA,L]
+
+# Habilitar compresión GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json
+</IfModule>
+
+# Configurar caché del navegador
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType text/html "access plus 1 day"
+    ExpiresByType application/xhtml+xml "access plus 1 day"
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+# Configurar headers de caché
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ico|jpe?g|png|gif|swf|css|js|woff2?)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+    <FilesMatch "\.(x?html?|php)$">
+        Header set Cache-Control "max-age=600, private, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# Deshabilitar ETags
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+FileETag None
+
+# Optimizar PHP
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 60
+    php_value max_input_time 90
+    php_value memory_limit 256M
+    php_value session.gc_maxlifetime 1800
+    php_value session.cookie_lifetime 1800
+</IfModule>
+
+# Prevenir listado de directorios
+Options -Indexes
+
+# Proteger archivos sensibles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Redirigir a HTTPS (descomentar si se usa SSL)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301] 
