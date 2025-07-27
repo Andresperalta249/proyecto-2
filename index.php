@@ -105,6 +105,8 @@ try {
     // Convertir kebab-case a camelCase para la acción
     $action = preg_replace_callback('/-([a-z])/', function($m) { return strtoupper($m[1]); }, $action);
     $action_name = $action . 'Action';
+    
+    error_log("Acción convertida: $action -> $action_name");
 
     // Formatear nombres de controlador y acción
     $controller_name = str_replace(' ', '', ucwords(str_replace('-', ' ', $controller))) . 'Controller';
