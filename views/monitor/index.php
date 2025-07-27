@@ -9,11 +9,6 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 
 <!-- Filtros Avanzados -->
 <div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-filter"></i> Filtros Avanzados
-        </h5>
-    </div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-2">
@@ -93,11 +88,6 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 
 <!-- Mapa Interactivo -->
 <div class="card mb-3">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-map"></i> Mapa de Ubicaciones
-        </h5>
-    </div>
     <div class="card-body">
         <div id="mapaMonitor" style="height: 300px; width: 100%; border-radius: 8px;"></div>
     </div>
