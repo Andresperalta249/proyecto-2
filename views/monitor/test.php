@@ -1,55 +1,69 @@
-<?php 
-$titulo = 'Test Monitor';
-$subtitulo = 'Página de prueba para verificar si el problema es de JavaScript';
-?>
-
-<div class="contenedor-sistema">
-    <!-- Header con título -->
-    <div class="contenedor-sistema-header">
-        <div class="header-content">
-            <div class="header-title">
-                <i class="fas fa-chart-line"></i>
-                <?= htmlspecialchars($titulo) ?>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Test Monitor - Sistema Funcionando</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h5>✅ Sistema de Monitor Funcionando Correctamente</h5>
+                        <p>Esta es una página de prueba para verificar que el módulo monitor está operativo.</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Información de Sesión</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Usuario:</strong> <?= $_SESSION['user_name'] ?? 'No definido' ?></li>
+                                        <li><strong>Rol:</strong> <?= $_SESSION['rol_nombre'] ?? 'No definido' ?></li>
+                                        <li><strong>ID Usuario:</strong> <?= $_SESSION['user_id'] ?? 'No definido' ?></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Permisos</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>ver_monitor:</strong> <?= verificarPermiso('ver_monitor') ? '✅ Sí' : '❌ No' ?></li>
+                                        <li><strong>ver_todos_dispositivos:</strong> <?= verificarPermiso('ver_todos_dispositivos') ? '✅ Sí' : '❌ No' ?></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h6>Variables del Sistema</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>BASE_URL:</strong> <?= BASE_URL ?? 'No definido' ?></li>
+                                        <li><strong>APP_URL:</strong> <?= APP_URL ?? 'No definido' ?></li>
+                                        <li><strong>ROOT_PATH:</strong> <?= ROOT_PATH ?? 'No definido' ?></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <a href="<?= BASE_URL ?>monitor" class="btn btn-primary">
+                                <i class="fas fa-arrow-left"></i> Ir al Monitor Principal
+                            </a>
+                            <a href="<?= BASE_URL ?>dashboard" class="btn btn-secondary">
+                                <i class="fas fa-home"></i> Ir al Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <p class="header-subtitle"><?= htmlspecialchars($subtitulo) ?></p>
     </div>
-
-    <!-- Contenido de prueba -->
-    <div class="alert alert-info">
-        <h4>✅ Página de Prueba Funcionando</h4>
-        <p>Si puedes ver este mensaje, significa que:</p>
-        <ul>
-            <li>✅ La vista se está cargando correctamente</li>
-            <li>✅ Los permisos están funcionando</li>
-            <li>✅ El controlador está ejecutándose</li>
-        </ul>
-    </div>
-
-    <!-- Información de debug -->
-    <div class="card">
-        <div class="card-header">
-            <h5>Información de Debug</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>Usuario:</strong> <?= $_SESSION['user_name'] ?? 'No definido' ?></p>
-            <p><strong>Rol:</strong> <?= $_SESSION['rol_nombre'] ?? 'No definido' ?></p>
-            <p><strong>Permiso ver_monitor:</strong> <?= verificarPermiso('ver_monitor') ? '✅ Sí' : '❌ No' ?></p>
-            <p><strong>BASE_URL:</strong> <?= BASE_URL ?? 'No definido' ?></p>
-            <p><strong>APP_URL:</strong> <?= APP_URL ?? 'No definido' ?></p>
-        </div>
-    </div>
-
-    <!-- Botón para volver -->
-    <div class="mt-3">
-        <a href="<?= BASE_URL ?>monitor" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Volver al Monitor
-        </a>
-    </div>
-</div>
-
-<script>
-console.log('Test page loaded successfully');
-console.log('BASE_URL:', '<?= BASE_URL ?>');
-console.log('APP_URL:', '<?= APP_URL ?>');
-</script> 
+</div> 

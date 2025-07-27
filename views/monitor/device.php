@@ -1,202 +1,254 @@
 <?php
-// Obtener el tipo de mascota para el icono
-$tipoMascota = isset($dispositivo['tipo_mascota']) ? $dispositivo['tipo_mascota'] : 'perro';
-$iconoMascota = $tipoMascota === 'gato' ? '🐱' : '🐕';
-$dispositivoId = isset($dispositivo['id']) ? $dispositivo['id'] : 0;
-$configuraciones = isset($configuraciones) ? $configuraciones : [];
+if (!isset($dispositivo)) {
+    echo '<div class="alert alert-danger">Dispositivo no encontrado</div>';
+    return;
+}
 ?>
 
-<div class="device-header">
-    <h1>Monitor de Dispositivo</h1>
-    <div class="device-info">
-        <strong><?= htmlspecialchars($dispositivo['nombre']) ?></strong><br>
-        <?php if (isset($dispositivo['nombre_mascota'])): ?>
-            <span>Mascota: <?= htmlspecialchars($dispositivo['nombre_mascota']) ?></span> |
-        <?php endif; ?>
-        <span>Estado: <span class="status-badge <?= $dispositivo['estado'] ?>"><?= ucfirst($dispositivo['estado']) ?></span></span> |
-        <span>Batería: <?= $dispositivo['bateria'] ?>%</span>
-    </div>
-</div>
-
-<div class="device-monitor">
-    <!-- Mensaje de error -->
-    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-
-    <!-- Mapa Interactivo -->
-    <div class="map-container">
-        <div id="mapaDispositivo" class="device-map"></div>
-        <div class="map-fab-controls">
-            <button class="btn-fab" id="btnCentrarDispositivo" title="Centrar en dispositivo">
-                <i class="fas fa-location-arrow"></i>
-            </button>
-            <div class="fab-dropdown" id="fabRangoTiempo">
-                <button class="btn-fab" id="btnRangoTiempo" title="Rango de tiempo">
-                    <i class="fas fa-clock"></i>
-                </button>
-                <div class="fab-dropdown-menu">
-                    <button class="btn-fab-option" data-range="2">2h</button>
-                    <button class="btn-fab-option" data-range="6">6h</button>
-                    <button class="btn-fab-option" data-range="12">12h</button>
-                    <button class="btn-fab-option" data-range="24">24h</button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-microchip"></i> 
+                        Monitor de Dispositivo: <?= htmlspecialchars($dispositivo['nombre_dispositivo'] ?? 'Sin nombre') ?>
+                    </h4>
                 </div>
-            </div>
-            <button class="btn-fab" id="btnMapaFull" title="Pantalla completa">
-                <i class="fas fa-expand"></i>
-            </button>
-        </div>
-    </div>
+                <div class="card-body">
+                    <!-- Información del Dispositivo -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Información del Dispositivo</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>MAC:</strong></td>
+                                            <td><?= htmlspecialchars($dispositivo['mac_address'] ?? 'N/A') ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Estado:</strong></td>
+                                            <td>
+                                                <span class="badge bg-<?= ($dispositivo['estado'] === 'activo') ? 'success' : 'danger' ?>">
+                                                    <?= ucfirst($dispositivo['estado'] ?? 'desconocido') ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Última Conexión:</strong></td>
+                                            <td><?= $dispositivo['ultima_conexion'] ?? 'N/A' ?></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Información de la Mascota</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Mascota:</strong></td>
+                                            <td><?= htmlspecialchars($dispositivo['mascota_nombre'] ?? 'Sin asignar') ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Especie:</strong></td>
+                                            <td><?= htmlspecialchars($dispositivo['especie'] ?? 'N/A') ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Propietario:</strong></td>
+                                            <td><?= htmlspecialchars($dispositivo['usuario_nombre'] ?? 'N/A') ?></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Tarjetas de Estado -->
-    <div class="status-cards">
-        <div class="card" id="cardTemperatura">
-            <div class="card-body">
-                <div class="status-icon">
-                    <i class="fas fa-thermometer-half"></i>
+                    <!-- Gráficos y Datos -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title">Datos de Sensores</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficaSensores" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title">Últimos Datos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="ultimosDatos">
+                                        <p class="text-muted">Cargando datos...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapa de Ubicación -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title">Ubicación Actual</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="mapaDispositivo" style="height: 300px; width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="status-info">
-                    <h3 class="status-value">--°C</h3>
-                    <p class="status-label">Temperatura</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" id="cardRitmoCardiaco">
-            <div class="card-body">
-                <div class="status-icon">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <div class="status-info">
-                    <h3 class="status-value">-- BPM</h3>
-                    <p class="status-label">Ritmo Cardíaco</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" id="cardBateria">
-            <div class="card-body">
-                <div class="status-icon">
-                    <i class="fas fa-battery-three-quarters"></i>
-                </div>
-                <div class="status-info">
-                    <h3 class="status-value">--%</h3>
-                    <p class="status-label">Batería</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gráficas -->
-    <div class="charts-container">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Temperatura</h3>
-                <button class="btn btn-sm btn-outline-primary" data-chart="temperatura">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-            <canvas id="graficaTemperatura"></canvas>
-            <div id="mensajeGraficaTemperatura" class="mensaje-grafica"></div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Ritmo Cardíaco</h3>
-                <button class="btn btn-sm btn-outline-primary" data-chart="ritmoCardiaco">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-            <canvas id="graficaRitmoCardiaco"></canvas>
-            <div id="mensajeGraficaRitmoCardiaco" class="mensaje-grafica"></div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Batería</h3>
-                <button class="btn btn-sm btn-outline-primary" data-chart="bateria">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-            <canvas id="graficaBateria"></canvas>
-            <div id="mensajeGraficaBateria" class="mensaje-grafica"></div>
-        </div>
-    </div>
-
-    <!-- Tabla de Registros -->
-    <div class="table-container">
-        <div class="table-responsive">
-            <table class="tabla-sistema" id="tablaRegistros">
-                <thead>
-                    <tr>
-                        <th class="celda-fecha">Hora</th>
-                        <th class="texto-centrado">Temperatura</th>
-                        <th class="texto-centrado">Ritmo Cardíaco</th>
-                        <th class="texto-centrado">Batería</th>
-                        <th class="texto-centrado">Ubicación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Los datos se cargarán dinámicamente -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para gráficas expandidas -->
-<div class="modal fade" id="modalGrafica" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Gráfica Detallada</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <canvas id="graficaExpandida"></canvas>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Scripts -->
-<script type="module">
-    // Configuración global
-    window.BASE_URL = '<?= BASE_URL ?>';
-    window.dispositivoId = '<?= $dispositivo['id_dispositivo'] ?>';
-    window.iconoMascota = '<?= $dispositivo['icono_mascota'] ?? '🐾' ?>';
-    window.tipoMascota = '<?= strtolower($tipoMascota) ?>';
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Dependencias principales -->
-<script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/dist/date-fns.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-<!-- Nuestros módulos -->
-<script type="module" src="<?= BASE_URL ?>assets/js/date-utils.js"></script>
-<script type="module" src="<?= BASE_URL ?>assets/js/device-monitor.js"></script>
-
-<!-- Configuración global -->
 <script>
-    // Esperar a que Chart.js esté disponible
-    window.addEventListener('load', function() {
-        if (typeof Chart !== 'undefined') {
-            // Configuración de Chart.js
-            Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--font-family-primary');
-            Chart.defaults.font.size = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--font-size-sm'));
-            Chart.defaults.color = '#6c757d';
-            
-            // Verificar ID de dispositivo
-            if (!window.dispositivoId) {
-                document.getElementById('error-message').textContent = 'Error: ID de dispositivo no definido';
-                document.getElementById('error-message').style.display = 'block';
+// Variables globales
+const dispositivoId = <?= $dispositivo['id_dispositivo'] ?? 'null' ?>;
+const BASE_URL = '<?= BASE_URL ?>';
+
+// Inicializar mapa
+let mapa = L.map('mapaDispositivo').setView([0, 0], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(mapa);
+
+// Función para cargar datos
+function cargarDatosDispositivo() {
+    if (!dispositivoId) return;
+
+    fetch(`${BASE_URL}monitor/getDatos/${dispositivoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarUltimosDatos(data.data);
+                actualizarGrafica(data.data);
+                actualizarMapa(data.data);
             }
-        } else {
-            console.error('Chart.js no está disponible');
+        })
+        .catch(error => {
+            console.error('Error al cargar datos:', error);
+        });
+}
+
+// Actualizar últimos datos
+function actualizarUltimosDatos(datos) {
+    const container = document.getElementById('ultimosDatos');
+    if (!datos || datos.length === 0) {
+        container.innerHTML = '<p class="text-muted">No hay datos disponibles</p>';
+        return;
+    }
+
+    const ultimo = datos[0];
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-6">
+                <small class="text-muted">Temperatura</small>
+                <div class="h5">${ultimo.temperatura}°C</div>
+            </div>
+            <div class="col-6">
+                <small class="text-muted">Humedad</small>
+                <div class="h5">${ultimo.humedad}%</div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <small class="text-muted">Última actualización</small>
+            <div>${new Date(ultimo.fecha_registro).toLocaleString()}</div>
+        </div>
+    `;
+}
+
+// Actualizar gráfica
+function actualizarGrafica(datos) {
+    const ctx = document.getElementById('graficaSensores').getContext('2d');
+    
+    if (window.graficaSensores) {
+        window.graficaSensores.destroy();
+    }
+
+    const labels = datos.slice(0, 10).reverse().map(d => 
+        new Date(d.fecha_registro).toLocaleTimeString()
+    );
+    const temperaturas = datos.slice(0, 10).reverse().map(d => d.temperatura);
+    const humedades = datos.slice(0, 10).reverse().map(d => d.humedad);
+
+    window.graficaSensores = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Temperatura (°C)',
+                data: temperaturas,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Humedad (%)',
+                data: humedades,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
-</script>
+}
 
-<!-- Estilos -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<link rel="stylesheet" href="<?= BASE_URL ?>assets/css/device-monitor.css" /> 
+// Actualizar mapa
+function actualizarMapa(datos) {
+    if (!datos || datos.length === 0) return;
+
+    const ultimo = datos[0];
+    if (ultimo.latitud && ultimo.longitud) {
+        const lat = parseFloat(ultimo.latitud);
+        const lng = parseFloat(ultimo.longitud);
+        
+        mapa.setView([lat, lng], 15);
+        
+        // Limpiar marcadores existentes
+        mapa.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                mapa.removeLayer(layer);
+            }
+        });
+
+        // Agregar nuevo marcador
+        L.marker([lat, lng]).addTo(mapa)
+            .bindPopup(`
+                <strong>${<?= json_encode($dispositivo['mascota_nombre'] ?? 'Sin nombre') ?>}</strong><br>
+                Temperatura: ${ultimo.temperatura}°C<br>
+                Humedad: ${ultimo.humedad}%<br>
+                Fecha: ${new Date(ultimo.fecha_registro).toLocaleString()}
+            `);
+    }
+}
+
+// Cargar datos iniciales
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatosDispositivo();
+    
+    // Actualizar cada 30 segundos
+    setInterval(cargarDatosDispositivo, 30000);
+});
+</script> 
