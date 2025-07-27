@@ -21,6 +21,13 @@ class MonitorController extends Controller {
             exit;
         }
 
+        // Verificar permiso para acceder al monitor
+        if (function_exists('verificarPermiso') && !verificarPermiso('ver_monitor')) {
+            error_log("Error: Usuario no tiene permiso para ver monitor");
+            header('Location: ' . BASE_URL . 'dashboard');
+            exit;
+        }
+
         if (function_exists('verificarPermiso') && verificarPermiso('ver_todos_dispositivos')) {
             $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
         } else {
@@ -397,5 +404,24 @@ class MonitorController extends Controller {
             error_log("Error en getDatosTabla: " . $e->getMessage());
             $this->jsonResponse(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Página de prueba para debug
+     */
+    public function testAction() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . 'auth/login');
+            exit;
+        }
+
+        if (function_exists('verificarPermiso') && !verificarPermiso('ver_monitor')) {
+            header('Location: ' . BASE_URL . 'dashboard');
+            exit;
+        }
+
+        $this->view->setTitle('Test Monitor');
+        $this->view->setData('menuActivo', 'monitor');
+        $this->view->render('monitor/test');
     }
 }
