@@ -1,112 +1,378 @@
+<?php
+// Definir BASE_URL para el JavaScript
+echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
+?>
+
 <h2 class="mb-4">
-    <i class="fas fa-desktop"></i> Monitor de Dispositivos
+    <i class="fas fa-desktop"></i> Monitor IoT de Mascotas
 </h2>
 
-<?php if (empty($dispositivos)): ?>
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> No hay dispositivos disponibles para mostrar.
+<!-- Filtros Avanzados -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-filter"></i> Filtros Avanzados
+        </h5>
     </div>
-<?php else: ?>
-    <div class="row">
-        <?php foreach ($dispositivos as $dispositivo): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">
-                            <i class="fas fa-microchip"></i> 
-                            <?= htmlspecialchars($dispositivo['nombre'] ?? 'Sin nombre') ?>
-                        </h6>
-                        <span class="badge bg-<?= ($dispositivo['estado'] === 'activo') ? 'success' : 'danger' ?>">
-                            <?= ucfirst($dispositivo['estado'] ?? 'desconocido') ?>
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-6">
-                                <small class="text-muted">MAC Address</small>
-                                <div class="fw-bold"><?= htmlspecialchars($dispositivo['mac'] ?? 'N/A') ?></div>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted">Mascota</small>
-                                <div class="fw-bold"><?= htmlspecialchars($dispositivo['mascota_nombre'] ?? 'Sin asignar') ?></div>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-6">
-                                <small class="text-muted">Propietario</small>
-                                <div class="fw-bold"><?= htmlspecialchars($dispositivo['usuario_nombre'] ?? 'N/A') ?></div>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted">Última Fecha</small>
-                                <div class="fw-bold"><?= $dispositivo['ultima_fecha'] ?? 'N/A' ?></div>
-                            </div>
-                        </div>
-                        <?php if ($dispositivo['temperatura'] || $dispositivo['bpm']): ?>
-                        <div class="row mt-2">
-                            <div class="col-4">
-                                <small class="text-muted">Temperatura</small>
-                                <div class="fw-bold"><?= $dispositivo['temperatura'] ? $dispositivo['temperatura'] . '°C' : 'N/A' ?></div>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted">BPM</small>
-                                <div class="fw-bold"><?= $dispositivo['bpm'] ?? 'N/A' ?></div>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted">Batería</small>
-                                <div class="fw-bold"><?= $dispositivo['bateria_sensor'] ? $dispositivo['bateria_sensor'] . '%' : 'N/A' ?></div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($dispositivo['latitude'] && $dispositivo['longitude']): ?>
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <small class="text-muted">Ubicación</small>
-                                    <div class="fw-bold">
-                                        <?= number_format($dispositivo['latitude'], 6) ?>, 
-                                        <?= number_format($dispositivo['longitude'], 6) ?>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalles(<?= $dispositivo['id_dispositivo'] ?>)">
-                                <i class="fas fa-eye"></i> Ver Detalles
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" onclick="verUbicacion(<?= $dispositivo['id_dispositivo'] ?>, <?= $dispositivo['latitude'] ?? 'null' ?>, <?= $dispositivo['longitude'] ?? 'null' ?>)">
-                                <i class="fas fa-map-marker-alt"></i> Ubicación
-                            </button>
-                        </div>
-                    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="filtroPropietario" class="form-label">Propietario</label>
+                <select class="form-select" id="filtroPropietario">
+                    <option value="">Todos los propietarios</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtroMascota" class="form-label">Mascota</label>
+                <select class="form-select" id="filtroMascota">
+                    <option value="">Todas las mascotas</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtroMAC" class="form-label">MAC del Dispositivo</label>
+                <input type="text" class="form-control" id="filtroMAC" placeholder="Buscar por MAC...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
+                        <i class="fas fa-filter"></i> Solo Activos
+                    </button>
                 </div>
             </div>
-        <?php endforeach; ?>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="button" class="btn btn-success" id="btnAplicarFiltros">
+                    <i class="fas fa-search"></i> Aplicar Filtros
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+                <button type="button" class="btn btn-info" id="btnCentrarMapa">
+                    <i class="fas fa-crosshairs"></i> Centrar Mapa
+                </button>
+            </div>
+        </div>
     </div>
-<?php endif; ?>
+</div>
+
+<!-- Mapa Interactivo -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-map"></i> Mapa de Ubicaciones
+        </h5>
+    </div>
+    <div class="card-body">
+        <div id="mapaMonitor" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+    </div>
+</div>
+
+<!-- Tabla de Datos de Sensores -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-table"></i> Datos de Sensores en Tiempo Real
+        </h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="btnActualizarTabla">
+            <i class="fas fa-sync-alt"></i> Actualizar
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="tablaDatos">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Dispositivo</th>
+                        <th>Mascota</th>
+                        <th>Propietario</th>
+                        <th>Temperatura</th>
+                        <th>Humedad</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="10" class="text-center">Cargando datos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts para el mapa -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <script>
-function verDetalles(id) {
-    // Por ahora solo muestra un alert, se puede expandir después
-    Swal.fire({
-        title: 'Detalles del Dispositivo',
-        text: 'Funcionalidad en desarrollo para el dispositivo ID: ' + id,
-        icon: 'info'
-    });
+// Variables globales
+let mapa;
+let marcadores = [];
+let soloActivos = false;
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarMapa();
+    cargarPropietarios();
+    cargarTablaDatos();
+    configurarEventos();
+    iniciarActualizacionAutomatica();
+});
+
+// Inicializar mapa de Leaflet
+function inicializarMapa() {
+    mapa = L.map('mapaMonitor').setView([4.5709, -74.2973], 6); // Colombia
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(mapa);
 }
 
-function verUbicacion(id, lat, lng) {
-    if (!lat || !lng) {
-        Swal.fire({
-            title: 'Sin Ubicación',
-            text: 'Este dispositivo no tiene datos de ubicación disponibles.',
-            icon: 'warning'
+// Cargar propietarios en el filtro
+function cargarPropietarios() {
+    fetch(`${window.BASE_URL}monitor/getPropietarios`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('filtroPropietario');
+                select.innerHTML = '<option value="">Todos los propietarios</option>';
+                
+                data.data.forEach(propietario => {
+                    const option = document.createElement('option');
+                    option.value = propietario.usuario_id;
+                    option.textContent = propietario.usuario_nombre;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar propietarios:', error);
         });
+}
+
+// Cargar mascotas por propietario
+function cargarMascotas(propietarioId = '') {
+    const select = document.getElementById('filtroMascota');
+    select.innerHTML = '<option value="">Todas las mascotas</option>';
+    
+    if (!propietarioId) return;
+    
+    fetch(`${window.BASE_URL}monitor/getMascotasPorPropietario?propietario=${propietarioId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                data.data.forEach(mascota => {
+                    const option = document.createElement('option');
+                    option.value = mascota.id_mascota;
+                    option.textContent = mascota.nombre;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar mascotas:', error);
+        });
+}
+
+// Aplicar filtros y actualizar mapa
+function aplicarFiltros() {
+    const propietario = document.getElementById('filtroPropietario').value;
+    const mascota = document.getElementById('filtroMascota').value;
+    const mac = document.getElementById('filtroMAC').value;
+    
+    const params = new URLSearchParams({
+        propietario: propietario,
+        mascota: mascota,
+        mac: mac,
+        soloActivos: soloActivos
+    });
+    
+    fetch(`${window.BASE_URL}monitor/getDatosFiltrados?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaConDispositivos(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error al aplicar filtros:', error);
+        });
+}
+
+// Actualizar mapa con dispositivos
+function actualizarMapaConDispositivos(dispositivos) {
+    // Limpiar marcadores existentes
+    marcadores.forEach(marker => mapa.removeLayer(marker));
+    marcadores = [];
+    
+    if (!dispositivos || dispositivos.length === 0) {
         return;
     }
     
-    // Abrir mapa en nueva ventana
-    const url = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
-    window.open(url, '_blank');
+    const bounds = L.latLngBounds();
+    
+    dispositivos.forEach(dispositivo => {
+        if (dispositivo.latitude && dispositivo.longitude) {
+            const lat = parseFloat(dispositivo.latitude);
+            const lng = parseFloat(dispositivo.longitude);
+            
+            // Crear icono personalizado según la especie
+            let iconUrl = `${window.BASE_URL}assets/img/paw-default.svg`;
+            if (dispositivo.mascota_especie === 'perro') {
+                iconUrl = `${window.BASE_URL}assets/img/paw-dog.svg`;
+            } else if (dispositivo.mascota_especie === 'gato') {
+                iconUrl = `${window.BASE_URL}assets/img/paw-cat.svg`;
+            }
+            
+            const icon = L.icon({
+                iconUrl: iconUrl,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+            
+            const marker = L.marker([lat, lng], { icon: icon }).addTo(mapa);
+            
+            // Crear popup con información
+            const popupContent = `
+                <div style="min-width: 200px;">
+                    <h6><strong>${dispositivo.mascota_nombre || 'Sin nombre'}</strong></h6>
+                    <p><strong>Propietario:</strong> ${dispositivo.usuario_nombre}</p>
+                    <p><strong>Dispositivo:</strong> ${dispositivo.nombre}</p>
+                    <p><strong>MAC:</strong> ${dispositivo.mac}</p>
+                    <p><strong>Estado:</strong> 
+                        <span class="badge bg-${dispositivo.estado === 'activo' ? 'success' : 'danger'}">
+                            ${dispositivo.estado}
+                        </span>
+                    </p>
+                    <p><strong>Última fecha:</strong> ${dispositivo.ultima_fecha || 'N/A'}</p>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            marcadores.push(marker);
+            bounds.extend([lat, lng]);
+        }
+    });
+    
+    // Ajustar vista del mapa
+    if (marcadores.length > 0) {
+        mapa.fitBounds(bounds, { padding: [20, 20] });
+    }
+}
+
+// Cargar datos de la tabla
+function cargarTablaDatos() {
+    fetch(`${window.BASE_URL}monitor/getDatosTabla`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderizarTablaDatos(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar tabla:', error);
+        });
+}
+
+// Renderizar datos en la tabla
+function renderizarTablaDatos(datos) {
+    const tbody = document.querySelector('#tablaDatos tbody');
+    
+    if (!datos || datos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay datos disponibles</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = datos.map(dato => `
+        <tr>
+            <td>${dato.id_dato}</td>
+            <td>${dato.nombre_dispositivo || 'N/A'}</td>
+            <td>${dato.mascota_nombre || 'Sin asignar'}</td>
+            <td>${dato.usuario_nombre || 'N/A'}</td>
+            <td>${dato.temperatura}°C</td>
+            <td>${dato.humedad}%</td>
+            <td>${dato.latitude || 'N/A'}</td>
+            <td>${dato.longitude || 'N/A'}</td>
+            <td>${formatearFecha(dato.fecha_registro)}</td>
+            <td>
+                <span class="badge bg-${dato.estado === 'activo' ? 'success' : 'danger'}">
+                    ${dato.estado}
+                </span>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Configurar eventos de los botones
+function configurarEventos() {
+    // Filtro de propietario
+    document.getElementById('filtroPropietario').addEventListener('change', function() {
+        cargarMascotas(this.value);
+    });
+    
+    // Botón aplicar filtros
+    document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltros);
+    
+    // Botón limpiar filtros
+    document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
+        document.getElementById('filtroPropietario').value = '';
+        document.getElementById('filtroMascota').value = '';
+        document.getElementById('filtroMAC').value = '';
+        soloActivos = false;
+        document.getElementById('btnSoloActivos').classList.remove('btn-success');
+        document.getElementById('btnSoloActivos').classList.add('btn-primary');
+        aplicarFiltros();
+    });
+    
+    // Botón solo activos
+    document.getElementById('btnSoloActivos').addEventListener('click', function() {
+        soloActivos = !soloActivos;
+        if (soloActivos) {
+            this.classList.remove('btn-primary');
+            this.classList.add('btn-success');
+        } else {
+            this.classList.remove('btn-success');
+            this.classList.add('btn-primary');
+        }
+        aplicarFiltros();
+    });
+    
+    // Botón centrar mapa
+    document.getElementById('btnCentrarMapa').addEventListener('click', function() {
+        if (marcadores.length > 0) {
+            const bounds = L.latLngBounds();
+            marcadores.forEach(marker => bounds.extend(marker.getLatLng()));
+            mapa.fitBounds(bounds, { padding: [20, 20] });
+        }
+    });
+    
+    // Botón actualizar tabla
+    document.getElementById('btnActualizarTabla').addEventListener('click', cargarTablaDatos);
+}
+
+// Iniciar actualización automática
+function iniciarActualizacionAutomatica() {
+    // Actualizar mapa y filtros cada 30 segundos
+    setInterval(() => {
+        aplicarFiltros();
+    }, 30000);
+    
+    // Actualizar tabla cada 10 segundos
+    setInterval(() => {
+        cargarTablaDatos();
+    }, 10000);
+}
+
+// Funciones de utilidad
+function formatearFecha(fecha) {
+    if (!fecha) return 'N/A';
+    return new Date(fecha).toLocaleString('es-ES');
 }
 </script> 
