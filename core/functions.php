@@ -1,22 +1,8 @@
 <?php
 /**
- * Funciones de utilidad para el sistema
+ * Funciones de utilidad adicionales para el sistema
+ * Nota: verificarPermiso() ya está definida en config/config.php
  */
-
-/**
- * Verifica si el usuario actual tiene un permiso específico
- * @param string $permiso Nombre del permiso a verificar
- * @return bool True si tiene el permiso, False en caso contrario
- */
-function verificarPermiso($permiso) {
-    // Si no hay sesión activa, no tiene permisos
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['permissions'])) {
-        return false;
-    }
-    
-    // Verificar si el permiso está en la lista de permisos del usuario
-    return in_array($permiso, $_SESSION['permissions']);
-}
 
 /**
  * Verifica si el usuario actual tiene al menos uno de los permisos especificados
@@ -109,23 +95,20 @@ function formatearFecha($fecha, $formato = 'd/m/Y H:i') {
 }
 
 /**
- * Genera un token CSRF
+ * Genera un token CSRF (alias para csrf_token)
  * @return string Token generado
  */
 function generarTokenCSRF() {
-    if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
+    return csrf_token();
 }
 
 /**
- * Verifica un token CSRF
+ * Verifica un token CSRF (alias para verify_csrf_token)
  * @param string $token Token a verificar
  * @return bool True si el token es válido
  */
 function verificarTokenCSRF($token) {
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    return verify_csrf_token($token);
 }
 
 /**
