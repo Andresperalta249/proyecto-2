@@ -57,84 +57,78 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
     <i class="fas fa-desktop"></i> Monitor IoT de Mascotas
 </h2>
 
-<!-- Filtros Avanzados -->
-<div class="card mb-4">
+<!-- Mapa Interactivo -->
+<div class="card mb-3">
     <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label for="filtroPropietario" class="form-label">Propietario</label>
-                <select class="form-select" id="filtroPropietario">
-                    <option value="">Todos los propietarios</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="filtroMascota" class="form-label">Mascota</label>
-                <select class="form-select" id="filtroMascota">
-                    <option value="">Todas las mascotas</option>
+        <div id="mapaMonitor" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+    </div>
+</div>
+
+<!-- Filtros Avanzados Compactos -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label for="filtroPropietario" class="form-label small mb-1">Propietario</label>
+                <select class="form-select form-select-sm" id="filtroPropietario">
+                    <option value="">Todos</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="filtroEspecie" class="form-label">Especie</label>
-                <select class="form-select" id="filtroEspecie">
-                    <option value="">Todas las especies</option>
+                <label for="filtroMascota" class="form-label small mb-1">Mascota</label>
+                <select class="form-select form-select-sm" id="filtroMascota">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label for="filtroEspecie" class="form-label small mb-1">Especie</label>
+                <select class="form-select form-select-sm" id="filtroEspecie">
+                    <option value="">Todas</option>
                     <option value="perro">Perro</option>
                     <option value="gato">Gato</option>
                     <option value="otro">Otro</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label for="filtroBateria" class="form-label">Estado Batería</label>
-                <select class="form-select" id="filtroBateria">
-                    <option value="">Todos</option>
-                    <option value="alta">Alta (>80%)</option>
-                    <option value="media">Media (20-80%)</option>
-                    <option value="baja">Baja (<20%)</option>
+            <div class="col-md-1">
+                <label for="filtroBateria" class="form-label small mb-1">Batería</label>
+                <select class="form-select form-select-sm" id="filtroBateria">
+                    <option value="">Todas</option>
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="filtroMAC" class="form-label">MAC del Dispositivo</label>
-                <input type="text" class="form-control" id="filtroMAC" placeholder="Buscar por MAC...">
+                <label for="filtroMAC" class="form-label small mb-1">MAC</label>
+                <input type="text" class="form-control form-control-sm" id="filtroMAC" placeholder="Buscar MAC...">
             </div>
-        </div>
-        <div class="row g-3 mt-2">
-            <div class="col-md-3">
-                <label for="filtroFechaInicio" class="form-label">Fecha Inicio</label>
-                <input type="date" class="form-control" id="filtroFechaInicio">
+            <div class="col-md-2">
+                <label for="filtroFechaInicio" class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" id="filtroFechaInicio">
             </div>
-            <div class="col-md-3">
-                <label for="filtroFechaFin" class="form-label">Fecha Fin</label>
-                <input type="date" class="form-control" id="filtroFechaFin">
+            <div class="col-md-2">
+                <label for="filtroFechaFin" class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" id="filtroFechaFin">
             </div>
-            <div class="col-md-3">
-                <label for="filtroBusqueda" class="form-label">Búsqueda</label>
-                <input type="text" class="form-control" id="filtroBusqueda" placeholder="Buscar por nombre...">
+            <div class="col-md-2">
+                <label for="filtroBusqueda" class="form-label small mb-1">Buscar</label>
+                <input type="text" class="form-control form-control-sm" id="filtroBusqueda" placeholder="Nombre...">
             </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
-                        <i class="fas fa-filter"></i> Solo Activos
+            <div class="col-md-2">
+                <label class="form-label small mb-1">&nbsp;</label>
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSoloActivos">
+                        <i class="fas fa-filter"></i> Activos
                     </button>
-                    <button type="button" class="btn btn-warning" id="btnExportar">
-                        <i class="fas fa-download"></i> Exportar
+                    <button type="button" class="btn btn-warning btn-sm" id="btnExportar">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnLimpiarFiltros">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>
         </div>
-        <div class="row mt-3">
-            <div class="col-12">
-                <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                    <i class="fas fa-times"></i> Limpiar Filtros
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Mapa Interactivo -->
-<div class="card mb-3">
-    <div class="card-body">
-        <div id="mapaMonitor" style="height: 300px; width: 100%; border-radius: 8px;"></div>
     </div>
 </div>
 
