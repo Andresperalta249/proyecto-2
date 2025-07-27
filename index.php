@@ -40,6 +40,7 @@ error_log("Aplicación iniciando - " . date('Y-m-d H:i:s'));
 // Cargar la configuración primero
 require_once dirname(__FILE__) . '/config/config.php';
 require_once ROOT_PATH . '/core/Autoload.php';
+require_once ROOT_PATH . '/core/functions.php';
 
 try {
     // Obtener la URL solicitada
