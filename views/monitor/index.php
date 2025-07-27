@@ -66,15 +66,15 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 
 <!-- Filtros Avanzados Compactos -->
 <div class="card mb-4">
-    <div class="card-body py-3">
-        <div class="row g-2 align-items-end">
-            <div class="col-md-2">
+    <div class="card-body py-2">
+        <div class="row g-1 align-items-end">
+            <div class="col-md-1">
                 <label for="filtroPropietario" class="form-label small mb-1">Propietario</label>
                 <select class="form-select form-select-sm" id="filtroPropietario">
                     <option value="">Todos</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label for="filtroMascota" class="form-label small mb-1">Mascota</label>
                 <select class="form-select form-select-sm" id="filtroMascota">
                     <option value="">Todas</option>
@@ -100,13 +100,13 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
             </div>
             <div class="col-md-2">
                 <label for="filtroMAC" class="form-label small mb-1">MAC</label>
-                <input type="text" class="form-control form-control-sm" id="filtroMAC" placeholder="Buscar MAC...">
+                <input type="text" class="form-control form-control-sm" id="filtroMAC" placeholder="MAC...">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label for="filtroFechaInicio" class="form-label small mb-1">Desde</label>
                 <input type="date" class="form-control form-control-sm" id="filtroFechaInicio">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label for="filtroFechaFin" class="form-label small mb-1">Hasta</label>
                 <input type="date" class="form-control form-control-sm" id="filtroFechaFin">
             </div>
@@ -117,13 +117,13 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
             <div class="col-md-2">
                 <label class="form-label small mb-1">&nbsp;</label>
                 <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-primary btn-sm" id="btnSoloActivos">
+                    <button type="button" class="btn btn-primary btn-sm px-2" id="btnSoloActivos" style="font-size: 11px;">
                         <i class="fas fa-filter"></i> Activos
                     </button>
-                    <button type="button" class="btn btn-warning btn-sm" id="btnExportar">
+                    <button type="button" class="btn btn-warning btn-sm px-2" id="btnExportar" style="font-size: 11px;">
                         <i class="fas fa-download"></i>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnLimpiarFiltros">
+                    <button type="button" class="btn btn-secondary btn-sm px-2" id="btnLimpiarFiltros" style="font-size: 11px;">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
