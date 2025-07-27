@@ -60,14 +60,14 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 <!-- Filtros Avanzados -->
 <div class="card mb-4">
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-2">
+        <div class="row g-3">
+            <div class="col-md-3">
                 <label for="filtroPropietario" class="form-label">Propietario</label>
                 <select class="form-select" id="filtroPropietario">
                     <option value="">Todos los propietarios</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label for="filtroMascota" class="form-label">Mascota</label>
                 <select class="form-select" id="filtroMascota">
                     <option value="">Todas las mascotas</option>
@@ -95,16 +95,8 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 <label for="filtroMAC" class="form-label">MAC del Dispositivo</label>
                 <input type="text" class="form-control" id="filtroMAC" placeholder="Buscar por MAC...">
             </div>
-            <div class="col-md-2">
-                <label class="form-label">&nbsp;</label>
-                <div class="d-grid">
-                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
-                        <i class="fas fa-filter"></i> Solo Activos
-                    </button>
-                </div>
-            </div>
         </div>
-        <div class="row mt-3">
+        <div class="row g-3 mt-2">
             <div class="col-md-3">
                 <label for="filtroFechaInicio" class="form-label">Fecha Inicio</label>
                 <input type="date" class="form-control" id="filtroFechaInicio">
@@ -119,7 +111,10 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
             </div>
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
-                <div class="d-grid">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
+                        <i class="fas fa-filter"></i> Solo Activos
+                    </button>
                     <button type="button" class="btn btn-warning" id="btnExportar">
                         <i class="fas fa-download"></i> Exportar
                     </button>
@@ -145,21 +140,10 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 
 <!-- Tabla de Datos de Sensores -->
 <div class="card" style="margin: 0; border-radius: 0; width: 100%;">
-    <div class="card-header d-flex justify-content-between align-items-center" style="border-radius: 0; padding: 15px 20px;">
+    <div class="card-header" style="border-radius: 0; padding: 15px 20px;">
         <h5 class="card-title mb-0">
             <i class="fas fa-table"></i> Historial de Datos de Sensores
         </h5>
-        <div class="d-flex gap-2">
-            <div class="input-group" style="width: 250px;">
-                <input type="text" class="form-control form-control-sm" id="busquedaTabla" placeholder="Buscar en tabla...">
-                <button class="btn btn-outline-secondary btn-sm" type="button">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-primary" id="btnActualizarTabla">
-                <i class="fas fa-sync-alt"></i> Actualizar
-            </button>
-        </div>
     </div>
     <div class="card-body" style="padding: 0; width: 100%;">
         <div class="table-responsive" style="margin: 0; width: 100%;">
@@ -206,18 +190,38 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 </tbody>
             </table>
         </div>
+        <!-- Controles de la tabla -->
+        <div class="card-footer" style="border-radius: 0; padding: 15px 20px; background-color: #f8f9fa;">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group" style="width: 300px;">
+                        <input type="text" class="form-control" id="busquedaTabla" placeholder="Buscar en tabla...">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-outline-primary" id="btnActualizarTabla">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Paginación -->
-        <nav aria-label="Paginación de datos">
-            <ul class="pagination justify-content-center" id="paginacion">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
-                </li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item disabled">
-                    <a class="page-link" href="#">Siguiente</a>
-                </li>
-            </ul>
-        </nav>
+        <div class="card-footer" style="border-radius: 0; padding: 10px 20px; background-color: #f8f9fa;">
+            <nav aria-label="Paginación de datos">
+                <ul class="pagination justify-content-center mb-0" id="paginacion">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </div>
 
