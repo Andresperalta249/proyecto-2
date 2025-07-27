@@ -1,3 +1,8 @@
+<!-- PRUEBA SIMPLE - SI VES ESTO, LA PÁGINA FUNCIONA -->
+<div style="background: red; color: white; padding: 20px; margin: 20px; font-size: 24px; text-align: center;">
+    🎯 PRUEBA: SI VES ESTE TEXTO ROJO, LA PÁGINA ESTÁ FUNCIONANDO 🎯
+</div>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">

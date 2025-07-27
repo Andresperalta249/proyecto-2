@@ -31,4 +31,15 @@ class MonitorController extends Controller {
         $this->view->setData('menuActivo', 'monitor');
         $this->view->render('monitor/index');
     }
+
+    public function testSimpleAction() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . 'auth/login');
+            exit;
+        }
+
+        $this->view->setTitle('Test Simple');
+        $this->view->setData('menuActivo', 'monitor');
+        $this->view->render('monitor/test-simple');
+    }
 } 
