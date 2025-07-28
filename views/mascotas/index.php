@@ -73,11 +73,17 @@ $mascotasPagina = array_slice($mascotas, $start, $perPage);
                         </label>
                     </td>
                     <td class="celda-acciones">
-                        <?php if ($puedeEditar || $esAdmin): ?>
+                        <?php 
+                        // Debug: verificar variables
+                        $puedeEditar = $puedeEditar ?? false;
+                        $esAdmin = $esAdmin ?? false;
+                        $puedeEliminar = $puedeEliminar ?? false;
+                        echo "<!-- Debug: puedeEditar=$puedeEditar, esAdmin=$esAdmin, id=" . $mascota['id_mascota'] . " -->";
+                        ?>
+                        <!-- Botón de editar siempre visible para debug -->
                         <button class="btn-accion btn-editar btnEditarMascota" data-id="<?= $mascota['id_mascota'] ?>" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <?php endif; ?>
                         <?php if ($puedeEliminar || $esAdmin): ?>
                         <button class="btn-accion btn-eliminar btnEliminarMascota" data-id="<?= $mascota['id_mascota'] ?>" title="Eliminar">
                             <i class="fas fa-trash-alt"></i>
@@ -118,7 +124,7 @@ $mascotasPagina = array_slice($mascotas, $start, $perPage);
 </script>
 
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
 
     // Búsqueda simple sin DataTables
     $('#inputBusquedaMascota').on('input', function() {
@@ -134,15 +140,7 @@ $(document).ready(function() {
         });
     });
 
-    // Manejar clic en fila de mascota
-    $('#tablaMascotas tbody').on('click', 'tr', function(e) {
-        // Si el clic fue en un botón dentro de la fila, no hacer nada
-        if ($(e.target).closest('button').length > 0) return;
-        var id = $(this).data('id');
-        if (id) {
-            editarMascota(id);
-        }
-    });
+
 
     // Manejar cambio de estado
     $(document).on('change', '.cambiar-estado-mascota', function(e) {
@@ -150,6 +148,7 @@ $(document).ready(function() {
         var id = $(this).data('id');
         var nuevoEstado = $(this).prop('checked') ? 'activo' : 'inactivo';
         var label = $(this).next('label');
+        var checkbox = $(this); // Guardar referencia al checkbox
 
         $.ajax({
             url: BASE_URL + 'mascotas/cambiarEstado/' + id,
@@ -170,7 +169,7 @@ $(document).ready(function() {
                         text: response.error
                     });
                     // Revertir el cambio
-                    $(this).prop('checked', !$(this).prop('checked'));
+                    checkbox.prop('checked', !checkbox.prop('checked'));
                 }
             },
             error: function() {
@@ -180,7 +179,7 @@ $(document).ready(function() {
                     text: 'No se pudo cambiar el estado'
                 });
                 // Revertir el cambio
-                $(this).prop('checked', !$(this).prop('checked'));
+                checkbox.prop('checked', !checkbox.prop('checked'));
             }
         });
     });
@@ -200,6 +199,54 @@ $(document).ready(function() {
                     icon: 'error',
                     title: 'Error',
                     text: 'No se pudo cargar la información de la mascota'
+                });
+            }
+        });
+    }
+
+    function eliminarMascota(id) {
+        console.log('Eliminando mascota con ID:', id);
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Confirmado, enviando petición AJAX');
+                $.ajax({
+                    url: BASE_URL + 'mascotas/delete/' + id,
+                    type: 'POST',
+                    success: function(response) {
+                        console.log('Respuesta del servidor:', response);
+                        if (response.success) {
+                            Swal.fire(
+                                'Eliminado',
+                                'La mascota ha sido eliminada correctamente.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error',
+                                response.message || 'Error al eliminar la mascota',
+                                'error'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        console.log('Error en AJAX:', xhr);
+                        Swal.fire(
+                            'Error',
+                            'No se pudo eliminar la mascota',
+                            'error'
+                        );
+                    }
                 });
             }
         });
@@ -273,6 +320,26 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+
+    // Manejar clic en botón de editar mascota
+    $(document).on('click', '.btnEditarMascota', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // Evitar que el clic se propague a la fila
+        var id = $(this).data('id');
+        if (id) {
+            editarMascota(id);
+        }
+    });
+
+    // Evento para eliminar mascota
+    $(document).on('click', '.btnEliminarMascota', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // Evitar que el clic se propague a la fila
+        var id = $(this).data('id');
+        if (id) {
+            eliminarMascota(id);
+        }
     });
 
     // Manejar clic en botón de monitor

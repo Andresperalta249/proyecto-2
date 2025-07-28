@@ -1,0 +1,109 @@
+-- COMANDOS SQL PARA INSERTAR DATOS DE PRUEBA EN CALI
+-- Ejecutar estos comandos uno por uno en la línea de comandos de MySQL
+
+-- 1. Primero verificar las tablas existentes
+SHOW TABLES;
+
+-- 2. Ver la estructura de la tabla usuarios
+DESCRIBE usuarios;
+
+-- 3. Insertar usuarios (sin especificar ID para que sea autoincremental)
+INSERT INTO usuarios (usuario_nombre, usuario_email, usuario_telefono, rol_id, fecha_registro) VALUES
+('María González', 'maria.gonzalez@email.com', '3001234567', 2, NOW()),
+('Carlos Rodríguez', 'carlos.rodriguez@email.com', '3001234568', 2, NOW()),
+('Ana López', 'ana.lopez@email.com', '3001234569', 2, NOW()),
+('Pedro Martínez', 'pedro.martinez@email.com', '3001234570', 2, NOW()),
+('Laura Silva', 'laura.silva@email.com', '3001234571', 2, NOW());
+
+-- 4. Verificar que se insertaron los usuarios
+SELECT * FROM usuarios ORDER BY usuario_id DESC LIMIT 5;
+
+-- 5. Ver la estructura de la tabla dispositivos
+DESCRIBE dispositivos;
+
+-- 6. Insertar dispositivos IoT
+INSERT INTO dispositivos (nombre, mac, descripcion, estado, fecha_registro) VALUES
+('Tracker-001', 'AA:BB:CC:DD:01:01', 'Dispositivo IoT para mascotas - Luna', 'activo', NOW()),
+('Tracker-002', 'AA:BB:CC:DD:01:02', 'Dispositivo IoT para mascotas - Max', 'activo', NOW()),
+('Tracker-003', 'AA:BB:CC:DD:01:03', 'Dispositivo IoT para mascotas - Mittens', 'activo', NOW()),
+('Tracker-004', 'AA:BB:CC:DD:01:04', 'Dispositivo IoT para mascotas - Rocky', 'activo', NOW()),
+('Tracker-005', 'AA:BB:CC:DD:01:05', 'Dispositivo IoT para mascotas - Whiskers', 'activo', NOW());
+
+-- 7. Verificar dispositivos insertados
+SELECT * FROM dispositivos ORDER BY dispositivo_id DESC LIMIT 5;
+
+-- 8. Ver la estructura de la tabla mascotas
+DESCRIBE mascotas;
+
+-- 9. Insertar mascotas (usar los IDs de usuarios y dispositivos que se generaron)
+INSERT INTO mascotas (nombre, especie, raza, edad, peso, usuario_id, dispositivo_id, fecha_registro) VALUES
+('Luna', 'perro', 'Golden Retriever', 3, 25.5, (SELECT usuario_id FROM usuarios WHERE usuario_nombre = 'María González'), (SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-001'), NOW()),
+('Max', 'perro', 'Labrador', 2, 30.0, (SELECT usuario_id FROM usuarios WHERE usuario_nombre = 'Carlos Rodríguez'), (SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-002'), NOW()),
+('Mittens', 'gato', 'Siamés', 1, 4.2, (SELECT usuario_id FROM usuarios WHERE usuario_nombre = 'Ana López'), (SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-003'), NOW()),
+('Rocky', 'perro', 'Pastor Alemán', 4, 35.0, (SELECT usuario_id FROM usuarios WHERE usuario_nombre = 'Pedro Martínez'), (SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-004'), NOW()),
+('Whiskers', 'gato', 'Persa', 2, 5.0, (SELECT usuario_id FROM usuarios WHERE usuario_nombre = 'Laura Silva'), (SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-005'), NOW());
+
+-- 10. Verificar mascotas insertadas
+SELECT * FROM mascotas ORDER BY mascota_id DESC LIMIT 5;
+
+-- 11. Ver la estructura de la tabla datos_sensores
+DESCRIBE datos_sensores;
+
+-- 12. Insertar datos de sensores (usar los IDs de dispositivos que se generaron)
+INSERT INTO datos_sensores (dispositivo_id, temperatura, bpm, latitude, longitude, bateria, fecha_registro) VALUES
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-001'), 38.2, 85, 3.4516, -76.5320, 87, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-001'), 37.8, 82, 3.4518, -76.5318, 86, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-001'), 39.1, 88, 3.4514, -76.5322, 85, DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-002'), 38.8, 92, 3.4372, -76.5225, 95, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-002'), 39.2, 94, 3.4374, -76.5223, 94, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-003'), 37.5, 120, 3.4567, -76.5443, 78, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-003'), 37.8, 118, 3.4569, -76.5441, 77, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-004'), 39.5, 95, 3.4421, -76.5189, 82, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-004'), 39.8, 97, 3.4423, -76.5187, 81, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-005'), 37.8, 125, 3.4689, -76.5312, 65, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-005'), 38.1, 127, 3.4691, -76.5310, 64, DATE_SUB(NOW(), INTERVAL 2 HOUR));
+
+-- 13. Insertar más datos de sensores
+INSERT INTO datos_sensores (dispositivo_id, temperatura, bpm, latitude, longitude, bateria, fecha_registro) VALUES
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-001'), 38.0, 83, 3.4516, -76.5320, 82, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-002'), 38.7, 91, 3.4372, -76.5225, 90, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-003'), 37.3, 120, 3.4567, -76.5443, 73, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-004'), 39.3, 95, 3.4421, -76.5189, 77, DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+((SELECT dispositivo_id FROM dispositivos WHERE nombre = 'Tracker-005'), 37.6, 125, 3.4689, -76.5312, 60, DATE_SUB(NOW(), INTERVAL 4 HOUR));
+
+-- 14. Verificar que se insertaron los datos de sensores
+SELECT COUNT(*) as total_datos FROM datos_sensores;
+
+-- 15. Ver los últimos 10 registros de datos de sensores
+SELECT 
+    ds.datos_sensor_id,
+    d.nombre as dispositivo,
+    m.nombre as mascota,
+    u.usuario_nombre as propietario,
+    ds.temperatura,
+    ds.bpm,
+    ds.latitude,
+    ds.longitude,
+    ds.bateria,
+    ds.fecha_registro
+FROM datos_sensores ds
+JOIN dispositivos d ON ds.dispositivo_id = d.dispositivo_id
+JOIN mascotas m ON d.dispositivo_id = m.dispositivo_id
+JOIN usuarios u ON m.usuario_id = u.usuario_id
+ORDER BY ds.fecha_registro DESC
+LIMIT 10;
+
+-- 16. Verificar que todo está conectado correctamente
+SELECT 
+    u.usuario_nombre,
+    m.nombre as mascota,
+    m.especie,
+    d.nombre as dispositivo,
+    d.mac,
+    COUNT(ds.datos_sensor_id) as total_registros
+FROM usuarios u
+JOIN mascotas m ON u.usuario_id = m.usuario_id
+JOIN dispositivos d ON m.dispositivo_id = d.dispositivo_id
+LEFT JOIN datos_sensores ds ON d.dispositivo_id = ds.dispositivo_id
+GROUP BY u.usuario_id, m.mascota_id, d.dispositivo_id
+ORDER BY u.usuario_nombre; 

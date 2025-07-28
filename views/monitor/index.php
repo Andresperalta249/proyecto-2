@@ -8,12 +8,12 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 #tablaDatos {
     width: 100% !important;
     table-layout: fixed;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 #tablaDatos th,
 #tablaDatos td {
-    padding: 8px 4px;
+    padding: 6px 3px;
     vertical-align: middle;
     white-space: nowrap;
     overflow: hidden;
@@ -30,6 +30,21 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 .table-responsive {
     width: 100% !important;
     overflow-x: auto;
+    max-height: 35vh;
+    overflow-y: auto;
+}
+
+/* Responsive para diferentes pantallas */
+@media (max-width: 768px) {
+    .table-responsive {
+        max-height: 30vh;
+    }
+}
+
+@media (min-width: 1400px) {
+    .table-responsive {
+        max-height: 45vh;
+    }
 }
 
 .card {
@@ -48,112 +63,225 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 }
 
 .fila-dato:hover {
-    background-color: rgba(0,123,255,.1) !important;
+    background-color: rgba(0,123,255,.05) !important;
     cursor: pointer;
 }
+
+.fila-seleccionada {
+    background-color: rgba(0,123,255,.15) !important;
+    border-left: 4px solid #007bff !important;
+}
+
+.fila-seleccionada:hover {
+    background-color: rgba(0,123,255,.2) !important;
+}
+
+/* Mejorar legibilidad de badges */
+.badge {
+    font-weight: 500;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+/* Scroll personalizado para la tabla */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+/* Estilos específicos para los filtros del header */
+.card-header .d-flex {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.card-header .form-control-sm {
+    height: 28px !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ced4da !important;
+    margin: 0 !important;
+    border-radius: 4px !important;
+}
+
+.card-header .btn-sm {
+    height: 28px !important;
+    width: 32px !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    border: none !important;
+    margin: 0 !important;
+    border-radius: 4px !important;
+}
+
+.card-header .btn-sm i {
+    font-size: 11px !important;
+    margin: 0 !important;
+}
+
+/* Forzar alineación vertical */
+.card-header .d-flex > * {
+    vertical-align: middle !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Estilos para filtros simplificados - Override Bootstrap */
+.card-header .form-control-sm {
+    border-radius: 4px !important;
+    border: 1px solid #ced4da !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    font-size: 11px !important;
+    height: 28px !important;
+    padding: 4px 8px !important;
+}
+
+.card-header .form-control-sm:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    outline: none !important;
+}
+
+.card-header .btn-sm {
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease-in-out !important;
+    height: 28px !important;
+    width: 32px !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+
+.card-header .btn-sm:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Asegurar alineación correcta */
+.card-header .d-flex {
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.card-header .d-flex > * {
+    vertical-align: middle !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.card-header .btn-sm i {
+    font-size: 11px !important;
+    line-height: 1 !important;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    #mapaMonitor {
+        height: 20vh !important;
+        min-height: 150px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    #mapaMonitor {
+        height: 20vh !important;
+        min-height: 180px !important;
+    }
+}
+
+@media (min-width: 1400px) {
+    #mapaMonitor {
+        height: 40vh !important;
+        max-height: 500px !important;
+    }
+}
+
+/* Asegurar que el mapa se renderice correctamente */
+#mapaMonitor {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+#mapaMonitor .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* Estilos para marcadores personalizados del mapa */
+.custom-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.custom-marker div {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.custom-marker div:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+
 </style>
 
-<h2 class="mb-4">
-    <i class="fas fa-desktop"></i> Monitor IoT de Mascotas
-</h2>
+
 
 <!-- Mapa Interactivo -->
-<div class="card mb-3">
-    <div class="card-body">
-        <div id="mapaMonitor" style="height: 250px; width: 100%; border-radius: 8px;"></div>
+<div class="card mb-1">
+    <div class="card-body py-1">
+        <div id="mapaMonitor" style="height: 25vh; min-height: 180px; max-height: 250px; width: 100%; border-radius: 8px; position: relative; z-index: 1;"></div>
     </div>
 </div>
 
-<!-- Filtros Avanzados Compactos -->
-<div class="card mb-4">
-    <div class="card-body py-2">
-        <style>
-            .filtros-container .form-select,
-            .filtros-container .form-control,
-            .filtros-container .btn {
-                height: 32px !important;
-                line-height: 1.2 !important;
-                padding: 4px 8px !important;
-                font-size: 12px !important;
-                border-radius: 4px !important;
-            }
-            .filtros-container .form-label {
-                font-size: 11px !important;
-                margin-bottom: 4px !important;
-                font-weight: 500 !important;
-            }
-            .filtros-container .btn {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-            }
-        </style>
-        <div class="row g-1 align-items-end filtros-container">
-            <div class="col-md-1">
-                <label for="filtroPropietario" class="form-label">Propietario</label>
-                <select class="form-select" id="filtroPropietario">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="col-md-1">
-                <label for="filtroMascota" class="form-label">Mascota</label>
-                <select class="form-select" id="filtroMascota">
-                    <option value="">Todas</option>
-                </select>
-            </div>
-            <div class="col-md-1">
-                <label for="filtroEspecie" class="form-label">Especie</label>
-                <select class="form-select" id="filtroEspecie">
-                    <option value="">Todas</option>
-                    <option value="perro">Perro</option>
-                    <option value="gato">Gato</option>
-                    <option value="otro">Otro</option>
-                </select>
-            </div>
-            <div class="col-md-1">
-                <label for="filtroMAC" class="form-label">MAC</label>
-                <input type="text" class="form-control" id="filtroMAC" placeholder="MAC...">
-            </div>
-            <div class="col-md-1">
-                <label for="filtroFechaInicio" class="form-label">Desde</label>
-                <input type="date" class="form-control" id="filtroFechaInicio">
-            </div>
-            <div class="col-md-1">
-                <label for="filtroFechaFin" class="form-label">Hasta</label>
-                <input type="date" class="form-control" id="filtroFechaFin">
-            </div>
-            <div class="col-md-1">
-                <label for="filtroBusqueda" class="form-label">Buscar</label>
-                <input type="text" class="form-control" id="filtroBusqueda" placeholder="Nombre...">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">&nbsp;</label>
-                <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-primary" id="btnSoloActivos">
-                        <i class="fas fa-filter"></i> Activos
-                    </button>
-                    <button type="button" class="btn btn-warning" id="btnExportar">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="btnLimpiarFiltros">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Tabla de Datos de Sensores -->
 <div class="card" style="margin: 0; border-radius: 0; width: 100%;">
-    <div class="card-header" style="border-radius: 0; padding: 15px 20px;">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-table"></i> Historial de Datos de Sensores
-        </h5>
+    <div class="card-header" style="border-radius: 0; padding: 4px 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin: 0;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="card-title mb-0" style="font-size: 13px; color: #495057;">
+                <i class="fas fa-table"></i> Historial de Datos de Sensores
+            </h6>
+            <div class="d-flex align-items-center gap-2">
+                <input type="text" class="form-control form-control-sm" id="busquedaGeneral" placeholder="Buscar por ID, dispositivo, mascota, propietario..." style="width: 150px;">
+                <input type="date" class="form-control form-control-sm" id="filtroFechaInicio" style="width: 120px;">
+                <input type="date" class="form-control form-control-sm" id="filtroFechaFin" style="width: 120px;">
+                <button type="button" class="btn btn-sm btn-warning" id="btnExportar" title="Exportar datos">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="card-body" style="padding: 0; width: 100%;">
-        <div class="table-responsive" style="margin: 0; width: 100%;">
-            <table class="table table-striped table-hover mb-0" id="tablaDatos" style="margin: 0; width: 100%; font-size: 14px;">
+
+    <div class="card-body" style="padding: 0; width: 100%; margin: 0;">
+        <div class="table-responsive" style="margin: 0; padding: 0; width: 100%;">
+            <table class="table table-striped table-hover mb-0" id="tablaDatos" style="margin: 0; width: 100%; font-size: 12px;">
                 <thead class="table-dark">
                     <tr>
                         <th style="cursor: pointer; width: 5%;" onclick="ordenarTabla(0)">
@@ -196,38 +324,7 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 </tbody>
             </table>
         </div>
-        <!-- Controles de la tabla -->
-        <div class="card-footer" style="border-radius: 0; padding: 15px 20px; background-color: #f8f9fa;">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <div class="input-group" style="width: 300px;">
-                        <input type="text" class="form-control" id="busquedaTabla" placeholder="Buscar en tabla...">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-6 text-end">
-                    <button type="button" class="btn btn-outline-primary" id="btnActualizarTabla">
-                        <i class="fas fa-sync-alt"></i> Actualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Paginación -->
-        <div class="card-footer" style="border-radius: 0; padding: 10px 20px; background-color: #f8f9fa;">
-            <nav aria-label="Paginación de datos">
-                <ul class="pagination justify-content-center mb-0" id="paginacion">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#">Siguiente</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+
     </div>
 </div>
 
@@ -239,111 +336,60 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
 // Variables globales
 let mapa;
 let marcadores = [];
-let soloActivos = false;
+
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    inicializarMapa();
-    cargarPropietarios();
-    cargarTablaDatos();
-    configurarEventos();
-    iniciarActualizacionAutomatica();
+    // Pequeño retraso para asegurar que el contenedor del mapa esté listo
+    setTimeout(() => {
+        inicializarMapa();
+        cargarTablaDatos();
+        configurarEventos();
+        iniciarActualizacionAutomatica();
+        
+        // Forzar actualización de iconos después de un retraso
+        setTimeout(() => {
+            if (mapa) {
+                mapa.invalidateSize();
+                // Limpiar y recargar marcadores
+                marcadores.forEach(marker => mapa.removeLayer(marker));
+                marcadores = [];
+                actualizarMapaConDispositivos(datosTabla);
+            }
+        }, 500);
+    }, 100);
 });
 
 // Inicializar mapa de Leaflet
 function inicializarMapa() {
-    mapa = L.map('mapaMonitor').setView([4.5709, -74.2973], 6); // Colombia
+    const mapaContainer = document.getElementById('mapaMonitor');
+    if (!mapaContainer) {
+        console.error('Contenedor del mapa no encontrado');
+        return;
+    }
     
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(mapa);
-}
-
-// Cargar propietarios en el filtro
-function cargarPropietarios() {
-    fetch(`${window.BASE_URL}monitor/getPropietarios`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const select = document.getElementById('filtroPropietario');
-                select.innerHTML = '<option value="">Todos los propietarios</option>';
-                
-                data.data.forEach(propietario => {
-                    const option = document.createElement('option');
-                    option.value = propietario.usuario_id;
-                    option.textContent = propietario.usuario_nombre;
-                    select.appendChild(option);
-                });
+    try {
+        mapa = L.map('mapaMonitor').setView([4.5709, -74.2973], 6); // Colombia
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(mapa);
+        
+        // Forzar el refresh del mapa después de un pequeño retraso
+        setTimeout(() => {
+            if (mapa) {
+                mapa.invalidateSize();
             }
-        })
-        .catch(error => {
-            console.error('Error al cargar propietarios:', error);
-        });
+        }, 200);
+        
+        console.log('Mapa inicializado correctamente');
+    } catch (error) {
+        console.error('Error al inicializar el mapa:', error);
+    }
 }
 
-// Cargar mascotas por propietario
-function cargarMascotas(propietarioId = '') {
-    const select = document.getElementById('filtroMascota');
-    select.innerHTML = '<option value="">Todas las mascotas</option>';
-    
-    if (!propietarioId) return;
-    
-    fetch(`${window.BASE_URL}monitor/getMascotasPorPropietario?propietario=${propietarioId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                data.data.forEach(mascota => {
-                    const option = document.createElement('option');
-                    option.value = mascota.id_mascota;
-                    option.textContent = mascota.nombre;
-                    select.appendChild(option);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error al cargar mascotas:', error);
-        });
-}
 
-// Variables globales para filtros
-let filtrosActuales = {
-    propietario: '',
-    mascota: '',
-    especie: '',
-    mac: '',
-    fechaInicio: '',
-    fechaFin: '',
-    busqueda: '',
-    soloActivos: false
-};
 
-// Aplicar filtros y actualizar mapa
-function aplicarFiltros() {
-    // Recoger todos los filtros
-    filtrosActuales = {
-        propietario: document.getElementById('filtroPropietario').value,
-        mascota: document.getElementById('filtroMascota').value,
-        especie: document.getElementById('filtroEspecie').value,
-        mac: document.getElementById('filtroMAC').value,
-        fechaInicio: document.getElementById('filtroFechaInicio').value,
-        fechaFin: document.getElementById('filtroFechaFin').value,
-        busqueda: document.getElementById('filtroBusqueda').value,
-        soloActivos: soloActivos
-    };
-    
-    const params = new URLSearchParams(filtrosActuales);
-    
-    fetch(`${window.BASE_URL}monitor/getDatosFiltrados?${params}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarMapaConDispositivos(data.data);
-            }
-        })
-        .catch(error => {
-            console.error('Error al aplicar filtros:', error);
-        });
-}
 
 // Actualizar mapa con dispositivos
 function actualizarMapaConDispositivos(dispositivos) {
@@ -363,40 +409,65 @@ function actualizarMapaConDispositivos(dispositivos) {
             const lat = parseFloat(dispositivo.latitude);
             const lng = parseFloat(dispositivo.longitude);
             
-            // Crear icono personalizado según la especie
-            let iconUrl = `${window.BASE_URL}assets/img/paw-default.svg`;
+            // Crear icono personalizado según la especie usando HTML
+            let iconHtml, iconColor;
+            
+            console.log('Creando marcador para:', dispositivo.mascota_nombre, 'Especie:', dispositivo.mascota_especie);
+            
             if (dispositivo.mascota_especie === 'perro') {
-                iconUrl = `${window.BASE_URL}assets/img/paw-dog.svg`;
+                iconHtml = '<div style="background-color: #FF6B35; border: 2px solid #E55A2B; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">🐕</div>';
+                iconColor = '#FF6B35';
+                console.log('Icono de perro creado');
             } else if (dispositivo.mascota_especie === 'gato') {
-                iconUrl = `${window.BASE_URL}assets/img/paw-cat.svg`;
+                iconHtml = '<div style="background-color: #9B59B6; border: 2px solid #8E44AD; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">🐱</div>';
+                iconColor = '#9B59B6';
+                console.log('Icono de gato creado');
+            } else {
+                // Si no es perro ni gato, usar icono de perro por defecto
+                iconHtml = '<div style="background-color: #FF6B35; border: 2px solid #E55A2B; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">🐕</div>';
+                iconColor = '#FF6B35';
+                console.log('Icono por defecto creado');
             }
             
-            const icon = L.icon({
-                iconUrl: iconUrl,
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
+            const icon = L.divIcon({
+                html: iconHtml,
+                className: 'custom-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
             });
             
             const marker = L.marker([lat, lng], { icon: icon }).addTo(mapa);
             
             // Crear popup con información
             const popupContent = `
-                <div style="min-width: 200px;">
+                <div style="min-width: 250px;">
                     <h6><strong>${dispositivo.mascota_nombre || 'Sin nombre'}</strong></h6>
                     <p><strong>Propietario:</strong> ${dispositivo.usuario_nombre}</p>
-                    <p><strong>Dispositivo:</strong> ${dispositivo.nombre}</p>
-                    <p><strong>MAC:</strong> ${dispositivo.mac}</p>
+                    <p><strong>Dispositivo:</strong> ${dispositivo.dispositivo_nombre}</p>
+                    <p><strong>MAC:</strong> ${dispositivo.dispositivo_mac}</p>
+                    <p><strong>Zona:</strong> ${dispositivo.zona || 'Cali'}</p>
+                    <p><strong>Temp:</strong> ${dispositivo.temperatura}°C | <strong>BPM:</strong> ${dispositivo.bpm}</p>
                     <p><strong>Estado:</strong> 
-                        <span class="badge bg-${dispositivo.estado === 'activo' ? 'success' : 'danger'}">
-                            ${dispositivo.estado}
+                        <span class="badge bg-${dispositivo.bateria > 20 ? 'success' : 'danger'}">
+                            ${dispositivo.bateria > 20 ? 'Activo' : 'Inactivo'} (${dispositivo.bateria}%)
                         </span>
                     </p>
-                    <p><strong>Última fecha:</strong> ${dispositivo.ultima_fecha || 'N/A'}</p>
+                    <p><strong>Última fecha:</strong> ${formatearFecha(dispositivo.fecha)}</p>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="mostrarDetallesDato(${dispositivo.id})">
+                        Ver Detalles Completos
+                    </button>
                 </div>
             `;
             
             marker.bindPopup(popupContent);
+            
+            // Agregar evento de click para mostrar detalles completos
+            marker.on('click', function() {
+                // El popup se abre automáticamente, pero también podemos mostrar detalles
+                setTimeout(() => {
+                    mostrarDetallesDato(dispositivo.id);
+                }, 100);
+            });
             marcadores.push(marker);
             bounds.extend([lat, lng]);
             hayMarcadores = true;
@@ -405,11 +476,17 @@ function actualizarMapaConDispositivos(dispositivos) {
     
     // Solo ajustar vista si hay marcadores y no es la primera carga
     if (hayMarcadores && marcadores.length > 0) {
-        // Mantener el zoom actual si ya hay marcadores, solo ajustar si es necesario
-        if (marcadores.length === 1) {
-            mapa.setView(bounds.getCenter(), Math.max(mapa.getZoom(), 10));
+        // Si el usuario está viendo una mascota específica, mantener esa vista
+        if (vistaMapaPersonalizada && coordenadasSeleccionadas) {
+            mapa.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
+            console.log('Manteniendo vista personalizada para:', coordenadasSeleccionadas.mascota);
         } else {
-            mapa.fitBounds(bounds, { padding: [20, 20] });
+            // Mantener el zoom actual si ya hay marcadores, solo ajustar si es necesario
+            if (marcadores.length === 1) {
+                mapa.setView(bounds.getCenter(), Math.max(mapa.getZoom(), 10));
+            } else {
+                mapa.fitBounds(bounds, { padding: [20, 20] });
+            }
         }
     }
 }
@@ -421,16 +498,25 @@ function cargarTablaDatos() {
         .then(data => {
             if (data.success) {
                 renderizarTablaDatos(data.data);
+            } else {
+                console.error('Error al cargar datos:', data.message);
             }
         })
         .catch(error => {
             console.error('Error al cargar tabla:', error);
+            // Mostrar mensaje de error en la tabla
+            const tbody = document.querySelector('#tablaDatos tbody');
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error al cargar datos</td></tr>';
         });
 }
+
+
 
 // Renderizar datos en la tabla
 function renderizarTablaDatos(datos) {
     const tbody = document.querySelector('#tablaDatos tbody');
+    
+
     
     // Guardar datos para ordenamiento y búsqueda
     datosTabla = datos;
@@ -441,9 +527,9 @@ function renderizarTablaDatos(datos) {
     }
     
     tbody.innerHTML = datos.map(dato => `
-        <tr class="fila-dato" data-id="${dato.id}" style="font-size: 13px;">
+        <tr class="fila-dato ${filaSeleccionada === dato.id ? 'fila-seleccionada' : ''}" data-id="${dato.id}" style="font-size: 12px;">
             <td class="text-center" style="width: 5%;">
-                <span class="badge bg-secondary">${dato.id || 'N/A'}</span>
+                <span class="badge bg-dark">${dato.id || 'N/A'}</span>
             </td>
             <td style="width: 15%;">
                 <div class="d-flex align-items-center">
@@ -473,9 +559,21 @@ function renderizarTablaDatos(datos) {
                     ${dato.bpm ? dato.bpm : 'N/A'}
                 </span>
             </td>
-            <td class="text-muted small" style="width: 10%; font-size: 11px;">${dato.latitude ? parseFloat(dato.latitude).toFixed(4) : 'N/A'}</td>
-            <td class="text-muted small" style="width: 10%; font-size: 11px;">${dato.longitude ? parseFloat(dato.longitude).toFixed(4) : 'N/A'}</td>
-            <td class="text-muted small" style="width: 15%; font-size: 11px;">${formatearFecha(dato.fecha)}</td>
+            <td class="text-center" style="width: 10%;">
+                <span class="badge bg-success" style="font-size: 11px;">
+                    ${dato.latitude ? parseFloat(dato.latitude).toFixed(4) : 'N/A'}
+                </span>
+            </td>
+            <td class="text-center" style="width: 10%;">
+                <span class="badge bg-success" style="font-size: 11px;">
+                    ${dato.longitude ? parseFloat(dato.longitude).toFixed(4) : 'N/A'}
+                </span>
+            </td>
+            <td class="text-center" style="width: 15%;">
+                <span style="font-size: 11px; color: #666;">
+                    ${formatearFecha(dato.fecha)}
+                </span>
+            </td>
             <td class="text-center" style="width: 5%;">
                 <span class="badge bg-${dato.bateria > 80 ? 'success' : dato.bateria > 20 ? 'warning' : 'danger'}">
                     ${dato.bateria ? dato.bateria + '%' : 'N/A'}
@@ -488,80 +586,139 @@ function renderizarTablaDatos(datos) {
     document.querySelectorAll('.fila-dato').forEach(fila => {
         fila.addEventListener('click', function() {
             const id = this.dataset.id;
-            mostrarDetallesDato(id);
+            
+            // Marcar fila como seleccionada
+            document.querySelectorAll('.fila-dato').forEach(f => f.classList.remove('fila-seleccionada'));
+            this.classList.add('fila-seleccionada');
+            filaSeleccionada = id;
+            
+            ubicarEnMapa(id);
         });
     });
+    
+    // Restaurar selección si existe
+    if (filaSeleccionada) {
+        const filaSeleccionadaElement = document.querySelector(`.fila-dato[data-id="${filaSeleccionada}"]`);
+        if (filaSeleccionadaElement) {
+            filaSeleccionadaElement.classList.add('fila-seleccionada');
+        }
+    }
 }
 
 // Configurar eventos de los botones
 function configurarEventos() {
-    // Filtro de propietario
-    document.getElementById('filtroPropietario').addEventListener('change', function() {
-        cargarMascotas(this.value);
-    });
-    
-    // Botón limpiar filtros
-    document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
-        // Limpiar todos los filtros
-        document.getElementById('filtroPropietario').value = '';
-        document.getElementById('filtroMascota').value = '';
-        document.getElementById('filtroEspecie').value = '';
-        document.getElementById('filtroMAC').value = '';
-        document.getElementById('filtroFechaInicio').value = '';
-        document.getElementById('filtroFechaFin').value = '';
-        document.getElementById('filtroBusqueda').value = '';
-        soloActivos = false;
-        document.getElementById('btnSoloActivos').classList.remove('btn-success');
-        document.getElementById('btnSoloActivos').classList.add('btn-primary');
-        aplicarFiltros();
-    });
-    
-    // Botón solo activos
-    document.getElementById('btnSoloActivos').addEventListener('click', function() {
-        soloActivos = !soloActivos;
-        if (soloActivos) {
-            this.classList.remove('btn-primary');
-            this.classList.add('btn-success');
-        } else {
-            this.classList.remove('btn-success');
-            this.classList.add('btn-primary');
-        }
-        aplicarFiltros();
-    });
-    
-    // Botón actualizar tabla
-    document.getElementById('btnActualizarTabla').addEventListener('click', cargarTablaDatos);
-    
     // Botón exportar
     document.getElementById('btnExportar').addEventListener('click', exportarDatos);
     
-    // Búsqueda en tabla
-    document.getElementById('busquedaTabla').addEventListener('input', function() {
-        buscarEnTabla(this.value);
+    // Búsqueda en tiempo real
+    const busquedaInput = document.getElementById('busquedaGeneral');
+    busquedaInput.addEventListener('input', aplicarFiltrosSimplificados);
+    
+    // Limpiar filtros cuando se borre completamente
+    busquedaInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            if (this.value === '') {
+                aplicarFiltrosSimplificados();
+            }
+        }
     });
     
-    // Filtros automáticos (se aplican automáticamente)
-    ['filtroEspecie', 'filtroMAC', 'filtroFechaInicio', 'filtroFechaFin', 'filtroBusqueda'].forEach(id => {
-        document.getElementById(id).addEventListener('change', aplicarFiltros);
+    // También detectar cuando se borre el contenido de otras formas
+    busquedaInput.addEventListener('paste', function() {
+        setTimeout(() => {
+            if (this.value === '') {
+                aplicarFiltrosSimplificados();
+            }
+        }, 10);
     });
+    
+    busquedaInput.addEventListener('cut', function() {
+        setTimeout(() => {
+            if (this.value === '') {
+                aplicarFiltrosSimplificados();
+            }
+        }, 10);
+    });
+    
+    // Filtros de fecha
+    document.getElementById('filtroFechaInicio').addEventListener('change', aplicarFiltrosSimplificados);
+    document.getElementById('filtroFechaFin').addEventListener('change', aplicarFiltrosSimplificados);
 }
+
+// Aplicar filtros simplificados
+function aplicarFiltrosSimplificados() {
+    const busqueda = document.getElementById('busquedaGeneral').value.toLowerCase().trim();
+    const fechaInicio = document.getElementById('filtroFechaInicio').value;
+    const fechaFin = document.getElementById('filtroFechaFin').value;
+    
+    // Si no hay filtros activos, mostrar todos los datos
+    if (!busqueda && !fechaInicio && !fechaFin) {
+        renderizarTablaDatos(datosTabla);
+        actualizarMapaConDispositivos(datosTabla);
+        return;
+    }
+    
+    // Filtrar datos
+    const datosFiltrados = datosTabla.filter(dato => {
+        // Filtro de búsqueda general - buscar en ID, dispositivo, mascota, propietario
+        if (busqueda) {
+            const textoBusqueda = `${dato.id || ''} ${dato.dispositivo_nombre || ''} ${dato.mascota_nombre || ''} ${dato.usuario_nombre || ''}`.toLowerCase();
+            if (!textoBusqueda.includes(busqueda)) {
+                return false;
+            }
+        }
+        
+        // Filtro por fecha inicio
+        if (fechaInicio && dato.fecha) {
+            const fechaDato = new Date(dato.fecha);
+            const fechaInicioDate = new Date(fechaInicio);
+            if (fechaDato < fechaInicioDate) {
+                return false;
+            }
+        }
+        
+        // Filtro por fecha fin
+        if (fechaFin && dato.fecha) {
+            const fechaDato = new Date(dato.fecha);
+            const fechaFinDate = new Date(fechaFin + 'T23:59:59');
+            if (fechaDato > fechaFinDate) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    // Actualizar tabla y mapa
+    renderizarTablaDatos(datosFiltrados);
+    actualizarMapaConDispositivos(datosFiltrados);
+}
+
+
 
 // Iniciar actualización automática
 function iniciarActualizacionAutomatica() {
-    // Actualizar mapa y filtros cada 30 segundos
-    setInterval(() => {
-        aplicarFiltros();
-    }, 30000);
-    
     // Actualizar tabla cada 10 segundos
     setInterval(() => {
         cargarTablaDatos();
     }, 10000);
+    
+    // Listener para resize de ventana
+    window.addEventListener('resize', () => {
+        if (mapa) {
+            setTimeout(() => {
+                mapa.invalidateSize();
+            }, 100);
+        }
+    });
 }
 
 // Variables para ordenamiento
 let ordenActual = { columna: -1, ascendente: true };
 let datosTabla = [];
+let filaSeleccionada = null; // Para mantener la fila seleccionada
+let vistaMapaPersonalizada = false; // Para saber si el usuario está viendo una mascota específica
+let coordenadasSeleccionadas = null; // Para mantener las coordenadas de la mascota seleccionada
 
 // Funciones de utilidad
 function formatearFecha(fecha) {
@@ -637,22 +794,43 @@ function ordenarTabla(columna) {
     renderizarTablaDatos(datosTabla);
 }
 
-// Buscar en tabla
-function buscarEnTabla(termino) {
-    if (!termino) {
-        renderizarTablaDatos(datosTabla);
+
+
+// Ubicar en mapa al hacer click en fila
+function ubicarEnMapa(id) {
+    const dato = datosTabla.find(d => d.id == id);
+    if (!dato || !dato.latitude || !dato.longitude) {
+        Swal.fire('Error', 'No hay ubicación disponible para este registro', 'warning');
         return;
     }
     
-    const filtrados = datosTabla.filter(dato => {
-        const texto = `${dato.dispositivo_nombre} ${dato.mascota_nombre} ${dato.usuario_nombre}`.toLowerCase();
-        return texto.includes(termino.toLowerCase());
-    });
+    // Guardar estado de vista personalizada
+    vistaMapaPersonalizada = true;
+    coordenadasSeleccionadas = {
+        lat: parseFloat(dato.latitude),
+        lng: parseFloat(dato.longitude),
+        mascota: dato.mascota_nombre || 'Sin asignar'
+    };
     
-    renderizarTablaDatos(filtrados);
+    // Centrar mapa en la ubicación
+    mapa.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
+    
+    // Forzar actualización del mapa
+    setTimeout(() => {
+        mapa.invalidateSize();
+    }, 100);
+    
+    // Mostrar notificación
+    Swal.fire({
+        title: 'Ubicación Centrada',
+        text: `Mascota: ${coordenadasSeleccionadas.mascota}`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+    });
 }
 
-// Mostrar detalles de un dato
+// Mostrar detalles de un dato (usado para marcadores del mapa)
 function mostrarDetallesDato(id) {
     const dato = datosTabla.find(d => d.id == id);
     if (!dato) return;
@@ -663,8 +841,11 @@ function mostrarDetallesDato(id) {
             <div class="text-start">
                 <p><strong>ID:</strong> ${dato.id}</p>
                 <p><strong>Dispositivo:</strong> ${dato.dispositivo_nombre}</p>
+                <p><strong>MAC:</strong> ${dato.dispositivo_mac}</p>
                 <p><strong>Mascota:</strong> ${dato.mascota_nombre || 'Sin asignar'}</p>
+                <p><strong>Especie:</strong> ${dato.mascota_especie}</p>
                 <p><strong>Propietario:</strong> ${dato.usuario_nombre}</p>
+                <p><strong>Zona:</strong> ${dato.zona || 'Cali'}</p>
                 <p><strong>Temperatura:</strong> ${dato.temperatura ? dato.temperatura + '°C' : 'N/A'}</p>
                 <p><strong>BPM:</strong> ${dato.bpm ? dato.bpm + ' BPM' : 'N/A'}</p>
                 <p><strong>Batería:</strong> ${dato.bateria ? dato.bateria + '%' : 'N/A'}</p>
@@ -674,16 +855,7 @@ function mostrarDetallesDato(id) {
             </div>
         `,
         icon: 'info',
-        confirmButtonText: 'Cerrar',
-        showCancelButton: true,
-        cancelButtonText: 'Ver en Mapa'
-    }).then((result) => {
-        if (result.dismiss === Swal.DismissReason.cancel) {
-            // Centrar mapa en la ubicación
-            if (dato.latitude && dato.longitude) {
-                mapa.setView([parseFloat(dato.latitude), parseFloat(dato.longitude)], 15);
-            }
-        }
+        confirmButtonText: 'Cerrar'
     });
 }
 
@@ -695,14 +867,17 @@ function exportarDatos() {
     }
     
     // Crear CSV
-    const headers = ['ID', 'Dispositivo', 'Mascota', 'Propietario', 'Temperatura', 'BPM', 'Latitud', 'Longitud', 'Fecha', 'Batería'];
+    const headers = ['ID', 'Dispositivo', 'MAC', 'Mascota', 'Especie', 'Propietario', 'Zona', 'Temperatura', 'BPM', 'Latitud', 'Longitud', 'Fecha', 'Batería'];
     const csvContent = [
         headers.join(','),
         ...datosTabla.map(dato => [
             dato.id || '',
             dato.dispositivo_nombre || '',
+            dato.dispositivo_mac || '',
             dato.mascota_nombre || '',
+            dato.mascota_especie || '',
             dato.usuario_nombre || '',
+            dato.zona || 'Cali',
             dato.temperatura || '',
             dato.bpm || '',
             dato.latitude || '',
@@ -717,7 +892,7 @@ function exportarDatos() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `datos_sensores_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `datos_sensores_cali_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

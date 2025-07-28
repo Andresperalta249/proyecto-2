@@ -173,8 +173,8 @@ class DatosSensor extends Model {
                             u.nombre as usuario_nombre
                      FROM {$this->table} ds
                      INNER JOIN dispositivos d ON ds.dispositivo_id = d.id_dispositivo
-                     LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota
-                     LEFT JOIN usuarios u ON d.usuario_id = u.id_usuario";
+                     LEFT JOIN mascotas m ON m.id_dispositivo = d.id_dispositivo
+                     LEFT JOIN usuarios u ON m.usuario_id = u.id_usuario";
             
             $conditions = [];
             $params = [];

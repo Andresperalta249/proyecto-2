@@ -1,164 +1,298 @@
-/* Variables específicas del dashboard que extienden el sistema de colores moderno */
-:root {
-    --dashboard-primary: var(--primary-600);
-    --dashboard-warning: var(--warning-500);
-    --dashboard-light: var(--neutral-50);
+/* Dashboard Styles */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--blue);
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.dashboard-container {
-    height: 100%;
-    padding: 1rem;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+.dashboard-title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.dashboard-title p {
+    margin: 0.25rem 0 0 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.dashboard-controls {
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    gap: 1.5rem;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dashboard-controls label {
+    color: white;
+    font-weight: 500;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.dashboard-controls .form-select {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    min-width: 120px;
+    font-size: 0.85rem;
+}
+
+.dashboard-controls .form-select option {
+    background: #333;
+    color: white;
+}
+
+/* KPIs Section */
+.dashboard-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .kpi-card {
-    background: var(--bg-primary);
-    border-radius: var(--radius-md);
-    padding: 1.25rem;
-    box-shadow: var(--shadow-sm);
-    height: 100%;
-    transition: var(--transition-fast);
-    border: 1px solid var(--border-light);
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .kpi-card:hover {
-    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .kpi-icon {
-    font-size: var(--icon-large-size);
-    color: var(--blue);
-}
-
-.chart-title {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-    line-height: var(--line-height-tight);
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.chart-container {
-    background: var(--bg-primary);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-    box-shadow: var(--shadow-sm);
-    height: 280px;
-    max-height: 320px;
-    min-height: 200px;
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-    box-sizing: border-box;
-    border: 1px solid var(--border-light);
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    flex-shrink: 0;
 }
 
-.chart-container canvas {
-    flex: 1 1 0;
-    min-height: 0;
-    height: 100% !important;
-    max-height: 100% !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block;
-    margin: 0 !important;
-    padding: 0 !important;
+.kpi-card:nth-child(1) .kpi-icon {
+    background: var(--blue);
 }
 
-.activity-list {
-    background: var(--bg-primary);
-    border-radius: var(--radius-md);
-    padding: 1rem;
-    box-shadow: var(--shadow-sm);
-    max-height: 300px;
-    overflow-y: auto;
+.kpi-card:nth-child(2) .kpi-icon {
+    background: #f093fb;
+}
+
+.kpi-card:nth-child(3) .kpi-icon {
+    background: #4facfe;
+}
+
+.kpi-content {
     flex: 1;
 }
 
-.activity-item {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--border-light);
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.125rem;
 }
 
-.activity-item:last-child {
-    border-bottom: none;
+.kpi-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
 }
 
-.alert-badge {
-    background-color: var(--orange);
-    color: var(--text-inverse);
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
+/* Charts Section */
+.dashboard-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
 }
 
-.bateria-label {
+.chart-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chart-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.chart-header {
+    padding: 1rem 1rem 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--blue);
+    color: #2c3e50;
 }
 
-@media (max-width: 900px) {
-    .chart-container {
-        height: 200px;
-        min-height: 150px;
-        max-height: 250px;
-        padding: 0.5rem;
+.chart-body {
+    padding: 0.5rem 1rem 1.5rem;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+/* Mejorar legibilidad de las leyendas de Chart.js */
+.chart-card canvas {
+    margin-bottom: 0.5rem;
+}
+
+/* Estilos específicos para las leyendas */
+.chart-card .chartjs-legend {
+    padding: 0.5rem 0;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.chart-card .chartjs-legend-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.chart-card .chartjs-legend-item span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 0.5rem;
+    border-radius: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+        padding: 0.75rem;
     }
     
-    .dashboard-container {
-        padding: 0.5rem;
-        gap: 1rem;
+    .dashboard-title h1 {
+        font-size: 1.25rem;
+    }
+    
+    .dashboard-kpis {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
     
     .kpi-card {
-        padding: 1rem;
+        padding: 0.75rem;
+    }
+    
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
     }
     
     .kpi-value {
-        font-size: var(--heading-4-size) !important;
+        font-size: 1.25rem;
     }
     
-    .kpi-label {
-        font-size: var(--ui-caption-size) !important;
+    .chart-header {
+        padding: 0.75rem 0.75rem 0.25rem;
+    }
+    
+    .chart-body {
+        padding: 0.25rem 0.75rem 0.75rem;
     }
 }
 
-/* Eliminar scroll horizontal en todos los dispositivos */
-.row {
-    margin-left: 0;
-    margin-right: 0;
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 0.5rem;
+    }
+    
+    .dashboard-title h1 {
+        font-size: 1.1rem;
+    }
+    
+    .chart-header {
+        padding: 0.5rem 0.5rem 0.25rem;
+    }
+    
+    .chart-body {
+        padding: 0.25rem 0.5rem 0.5rem;
+    }
 }
 
-.col, .col-md-3, .col-md-4, .col-md-6, .col-12 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+/* Alert Styles */
+.alert {
+    border-radius: 6px;
+    border: none;
+    margin-bottom: 0.75rem;
 }
 
-/* Asegurar que el contenido no cause scroll innecesario */
-.dashboard-container .row:last-child {
-    margin-bottom: 0;
+.alert-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
 }
 
-/* Optimizar espaciado */
-.mb-4 {
-    margin-bottom: 1.5rem !important;
+.alert-success {
+    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    color: white;
 }
 
-.mb-3 {
-    margin-bottom: 1rem !important;
+/* Loading States */
+.dashboard-kpis.loading .kpi-value {
+    opacity: 0.5;
 }
 
-.mb-2 {
-    margin-bottom: 0.5rem !important;
+.dashboard-charts.loading .chart-body {
+    opacity: 0.5;
+}
+
+/* Animation for KPI updates */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.kpi-value.updated {
+    animation: pulse 0.5s ease-in-out;
 } 

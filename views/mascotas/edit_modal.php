@@ -2,10 +2,12 @@
 // Formulario para crear/editar mascota
 $mascota = $mascota ?? null;
 $esEdicion = isset($mascota) && $mascota !== null;
+
+
 ?>
 
-<form id="formMascota" method="POST" action="<?= BASE_URL ?>mascotas/<?= $esEdicion ? 'update' : 'create' ?>">
-    <?php if ($esEdicion): ?>
+<form id="formMascota" method="POST" action="<?= BASE_URL ?>mascotas/<?= $esEdicion ? 'edit' : 'create' ?>">
+    <?php if ($esEdicion && isset($mascota['id_mascota'])): ?>
         <input type="hidden" name="id_mascota" value="<?= $mascota['id_mascota'] ?>">
     <?php endif; ?>
 
@@ -32,8 +34,8 @@ $esEdicion = isset($mascota) && $mascota !== null;
         <select class="form-select" id="tamano" name="tamano" required>
             <option value="">Seleccione un tamaño</option>
             <option value="pequeño" <?= ($mascota['tamano'] ?? '') === 'pequeño' ? 'selected' : '' ?>>Pequeño</option>
-            <option value="mediano" <?= ($mascota['tamano'] ?? '') === 'mediano' ? 'selected' : '' ?>>Mediano</option>
-            <option value="grande" <?= ($mascota['tamano'] ?? '') === 'grande' ? 'selected' : '' ?>>Grande</option>
+            <option value="Mediano" <?= ($mascota['tamano'] ?? '') === 'Mediano' ? 'selected' : '' ?>>Mediano</option>
+            <option value="Grande" <?= ($mascota['tamano'] ?? '') === 'Grande' ? 'selected' : '' ?>>Grande</option>
         </select>
     </div>
 
@@ -42,8 +44,8 @@ $esEdicion = isset($mascota) && $mascota !== null;
         <label for="genero" class="form-label">Género *</label>
         <select class="form-select" id="genero" name="genero" required>
             <option value="">Seleccione un género</option>
-            <option value="macho" <?= ($mascota['genero'] ?? '') === 'macho' ? 'selected' : '' ?>>Macho</option>
-            <option value="hembra" <?= ($mascota['genero'] ?? '') === 'hembra' ? 'selected' : '' ?>>Hembra</option>
+            <option value="Macho" <?= ($mascota['genero'] ?? '') === 'Macho' ? 'selected' : '' ?>>Macho</option>
+            <option value="Hembra" <?= ($mascota['genero'] ?? '') === 'Hembra' ? 'selected' : '' ?>>Hembra</option>
         </select>
     </div>
 
@@ -57,12 +59,12 @@ $esEdicion = isset($mascota) && $mascota !== null;
     <!-- Propietario (solo para administradores) -->
     <?php if (verificarPermiso('gestionar_mascotas')): ?>
     <div class="mb-3">
-        <label for="propietario_id" class="form-label">Propietario</label>
-        <select class="form-select" id="propietario_id" name="propietario_id">
+        <label for="usuario_id" class="form-label">Propietario</label>
+        <select class="form-select" id="usuario_id" name="usuario_id">
             <option value="">Seleccione un propietario</option>
             <?php foreach ($usuarios as $usuario): ?>
                 <option value="<?= $usuario['id_usuario'] ?>" 
-                        <?= ($mascota['propietario_id'] ?? '') == $usuario['id_usuario'] ? 'selected' : '' ?>>
+                        <?= ($mascota['usuario_id'] ?? '') == $usuario['id_usuario'] ? 'selected' : '' ?>>
                     <?= htmlspecialchars($usuario['nombre']) ?> (<?= htmlspecialchars($usuario['email']) ?>)
                 </option>
             <?php endforeach; ?>
@@ -79,11 +81,7 @@ $esEdicion = isset($mascota) && $mascota !== null;
         </select>
     </div>
 
-    <!-- Descripción -->
-    <div class="mb-3">
-        <label for="descripcion" class="form-label">Descripción</label>
-        <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars($mascota['descripcion'] ?? '') ?></textarea>
-    </div>
+
 
     <!-- Botones -->
     <div class="d-flex justify-content-end gap-2">

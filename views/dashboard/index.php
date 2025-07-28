@@ -2,73 +2,76 @@
 $titulo = isset($titulo) ? $titulo : 'Dashboard IoT';
 $subtitulo = isset($subtitulo) ? $subtitulo : 'Resumen general del sistema IoT Pets.';
 ?>
-<h1 class="titulo-pagina"><?= htmlspecialchars($titulo) ?></h1>
-<p class="subtitulo-pagina">
-  <?= htmlspecialchars($subtitulo) ?>
-</p>
 
-<div class="contenedor-sistema">
-    <div class="contenedor-sistema-header">
-        <i class="fas fa-chart-bar"></i>
-        Resumen del Sistema
+<!-- Header del Dashboard -->
+<div class="dashboard-header">
+    <div class="dashboard-title">
+        <h1><?= htmlspecialchars($titulo) ?></h1>
+        <p><?= htmlspecialchars($subtitulo) ?></p>
     </div>
-    <div class="contenedor-sistema-body">
-        <!-- KPI Cards -->
-        <div class="dashboard-kpi-grid">
-            <div class="kpi-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="kpi-value text-lg fw-bold" id="totalDispositivos">0</div>
-                        <div class="kpi-label text-sm">Dispositivos Conectados</div>
-                    </div>
-                    <i class="fas fa-microchip kpi-icon"></i>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="kpi-value text-lg fw-bold" id="totalMascotas">0</div>
-                        <div class="kpi-label text-sm">Mascotas Registradas</div>
-                    </div>
-                    <i class="fas fa-paw kpi-icon"></i>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="kpi-value text-lg fw-bold" id="usuariosRegistrados">0</div>
-                        <div class="kpi-label text-sm">Usuarios Registrados</div>
-                    </div>
-                    <i class="fas fa-users kpi-icon"></i>
-                </div>
-            </div>
-        </div>
+    <div class="dashboard-controls">
+        <label for="rangoDias">Rango de días:</label>
+        <select id="rangoDias" class="form-select">
+            <option value="7">Últimos 7 días</option>
+            <option value="15">Últimos 15 días</option>
+            <option value="30">Últimos 30 días</option>
+        </select>
+    </div>
+</div>
 
-        <!-- Selector de rango de días -->
-        <div class="dashboard-controls">
-            <label for="rangoDias" class="form-label mb-0 small">Rango de días:</label>
-            <select id="rangoDias" class="form-select form-select-sm">
-                <option value="7">Últimos 7 días</option>
-                <option value="15">Últimos 15 días</option>
-                <option value="30">Últimos 30 días</option>
-            </select>
+<!-- KPIs Section -->
+<div class="dashboard-kpis">
+    <div class="kpi-card">
+        <div class="kpi-icon">
+            <i class="fas fa-microchip"></i>
         </div>
-
-        <!-- Charts -->
-        <div class="dashboard-charts-grid">
-            <div class="chart-container">
-                <div class="chart-title text-md fw-bold">Distribución de especies</div>
-                <canvas id="especiesChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <div class="chart-title text-md fw-bold">Registros por día</div>
-                <canvas id="usuariosChart"></canvas>
-            </div>
+        <div class="kpi-content">
+            <div class="kpi-value" id="totalDispositivos">0</div>
+            <div class="kpi-label">Dispositivos Conectados</div>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-icon">
+            <i class="fas fa-paw"></i>
+        </div>
+        <div class="kpi-content">
+            <div class="kpi-value" id="totalMascotas">0</div>
+            <div class="kpi-label">Mascotas Registradas</div>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="kpi-content">
+            <div class="kpi-value" id="usuariosRegistrados">0</div>
+            <div class="kpi-label">Usuarios Registrados</div>
         </div>
     </div>
 </div>
 
-
+<!-- Charts Section -->
+<div class="dashboard-charts">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>Distribución de Especies</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="especiesChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>Registros por Día</h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="usuariosChart"></canvas>
+        </div>
+    </div>
+</div>
 
 <script>
 // Detectar la base del proyecto automáticamente
@@ -87,17 +90,19 @@ function initCharts() {
                 display: true,
                 position: 'bottom',
                 labels: {
-                    boxWidth: 12,
-                    padding: 8,
+                    boxWidth: 16,
+                    padding: 12,
                     font: {
-                        size: 10
-                    }
+                        size: 12,
+                        weight: '500'
+                    },
+                    color: '#2c3e50',
+                    usePointStyle: true,
+                    pointStyle: 'circle'
                 }
             }
         }
     };
-
-
 
     // Inicializar gráfica de especies
     const especiesCtx = document.getElementById('especiesChart').getContext('2d');
@@ -108,11 +113,11 @@ function initCharts() {
             datasets: [{
                 data: [],
                 backgroundColor: [
-                    '#004AAD',
-                    '#FFC107',
-                    '#28a745',
-                    '#dc3545',
-                    '#17a2b8'
+                    '#3b82f6',
+                    '#f59e0b',
+                    '#22c55e',
+                    '#ef4444',
+                    '#8b5cf6'
                 ]
             }]
         },
@@ -143,18 +148,26 @@ function initCharts() {
             datasets: [{
                 label: 'Usuarios',
                 data: [],
-                borderColor: '#004AAD',
-                backgroundColor: 'rgba(0, 74, 173, 0.1)',
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
-                fill: true
+                fill: true,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
             },
             {
                 label: 'Mascotas',
                 data: [],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
                 tension: 0.4,
-                fill: true
+                fill: true,
+                pointBackgroundColor: '#22c55e',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
             }]
         },
         options: {
@@ -184,15 +197,25 @@ function initCharts() {
                     ticks: {
                         stepSize: 1,
                         font: {
-                            size: 10
-                        }
+                            size: 11,
+                            weight: '500'
+                        },
+                        color: '#6c757d'
+                    },
+                    grid: {
+                        color: '#e9ecef'
                     }
                 },
                 x: {
                     ticks: {
                         font: {
-                            size: 10
-                        }
+                            size: 11,
+                            weight: '500'
+                        },
+                        color: '#6c757d'
+                    },
+                    grid: {
+                        color: '#e9ecef'
                     }
                 }
             }
@@ -215,12 +238,11 @@ async function handleFetchError(error) {
         <strong>Error!</strong> ${error.message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    document.querySelector('.contenedor-sistema-body').prepend(errorMessage);
+    document.querySelector('.dashboard-charts').prepend(errorMessage);
     
     // Actualizar valores por defecto
     document.getElementById('totalDispositivos').textContent = '0/0';
     document.getElementById('totalMascotas').textContent = '0';
-    document.getElementById('totalAlertas').textContent = '0/0';
     document.getElementById('usuariosRegistrados').textContent = '0';
 }
 
@@ -246,13 +268,11 @@ async function updateKPIs() {
         const dispositivosConectados = data.dispositivos?.conectados ?? 0;
         const dispositivosTotal = data.dispositivos?.total ?? 0;
         const mascotasTotal = data.mascotas ?? 0;
-
         const usuariosRegistrados = data.usuarios_registrados ?? 0;
 
         document.getElementById('totalDispositivos').textContent = 
             `${dispositivosConectados}/${dispositivosTotal}`;
         document.getElementById('totalMascotas').textContent = mascotasTotal;
-
         document.getElementById('usuariosRegistrados').textContent = usuariosRegistrados;
     } catch (error) {
         console.error('Error en updateKPIs:', error);
@@ -265,15 +285,6 @@ function getDiasSeleccionados() {
     return parseInt(document.getElementById('rangoDias').value, 10);
 }
 
-// Función para obtener el rango de fechas mostrado
-function getRangoFechas(data) {
-    if (!data || data.length === 0) return '';
-    const desde = data[0]?.fecha || '';
-    const hasta = data[data.length - 1]?.fecha || '';
-    if (!desde || !hasta) return '';
-    return `Datos del ${formatearFecha(desde)} al ${formatearFecha(hasta)}`;
-}
-
 // Función para formatear fecha (solo día)
 function formatearFecha(fecha) {
     if (!fecha) return '';
@@ -281,8 +292,6 @@ function formatearFecha(fecha) {
     if (isNaN(d)) return fecha;
     return d.getDate(); // Solo retorna el día
 }
-
-
 
 // Función para actualizar la gráfica de especies
 async function updateEspeciesChart() {
@@ -345,8 +354,6 @@ async function updateUsuariosChart() {
     }
 }
 
-
-
 // Función para actualizar todos los datos
 async function updateAllData() {
     try {
@@ -384,6 +391,3 @@ document.getElementById('rangoDias').addEventListener('change', () => {
 <!-- Si usas DataTables y plugins -->
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-
-</body>
-</html>

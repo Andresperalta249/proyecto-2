@@ -5,37 +5,30 @@
 /* ===== TABLA ESTANDARIZADA ===== */
 .tabla-sistema {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-family: var(--font-family-primary);
-    font-size: var(--body-normal-size);
-    background: var(--bg-primary);
-    border-radius: var(--radius-md);
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    display: table;
-    table-layout: fixed;
-    min-width: 0;
-    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-xs);
+    margin: 0;
 }
 
 /* ===== ENCABEZADOS ===== */
 .tabla-sistema thead {
-    background: var(--table-header-bg);
-    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-light);
 }
 
 .tabla-sistema th {
-    padding: 0.75rem 0.5rem;
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--body-normal-size);
+    padding: 0.5rem 0.75rem;
     text-align: left;
-    border: none;
-    position: relative;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-light);
     white-space: nowrap;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* ===== ANCHOS ESPECÍFICOS PARA COLUMNAS ===== */
@@ -112,14 +105,13 @@
 
 /* ===== FILAS ===== */
 .tabla-sistema tbody tr {
+    border-bottom: 1px solid var(--border-light);
     transition: var(--transition-fast);
-    border-bottom: 1px solid var(--table-border);
-    height: auto;
-    min-height: 48px;
+    background: var(--white);
 }
 
 .tabla-sistema tbody tr:hover {
-    background-color: var(--table-row-hover);
+    background: var(--bg-secondary);
 }
 
 .tabla-sistema tbody tr:last-child {
@@ -128,15 +120,11 @@
 
 /* ===== CELDAS ===== */
 .tabla-sistema td {
-    padding: 0.75rem 0.5rem;
-    vertical-align: middle;
-    border: none;
-    font-size: var(--body-normal-size);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-primary);
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light);
 }
 
 /* ===== CELDAS ESPECIALES ===== */
@@ -510,16 +498,13 @@
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    padding: 0.5rem;
-    margin: 1rem;
-    margin-bottom: 1.5rem;
     border: 1px solid var(--border-light);
-    display: flex;
-    flex-direction: column;
-    width: calc(100% - 2rem);
+    margin: 0.5rem;
+    padding: 0.5rem;
+    width: calc(100% - 1rem);
     max-width: 100%;
-    box-sizing: border-box;
     overflow: hidden;
+    position: relative;
 }
 
 /* Forzar el color del contenedor */
@@ -530,11 +515,11 @@ div.contenedor-sistema {
 .contenedor-sistema-header {
     background: var(--blue);
     color: var(--text-inverse);
-    padding: 1.25rem 1.5rem;
-    margin: -1.5rem -1.5rem 0 -1.5rem;
+    padding: 0.25rem 0.5rem;
+    margin: -0.5rem -0.5rem 0 -0.5rem;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     font-family: var(--font-family-primary);
-    font-size: 1.125rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
@@ -542,31 +527,33 @@ div.contenedor-sistema {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    min-height: 60px;
+    gap: 0.375rem;
+    min-height: 28px;
 }
 
 .header-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    font-size: 0.85rem;
 }
 
 .header-search {
     flex: 1;
-    max-width: 400px;
+    max-width: 300px;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
 }
 
 .header-search .form-control {
     background: rgba(255, 255, 255, 0.9);
     border: none;
     border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
+    padding: 0.25rem 0.375rem;
     color: var(--text-primary);
-    font-size: var(--body-normal-size);
-    height: 40px;
+    font-size: 0.75rem;
+    height: 24px;
     width: 100%;
 }
 
@@ -581,7 +568,7 @@ div.contenedor-sistema {
 }
 
 .contenedor-sistema-body {
-    padding: 0;
+    padding: 0.25rem;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -598,33 +585,62 @@ div.contenedor-sistema-body {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .btn-flotante-sistema {
-        width: 56px;
-        height: 56px;
-        font-size: 1.25rem;
-        bottom: 1.5rem;
-        right: 1.5rem;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+        bottom: 1rem;
+        right: 1rem;
     }
     
     .contenedor-sistema {
         padding: 0.25rem;
-        margin: 1rem;
-        margin-bottom: 1.5rem;
-        width: calc(100% - 2rem);
+        margin: 0.25rem;
+        margin-bottom: 0.5rem;
+        width: calc(100% - 0.5rem);
     }
     
     .contenedor-sistema-header {
-        padding: 0.75rem 1rem;
-        margin: -1rem -1rem 0 -1rem;
-        font-size: var(--heading-4-size);
+        padding: 0.125rem 0.375rem;
+        margin: -0.25rem -0.25rem 0 -0.25rem;
+        font-size: 0.8rem;
     }
     
     .header-content {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.125rem;
+        min-height: auto;
+        justify-content: space-between;
+    }
+    
+    .header-title {
+        margin-bottom: 0;
+        font-size: 0.8rem;
     }
     
     .header-search {
-        max-width: none;
+        max-width: 60%;
+        width: auto;
     }
-} 
+    
+    .header-search .form-control {
+        height: 20px;
+        font-size: 0.7rem;
+        padding: 0.125rem 0.25rem;
+        width: 100%;
+    }
+    
+    .tabla-sistema th {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .tabla-sistema td {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+}
+
+
+
+ 

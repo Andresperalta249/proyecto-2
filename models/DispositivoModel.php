@@ -10,7 +10,7 @@ class DispositivoModel {
     public function getDispositivoById($id) {
         try {
             $query = "SELECT d.id_dispositivo, d.nombre, d.mac, d.estado,
-                            d.usuario_id, d.mascota_id,
+                            d.usuario_id, d.mascota_id, d.creado_en,
                             m.nombre as nombre_mascota, m.especie as especie_mascota 
                      FROM {$this->table} d 
                      LEFT JOIN mascotas m ON d.mascota_id = m.id_mascota 
@@ -374,6 +374,126 @@ class DispositivoModel {
         } catch (PDOException $e) {
             error_log("Error en DispositivoModel::getMascotasPorPropietario: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Obtiene dispositivos asociados a una mascota específica
+     */
+    public function getDispositivosByMascota($mascotaId) {
+        try {
+            $query = "SELECT d.id_dispositivo, d.nombre, d.mac, d.estado, d.usuario_id, d.mascota_id
+                     FROM {$this->table} d 
+                     WHERE d.mascota_id = :mascota_id";
+            
+            $stmt = $this->db->getConnection()->prepare($query);
+            $stmt->bindParam(':mascota_id', $mascotaId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::getDispositivosByMascota: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Actualiza un dispositivo
+     */
+    public function updateDispositivo($id, $data) {
+        try {
+            $setClauses = [];
+            $params = [':id' => $id];
+            
+            foreach ($data as $key => $value) {
+                $setClauses[] = "$key = :$key";
+                $params[":$key"] = $value;
+            }
+            
+            $sql = "UPDATE {$this->table} SET " . implode(', ', $setClauses) . " WHERE id_dispositivo = :id";
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::updateDispositivo: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene dispositivos disponibles (sin mascota asignada)
+     */
+    public function getDispositivosDisponibles() {
+        try {
+            $query = "SELECT d.id_dispositivo, d.nombre, d.mac, d.estado, d.usuario_id, d.mascota_id
+                     FROM {$this->table} d 
+                     WHERE d.mascota_id IS NULL OR d.mascota_id = 0
+                     ORDER BY d.nombre";
+            $stmt = $this->db->getConnection()->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::getDispositivosDisponibles: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function existeMac($mac, $excludeId = null) {
+        try {
+            $query = "SELECT COUNT(*) as count FROM {$this->table} WHERE mac = :mac";
+            $params = [':mac' => $mac];
+            
+            if ($excludeId) {
+                $query .= " AND id_dispositivo != :exclude_id";
+                $params[':exclude_id'] = $excludeId;
+            }
+            
+            $stmt = $this->db->getConnection()->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result['count'] > 0;
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::existeMac: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createDispositivo($data) {
+        try {
+            $sql = "INSERT INTO {$this->table} (nombre, mac, estado, usuario_id, mascota_id, creado_en) 
+                    VALUES (:nombre, :mac, :estado, :usuario_id, :mascota_id, NOW())";
+            
+            $params = [
+                ':nombre' => $data['nombre'],
+                ':mac' => $data['mac'],
+                ':estado' => $data['estado'],
+                ':usuario_id' => $data['user_id'] ?? null,
+                ':mascota_id' => $data['mascota_id'] ?? null
+            ];
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $result = $stmt->execute($params);
+            
+            if ($result) {
+                return $this->db->getConnection()->lastInsertId();
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::createDispositivo: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteDispositivo($id) {
+        try {
+            $sql = "DELETE FROM {$this->table} WHERE id_dispositivo = :id";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en DispositivoModel::deleteDispositivo: " . $e->getMessage());
+            return false;
         }
     }
 } 

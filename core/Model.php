@@ -29,8 +29,9 @@ class Model {
     public function find($id) {
         $idField = ($this->table === 'mascotas') ? 'id_mascota' : (($this->table === 'dispositivos') ? 'id_dispositivo' : 'id');
         $sql = "SELECT * FROM {$this->table} WHERE $idField = :$idField";
-        $result = $this->query($sql, [":$idField" => $id])->fetch();
-        return $result ?: null;
+        $result = $this->query($sql, [":$idField" => $id]);
+        $data = !empty($result) ? $result[0] : null;
+        return $data;
     }
 
     public function create($data) {

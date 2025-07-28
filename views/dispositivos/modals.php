@@ -47,7 +47,7 @@
             </div>
             <div class="modal-body">
                 <form id="formEditarDispositivo">
-                    <input type="hidden" id="edit_id" name="id">
+                    <input type="hidden" id="edit_id" name="id_dispositivo">
                     <div class="mb-3">
                         <label for="edit_nombre" class="form-label">Nombre</label>
                         <input type="text" class="form-control" id="edit_nombre" name="nombre" required>
@@ -84,13 +84,13 @@
             <div class="modal-body">
                 <form id="formAsignarDispositivo">
                     <input type="hidden" id="asignar_dispositivo_id" name="dispositivo_id">
-                    <?php if (verificarPermiso('ver_todos_dispositivo')): ?>
+                    <?php if (verificarPermiso('ver_todos_dispositivos')): ?>
                     <div class="mb-3">
                         <label for="usuario_id_asignar" class="form-label">Usuario</label>
                         <select class="form-select" id="usuario_id_asignar" name="usuario_id" required>
                             <option value="">Seleccione un usuario...</option>
                             <?php foreach ($usuarios as $usuario): ?>
-                                <option value="<?= $usuario['id'] ?>"><?= htmlspecialchars($usuario['nombre']) ?> (<?= htmlspecialchars($usuario['email']) ?>)</option>
+                                <option value="<?= $usuario['id_usuario'] ?? $usuario['id'] ?? '' ?>"><?= htmlspecialchars($usuario['nombre']) ?> (<?= htmlspecialchars($usuario['email']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>

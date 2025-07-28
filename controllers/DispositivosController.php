@@ -47,7 +47,8 @@ class DispositivosController extends Controller {
         }
 
         $userModel = $this->loadModel('User');
-        $usuarios = $userModel->getUsuarios();
+        $resultado = $userModel->getAll();
+        $usuarios = $resultado['usuarios'] ?? [];
         $mascotaModel = $this->mascotaModel;
         $mascotas = $mascotaModel->findAll();
 
@@ -72,12 +73,12 @@ class DispositivosController extends Controller {
                     'nombre' => $_POST['nombre'],
                     'mac' => $_POST['mac'],
                     'estado' => $_POST['estado'],
-                    'user_id' => $_SESSION['user_id']
+                    'user_id' => null  // Por defecto sin usuario asignado
                 ];
                 
                 // Validar usuario_id si se proporciona
                 if (!empty($_POST['usuario_id'])) {
-                    $usuario = $userModel->getUsuarioById($_POST['usuario_id']);
+                    $usuario = $userModel->findById($_POST['usuario_id']);
                     if (!$usuario) {
                         $this->jsonResponse([
                             'success' => false,
@@ -261,15 +262,56 @@ class DispositivosController extends Controller {
         require_once 'views/layouts/main.php';
     }
 
+    // AJAX: Eliminar dispositivo
+    public function deleteAjaxAction($id = null) {
+        try {
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['success' => false, 'error' => 'Acceso denegado'], 403);
+                return;
+            }
+
+            if (!$id) {
+                $this->jsonResponse(['success' => false, 'error' => 'ID de dispositivo requerido'], 400);
+                return;
+            }
+
+            // Verificar que el dispositivo existe
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
+            if (!$dispositivo) {
+                $this->jsonResponse(['success' => false, 'error' => 'Dispositivo no encontrado'], 404);
+                return;
+            }
+
+            // Verificar permisos
+            $esAdmin = in_array($_SESSION['user_role'] ?? 0, [1,2,3]);
+            $tienePermisoEliminar = verificarPermiso('eliminar_dispositivos');
+            
+            if (!$esAdmin && !$tienePermisoEliminar) {
+                $this->jsonResponse(['success' => false, 'error' => 'No tienes permisos para eliminar dispositivos'], 403);
+                return;
+            }
+
+            // Eliminar el dispositivo
+            if ($this->dispositivoModel->deleteDispositivo($id)) {
+                $this->logModel->crearLog($_SESSION['user_id'], 'Eliminación de dispositivo: ' . $dispositivo['nombre']);
+                $this->jsonResponse(['success' => true, 'message' => 'Dispositivo eliminado correctamente']);
+            } else {
+                $this->jsonResponse(['success' => false, 'error' => 'Error al eliminar el dispositivo'], 500);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en deleteAjaxAction: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'Error interno del servidor'], 500);
+        }
+    }
+
     public function cambiarEstadoAction() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
 
-            if (!verificarPermiso('cambiar_estado_dispositivos')) {
-                throw new Exception('No tiene permiso para cambiar el estado de dispositivos');
-            }
+
 
             $id = (int)($_POST['id'] ?? 0);
             if ($id <= 0) {
@@ -286,12 +328,7 @@ class DispositivosController extends Controller {
                 throw new Exception('Dispositivo no encontrado');
             }
 
-            // Solo superadmin/admin o dueño pueden cambiar el estado
-            $usuarioLogueadoId = $_SESSION['user_id'] ?? 0;
-            $esSuperAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] == 1;
-            if (!$esSuperAdmin && $dispositivo['usuario_id'] != $usuarioLogueadoId) {
-                throw new Exception('No puede cambiar el estado de este dispositivo');
-            }
+
 
             $ok = $this->dispositivoModel->updateDispositivo($id, ['estado' => $estado]);
             if (!$ok) {
@@ -317,7 +354,7 @@ class DispositivosController extends Controller {
         }
         // Validar que el usuario consultado sea de rol 'Usuario'
         $userModel = $this->loadModel('User');
-        $usuario = $userModel->getUsuarioById($usuario_id);
+        $usuario = $userModel->findById($usuario_id);
         if (!$usuario || strtolower($usuario['rol_nombre']) !== 'usuario') {
             $this->jsonResponse([
                 'success' => false,
@@ -381,61 +418,59 @@ class DispositivosController extends Controller {
 
     // AJAX: Obtener detalles del dispositivo
     public function obtenerDetallesAction($id = null) {
-        if (!isset($_SESSION['user_id']) || !$id) {
-            $this->jsonResponse([
+        try {
+            // Debug temporal
+            error_log("DEBUG obtenerDetallesAction - SESSION: " . print_r($_SESSION, true));
+            error_log("DEBUG obtenerDetallesAction - ID recibido: " . $id);
+            
+            if (!isset($_SESSION['user_id']) || !$id) {
+                error_log("DEBUG obtenerDetallesAction - Acceso denegado: user_id=" . ($_SESSION['user_id'] ?? 'NO SET') . ", id=" . $id);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Acceso denegado'
+                ]);
+                return;
+            }
+
+            $dispositivo = $this->dispositivoModel->getDispositivoById($id);
+            error_log("DEBUG obtenerDetallesAction - Dispositivo encontrado: " . print_r($dispositivo, true));
+            
+            if (!$dispositivo) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Dispositivo no encontrado'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'id' => $dispositivo['id_dispositivo'],
+                    'nombre' => $dispositivo['nombre'],
+                    'mac' => $dispositivo['mac'],
+                    'estado' => $dispositivo['estado'],
+                    'bateria' => 'N/A',
+                    'ultima_lectura' => $dispositivo['creado_en'],
+                    'usuario_nombre' => 'Usuario ID: ' . $dispositivo['usuario_id'],
+                    'mascota_nombre' => $dispositivo['mascota_id'] ? 'Mascota ID: ' . $dispositivo['mascota_id'] : null,
+                    'fecha_asignacion' => $dispositivo['creado_en']
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en obtenerDetallesAction: " . $e->getMessage());
+            echo json_encode([
                 'success' => false,
-                'error' => 'Acceso denegado'
-            ], 403);
-            return;
+                'error' => 'Error interno del servidor'
+            ]);
         }
-
-        $dispositivo = $this->dispositivoModel->getDispositivoById($id);
-        if (!$dispositivo) {
-            $this->jsonResponse([
-                'success' => false,
-                'error' => 'Dispositivo no encontrado'
-            ], 404);
-            return;
-        }
-
-        // Verificar permisos
-        if ($dispositivo['usuario_id'] != $_SESSION['user_id'] && !verificarPermiso('ver_todos_dispositivo')) {
-            $this->jsonResponse([
-                'success' => false,
-                'error' => 'No tiene permiso para ver este dispositivo'
-            ], 403);
-            return;
-        }
-
-        // Obtener datos adicionales
-        $userModel = $this->loadModel('User');
-        $usuario = $userModel->getUsuarioById($dispositivo['usuario_id']);
-        
-        $mascota = null;
-        if ($dispositivo['mascota_id']) {
-            $mascotaModel = $this->loadModel('Mascota');
-            $mascota = $mascotaModel->findById($dispositivo['mascota_id']);
-        }
-
-        $this->jsonResponse([
-            'success' => true,
-            'data' => [
-                'id' => $dispositivo['id_dispositivo'],
-                'nombre' => $dispositivo['nombre'],
-                'mac' => $dispositivo['mac'],
-                'estado' => $dispositivo['estado'],
-                'bateria' => 'N/A',
-                'ultima_lectura' => $dispositivo['creado_en'],
-                'usuario_nombre' => $usuario ? $usuario['nombre'] : null,
-                'mascota_nombre' => $mascota ? $mascota['nombre'] : null,
-                'fecha_asignacion' => $dispositivo['creado_en']
-            ]
-        ]);
     }
 
     // AJAX: Actualizar dispositivo
     public function updateAction() {
         error_log('SESSION EN UPDATE: ' . print_r($_SESSION, true));
+        error_log('POST DATA EN UPDATE: ' . print_r($_POST, true));
+        
         if (!isset($_SESSION['user_id'])) {
             $this->jsonResponse(['success' => false, 'error' => 'Acceso denegado'], 403);
             return;
@@ -446,36 +481,53 @@ class DispositivosController extends Controller {
             return;
         }
 
-        $data = $this->validateRequest(['id_dispositivo', 'nombre', 'mac', 'estado']);
-        
-        // Validar formato de MAC
-        if (!preg_match('/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/', $data['mac'])) {
-            $this->jsonResponse(['success' => false, 'error' => 'Formato de MAC inválido'], 400);
-            return;
-        }
+        try {
+            $data = $this->validateRequest(['id_dispositivo', 'nombre', 'mac', 'estado']);
+            error_log('DATA VALIDADA EN UPDATE: ' . print_r($data, true));
+            
+            // Validar formato de MAC
+            if (!preg_match('/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/', $data['mac'])) {
+                $this->jsonResponse(['success' => false, 'error' => 'Formato de MAC inválido'], 400);
+                return;
+            }
 
-        // Validar unicidad de MAC
-        if ($this->dispositivoModel->existeMac($data['mac'], $data['id_dispositivo'])) {
-            $this->jsonResponse(['success' => false, 'error' => 'La MAC ya está registrada'], 400);
-            return;
-        }
+            // Validar unicidad de MAC
+            if ($this->dispositivoModel->existeMac($data['mac'], $data['id_dispositivo'])) {
+                $this->jsonResponse(['success' => false, 'error' => 'La MAC ya está registrada'], 400);
+                return;
+            }
 
-        // Verificar permisos
-        $dispositivo = $this->dispositivoModel->getDispositivoById($data['id_dispositivo']);
-        $esAdmin = in_array($_SESSION['user_role'] ?? 0, [1,2]);
-        if (
-            !$dispositivo ||
-            (!$esAdmin && !verificarPermiso('editar_todos_dispositivos') && $dispositivo['usuario_id'] != $_SESSION['user_id'])
-        ) {
-            $this->jsonResponse(['success' => false, 'error' => 'Acceso denegado'], 403);
-            return;
-        }
+            // Verificar permisos
+            $dispositivo = $this->dispositivoModel->getDispositivoById($data['id_dispositivo']);
+            error_log('DISPOSITIVO ENCONTRADO EN UPDATE: ' . print_r($dispositivo, true));
+            
+            // Verificación de permisos
+            $esAdmin = in_array($_SESSION['user_role'] ?? 0, [1,2,3]); // Incluir Super Admin (rol 3)
+            $tienePermisoEditar = verificarPermiso('editar_dispositivos');
+            
+            error_log('DEBUG PERMISOS - esAdmin: ' . ($esAdmin ? 'true' : 'false') . ', tienePermisoEditar: ' . ($tienePermisoEditar ? 'true' : 'false'));
+            
+            if (!$dispositivo) {
+                $this->jsonResponse(['success' => false, 'error' => 'Dispositivo no encontrado'], 404);
+                return;
+            }
+            
+            // Permitir si es admin o tiene permiso de editar dispositivos
+            if (!$esAdmin && !$tienePermisoEditar) {
+                $this->jsonResponse(['success' => false, 'error' => 'No tienes permisos para editar dispositivos'], 403);
+                return;
+            }
 
-        if ($this->dispositivoModel->updateDispositivo($data['id_dispositivo'], $data)) {
-            $this->logModel->crearLog($_SESSION['user_id'], 'Actualización de dispositivo: ' . $data['nombre']);
-            $this->jsonResponse(['success' => true, 'message' => 'Dispositivo actualizado correctamente']);
-        } else {
-            $this->jsonResponse(['success' => false, 'error' => 'Error al actualizar el dispositivo'], 500);
+            if ($this->dispositivoModel->updateDispositivo($data['id_dispositivo'], $data)) {
+                $this->logModel->crearLog($_SESSION['user_id'], 'Actualización de dispositivo: ' . $data['nombre']);
+                $this->jsonResponse(['success' => true, 'message' => 'Dispositivo actualizado correctamente']);
+            } else {
+                $this->jsonResponse(['success' => false, 'error' => 'Error al actualizar el dispositivo'], 500);
+            }
+        } catch (Exception $e) {
+            error_log('ERROR EN UPDATE ACTION: ' . $e->getMessage());
+            error_log('STACK TRACE: ' . $e->getTraceAsString());
+            $this->jsonResponse(['success' => false, 'error' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
 

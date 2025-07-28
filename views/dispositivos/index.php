@@ -56,9 +56,16 @@
                         <?php endif; ?>
                     </td>
                     <td class="celda-estado">
+                        <?php if (verificarPermiso('editar_dispositivos')): ?>
+                        <label class="switch-estado">
+                            <input class="cambiar-estado-dispositivo" type="checkbox" data-id="<?= $dispositivo['id_dispositivo'] ?>" <?= $dispositivo['estado'] === 'activo' ? 'checked' : '' ?>>
+                            <span class="slider-estado"></span>
+                        </label>
+                        <?php else: ?>
                         <span class="badge-estado badge-<?= $dispositivo['estado'] === 'activo' ? 'activo' : 'inactivo' ?>">
                             <?= ucfirst(htmlspecialchars($dispositivo['estado'] ?? 'inactivo')) ?>
                         </span>
+                        <?php endif; ?>
                     </td>
                     <td class="texto-centrado">
                         <?php
@@ -105,8 +112,11 @@
       </div>
       <div class="modal-body">
         <form id="formNuevoDispositivo">
-          <!-- Nombre/tipo de dispositivo oculto o automático -->
-          <input type="hidden" name="nombre" value="Dispositivo_<?= uniqid() ?>">
+          <!-- Nombre del dispositivo -->
+          <div class="input-group mb-3">
+            <span class="input-group-text"><i class="fas fa-microchip"></i></span>
+            <input type="text" class="form-control" id="nombre_nuevo" name="nombre" placeholder="Nombre del dispositivo" required>
+          </div>
 
           <!-- Dirección MAC -->
           <div class="input-group mb-3" style="height: 3.5rem;">
@@ -116,14 +126,14 @@
           <small id="macHelp" class="form-text text-muted mb-2">Ejemplo: 00:00:00:00:00:00</small>
           <div id="macError" class="text-danger mb-2" style="display:none;"></div>
 
-          <!-- Usuario asignado -->
-          <?php if (verificarPermiso('ver_todos_dispositivo')): ?>
+          <!-- Usuario asignado (opcional) -->
+          <?php if (verificarPermiso('ver_todos_dispositivos')): ?>
           <div class="input-group mb-3">
             <span class="input-group-text"><i class="fas fa-user"></i></span>
             <select class="form-select" id="usuario_id_nuevo" name="usuario_id">
-              <option value="">Seleccione un usuario...</option>
+              <option value="">Seleccione un usuario (opcional)...</option>
               <?php foreach ($usuarios as $usuario): ?>
-                <option value="<?= $usuario['id'] ?>"><?= htmlspecialchars($usuario['nombre']) ?> (<?= htmlspecialchars($usuario['email']) ?>)</option>
+                <option value="<?= $usuario['id_usuario'] ?? $usuario['id'] ?? '' ?>"><?= htmlspecialchars($usuario['nombre']) ?> (<?= htmlspecialchars($usuario['email']) ?>)</option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -203,61 +213,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = $(this).data('id');
             const estado = $(this).is(':checked') ? 'activo' : 'inactivo';
             const $checkbox = $(this);
-            const $label = $checkbox.siblings('.form-check-label');
-            
+
             $.ajax({
                 url: '<?= BASE_URL ?>dispositivos/cambiarEstado',
                 type: 'POST',
                 data: { id, estado },
-                dataType: 'json',
-                beforeSend: function() {
-                    $checkbox.prop('disabled', true);
-                },
                 success: function(response) {
                     if (response.success) {
-                        $label.text(estado.charAt(0).toUpperCase() + estado.slice(1));
-                        $label.removeClass('estado-activo estado-inactivo')
-                              .addClass(estado === 'activo' ? 'estado-activo' : 'estado-inactivo');
                         Swal.fire({
-                            toast: true,
-                            position: 'top-end',
                             icon: 'success',
-                            title: 'Estado actualizado correctamente',
-                            showConfirmButton: false,
-                            timer: 1800,
-                            timerProgressBar: true
+                            title: 'Éxito',
+                            text: 'Estado actualizado correctamente'
                         });
                     } else {
-                        $checkbox.prop('checked', !$checkbox.prop('checked'));
                         Swal.fire({
-                            toast: true,
-                            position: 'top-end',
                             icon: 'error',
-                            title: response.error || 'No se pudo cambiar el estado',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true
+                            title: 'Error',
+                            text: response.error
                         });
+                        // Revertir el cambio
+                        $checkbox.prop('checked', !$checkbox.prop('checked'));
                     }
                 },
-                error: function(xhr) {
-                    $checkbox.prop('checked', !$checkbox.prop('checked'));
-                    let errorMsg = 'No se pudo cambiar el estado. Intenta de nuevo.';
-                    if (xhr.responseJSON && xhr.responseJSON.error) {
-                        errorMsg = xhr.responseJSON.error;
-                    }
+                error: function() {
                     Swal.fire({
-                        toast: true,
-                        position: 'top-end',
                         icon: 'error',
-                        title: errorMsg,
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
+                        title: 'Error',
+                        text: 'No se pudo cambiar el estado'
                     });
-                },
-                complete: function() {
-                    $checkbox.prop('disabled', false);
+                    // Revertir el cambio
+                    $checkbox.prop('checked', !$checkbox.prop('checked'));
                 }
             });
         });
@@ -266,52 +251,44 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = $(this).data('id');
             Swal.fire({
                 title: '¿Estás seguro?',
-                text: 'Esta acción no se puede deshacer',
+                text: "Esta acción no se puede deshacer",
                 icon: 'warning',
                 showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '<?= BASE_URL ?>dispositivos/delete/' + id,
+                        url: '<?= BASE_URL ?>dispositivos/deleteAjax/' + id,
                         type: 'POST',
                         success: function(response) {
                             if (typeof response === 'string') {
                                 response = JSON.parse(response);
                             }
                             if (response.success) {
-                                Swal.fire({
-                                    toast: true,
-                                    position: 'top-end',
-                                    icon: 'success',
-                                    title: response.message,
-                                    showConfirmButton: false,
-                                    timer: 1800,
-                                    timerProgressBar: true
-                                }).then(() => { location.reload(); });
-                            } else {
-                                Swal.fire({
-                                    toast: true,
-                                    position: 'top-end',
-                                    icon: 'error',
-                                    title: response.error || 'No se pudo eliminar',
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                    timerProgressBar: true
+                                Swal.fire(
+                                    'Eliminado',
+                                    'El dispositivo ha sido eliminado correctamente.',
+                                    'success'
+                                ).then(() => {
+                                    location.reload();
                                 });
+                            } else {
+                                Swal.fire(
+                                    'Error',
+                                    response.error || 'Error al eliminar el dispositivo',
+                                    'error'
+                                );
                             }
                         },
                         error: function() {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'error',
-                                title: 'No se pudo eliminar el dispositivo',
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true
-                            });
+                            Swal.fire(
+                                'Error',
+                                'No se pudo eliminar el dispositivo',
+                                'error'
+                            );
                         }
                     });
                 }
@@ -320,17 +297,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cargar mascotas disponibles al seleccionar usuario
         $('#usuario_id_asignar, #usuario_id_nuevo').on('change', function() {
             var usuarioId = $(this).val();
+            
             if (usuarioId) {
+                
                 $.get('<?= BASE_URL ?>dispositivos/obtenerMascotasSinDispositivo/' + usuarioId, function(response) {
+                    
                     var options = '<option value="">Seleccione una mascota (opcional)...</option>';
                     if (response.success && response.data) {
+                        
                         response.data.forEach(function(mascota) {
-                            options += '<option value="' + mascota.id + '">' + mascota.nombre + '</option>';
+                            
+                            options += '<option value="' + (mascota.id || mascota.id_mascota || '') + '">' + mascota.nombre + '</option>';
                         });
+                    } else {
+                        
                     }
+                    
+                    
                     $('#mascota_id_asignar, #mascota_id_nuevo').html(options);
+                }).fail(function(xhr, status, error) {
+                    
                 });
             } else {
+                
                 $('#mascota_id_asignar, #mascota_id_nuevo').html('<option value="">Seleccione una mascota (opcional)...</option>');
             }
         });
@@ -348,8 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#formNuevoDispositivo').on('submit', function(e) {
             e.preventDefault();
             var formData = new FormData(this);
-            var nombreUnico = 'Dispositivo_' + Math.random().toString(36).substr(2, 9);
-            formData.set('nombre', nombreUnico);
             var formDataObj = {};
             formData.forEach((value, key) => formDataObj[key] = value);
             $.ajax({
@@ -358,37 +345,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: formDataObj,
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 1800,
-                            timerProgressBar: true
-                        }).then(() => { location.reload(); });
-                    } else {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: response.error || 'No se pudo crear el dispositivo',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true
+                        Swal.fire(
+                            'Creado',
+                            'El dispositivo ha sido creado correctamente.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
                         });
+                    } else {
+                        Swal.fire(
+                            'Error',
+                            response.error || 'No se pudo crear el dispositivo',
+                            'error'
+                        );
                     }
                 },
                 error: function(xhr, status, error) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'No se pudo crear el dispositivo. Por favor, intente nuevamente.',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
+                    Swal.fire(
+                        'Error',
+                        'No se pudo crear el dispositivo. Por favor, intente nuevamente.',
+                        'error'
+                    );
                 }
             });
         });
@@ -401,37 +378,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: $(this).serialize(),
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: response.message,
-                            showConfirmButton: false,
-                            timer: 1800,
-                            timerProgressBar: true
-                        }).then(() => { location.reload(); });
-                    } else {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: response.error || 'No se pudo asignar el dispositivo',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true
+                        Swal.fire(
+                            'Asignado',
+                            'El dispositivo ha sido asignado correctamente.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
                         });
+                    } else {
+                        Swal.fire(
+                            'Error',
+                            response.error || 'No se pudo asignar el dispositivo',
+                            'error'
+                        );
                     }
                 },
                 error: function() {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'No se pudo asignar el dispositivo',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
+                    Swal.fire(
+                        'Error',
+                        'No se pudo asignar el dispositivo',
+                        'error'
+                    );
                 }
             });
         });
@@ -584,16 +551,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para cargar datos del dispositivo para edición
     function cargarDatosEdicion(id) {
         $.get('<?= BASE_URL ?>dispositivos/obtenerDetalles/' + id, function(response) {
+            
+            // Si la respuesta es string, parsear como JSON
+            if (typeof response === 'string') {
+                try {
+                    response = JSON.parse(response);
+                    
+                } catch (e) {
+                    
+                    Swal.fire('Error', 'Error en la respuesta del servidor', 'error');
+                    return;
+                }
+            }
+            
             if (response.success) {
                 const dispositivo = response.data;
+                
                 $('#edit_id').val(dispositivo.id);
                 $('#edit_nombre').val(dispositivo.nombre);
                 $('#edit_mac').val(dispositivo.mac);
                 $('#edit_estado').val(dispositivo.estado);
                 $('#modalEditarDispositivo').modal('show');
             } else {
+                
                 Swal.fire('Error', 'No se pudieron cargar los datos del dispositivo', 'error');
             }
+        }, 'json').fail(function(xhr, status, error) {
+            
+            Swal.fire('Error', 'No se pudieron cargar los datos del dispositivo', 'error');
         });
     }
 
@@ -631,16 +616,28 @@ document.addEventListener('DOMContentLoaded', function() {
             data: formData,
             success: function(response) {
                 if (response.success) {
-                    Swal.fire('¡Éxito!', 'Dispositivo actualizado correctamente', 'success').then(() => {
+                    Swal.fire(
+                        'Actualizado',
+                        'El dispositivo ha sido actualizado correctamente.',
+                        'success'
+                    ).then(() => {
                         $('#modalEditarDispositivo').modal('hide');
                         location.reload();
                     });
                 } else {
-                    Swal.fire('Error', response.error || 'No se pudo actualizar el dispositivo', 'error');
+                    Swal.fire(
+                        'Error',
+                        response.error || 'No se pudo actualizar el dispositivo',
+                        'error'
+                    );
                 }
             },
             error: function() {
-                Swal.fire('Error', 'No se pudo actualizar el dispositivo', 'error');
+                Swal.fire(
+                    'Error',
+                    'No se pudo actualizar el dispositivo',
+                    'error'
+                );
             }
         });
     });
