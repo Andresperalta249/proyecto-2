@@ -1,21 +1,12 @@
-<?php 
-$titulo = isset($titulo) ? $titulo : 'Dashboard IoT';
-$subtitulo = isset($subtitulo) ? $subtitulo : 'Resumen general del sistema IoT Pets.';
-?>
-
-<!-- Header del Dashboard -->
-<div class="dashboard-header">
-    <div class="dashboard-title">
-        <h1><?= htmlspecialchars($titulo) ?></h1>
-        <p><?= htmlspecialchars($subtitulo) ?></p>
-    </div>
-    <div class="dashboard-controls">
-        <label for="rangoDias">Rango de días:</label>
-        <select id="rangoDias" class="form-select">
-            <option value="7">Últimos 7 días</option>
-            <option value="15">Últimos 15 días</option>
-            <option value="30">Últimos 30 días</option>
-        </select>
+<!-- Controles del Dashboard -->
+<div class="dashboard-controls-clean">
+    <div class="control-wrapper">
+        <span class="control-label">Rango de días:</span>
+        <div class="control-buttons">
+            <button class="clean-btn active" data-days="7">7 días</button>
+            <button class="clean-btn" data-days="15">15 días</button>
+            <button class="clean-btn" data-days="30">30 días</button>
+        </div>
     </div>
 </div>
 
@@ -282,7 +273,8 @@ async function updateKPIs() {
 
 // Obtener el rango de días seleccionado
 function getDiasSeleccionados() {
-    return parseInt(document.getElementById('rangoDias').value, 10);
+    const activeBtn = document.querySelector('.clean-btn.active');
+    return activeBtn ? parseInt(activeBtn.dataset.days, 10) : 30;
 }
 
 // Función para formatear fecha (solo día)
@@ -376,9 +368,20 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateAllData, 30000);
 });
 
-// Event listener para el selector de rango de días
-document.getElementById('rangoDias').addEventListener('change', () => {
-    updateUsuariosChart();
+// Event listeners para los botones de período
+document.addEventListener('DOMContentLoaded', () => {
+    const cleanBtns = document.querySelectorAll('.clean-btn');
+    
+    cleanBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remover clase active de todos los botones
+            cleanBtns.forEach(b => b.classList.remove('active'));
+            // Agregar clase active al botón clickeado
+            btn.classList.add('active');
+            // Actualizar gráfica
+            updateUsuariosChart();
+        });
+    });
 });
 </script>
 

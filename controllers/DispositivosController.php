@@ -16,10 +16,14 @@ class DispositivosController extends Controller {
             redirect('auth/login');
         }
         $user_id = $_SESSION['user_id'];
-        $puedeVerTodos = verificarPermiso('ver_todos_dispositivo');
+        $puedeVerTodos = verificarPermiso('ver_todos_dispositivos');
         
-        // Obtener todos los dispositivos sin paginación
-        $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
+        // Obtener dispositivos según permisos
+        if ($puedeVerTodos) {
+            $dispositivos = $this->dispositivoModel->getTodosDispositivosConMascotas();
+        } else {
+            $dispositivos = $this->dispositivoModel->getDispositivosByUsuario($user_id);
+        }
         $totalDispositivos = count($dispositivos);
         // Filtrar solo usuarios con rol 'Usuario'
         $userModel = $this->loadModel('User');
@@ -28,7 +32,7 @@ class DispositivosController extends Controller {
             return isset($u['rol_nombre']) && strtolower($u['rol_nombre']) === 'usuario';
         });
         $mascotas = $this->mascotaModel->findAll();
-        $title = 'Administrador de dispositivos';
+        $title = 'Administrador de dispositivos - VitalPet Monitor';
         $content = $this->render('dispositivos/index', [
             'dispositivos' => $dispositivos,
             'usuarios' => $usuarios,

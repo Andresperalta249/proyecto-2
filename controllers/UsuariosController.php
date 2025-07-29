@@ -22,7 +22,7 @@ class UsuariosController extends Controller {
         ob_start();
         require 'views/usuarios/index.php';
         $content = ob_get_clean();
-        $title = 'Administración de usuarios';
+        $title = 'Administración de usuarios - VitalPet Monitor';
         $GLOBALS['content'] = $content;
         $GLOBALS['title'] = $title;
         $GLOBALS['menuActivo'] = 'usuarios';

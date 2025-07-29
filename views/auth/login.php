@@ -3,28 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - PetMonitoring IoT</title>
+    <title>Iniciar Sesión - VitalPet Monitor</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="/proyecto-2/assets/img/favicon.svg">
-    <link rel="stylesheet" href="/proyecto-2/assets/css/typography.css">
-    <link rel="stylesheet" href="/proyecto-2/assets/css/auth.css">  
+    <link rel="icon" type="image/x-icon" href="<?= APP_URL ?>/assets/img/favico.ico">
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/typography.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/auth.css">  
 </head>
 <body>
-    <div style="text-align:center; margin-top: 40px;">
-        <img src="/proyecto-2/assets/img/paw-dog.svg" alt="PetMonitoring Logo" style="width:54px;height:54px;">
-        <h1>PetMonitoring IoT</h1>
-        <p>Monitoreo inteligente para tus mascotas</p>
-    </div>
-
     <form id="loginForm" method="POST" autocomplete="off" novalidate style="max-width:370px;margin:30px auto 0 auto;" action="<?= APP_URL ?>/auth/login">
-        <h2 class="mb-3" style="text-align:center;">¡Bienvenido de vuelta!</h2>
-        <p style="text-align:center;">Ingresa tus credenciales para acceder a tu cuenta</p>
+        <div style="text-align:center; margin-bottom: 20px;">
+            <img src="<?= APP_URL ?>/assets/img/logo.png" alt="VitalPet Monitor Logo" style="width:80px;height:80px; margin-bottom: 15px;">
+            <h1>VitalPet Monitor</h1>
+            <p>Monitoreo inteligente para tus mascotas</p>
+        </div>
 
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($register_success)): ?>
+            <div style="background: #dbeafe; border: 1px solid #2563eb; color: #1e40af; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; display: flex; align-items: center; gap: 7px; font-size: 14px;">
+                <i class="fas fa-info-circle" style="color: #2563eb;"></i>
+                <?php echo htmlspecialchars($register_success); ?>
             </div>
         <?php endif; ?>
 

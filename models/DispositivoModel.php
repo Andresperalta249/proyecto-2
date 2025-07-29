@@ -141,7 +141,7 @@ class DispositivoModel {
 
     public function getTotalConectados() {
         try {
-            $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE estado = 'conectado'";
+            $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE estado = 'activo'";
             $stmt = $this->db->getConnection()->prepare($query);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);

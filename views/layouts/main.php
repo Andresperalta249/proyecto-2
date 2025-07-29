@@ -15,8 +15,8 @@ file_put_contents(__DIR__ . '/../../logs/error.log', $logMsg, FILE_APPEND);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($title) ? $title . ' - ' . APP_NAME : APP_NAME ?></title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/img/favicon.svg">
+            <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="<?= APP_URL ?>/assets/img/favico.ico">
     
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -77,7 +77,7 @@ if (!isset($content)) {
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header d-flex align-items-center p-3">
                 <span class="sidebar-logo me-2"><i class="fas fa-dog"></i></span>
-                <span class="sidebar-title">PetMonitoring IoT</span>
+                                        <span class="sidebar-title">VitalPet Monitor</span>
             </div>
             <div class="sidebar-menu">
                 <div class="sidebar-section">

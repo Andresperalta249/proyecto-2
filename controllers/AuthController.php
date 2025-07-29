@@ -68,9 +68,21 @@ class AuthController extends Controller {
                         
                         $_SESSION['permissions'] = $permisosNombres;
 
+                        // Limpiar permisos temporales si existen
+                        if (isset($_SESSION['temp_permissions'])) {
+                            unset($_SESSION['temp_permissions']);
+                        }
+
                         $this->usuarioModel->registrarInicioSesion($usuario['id_usuario']);
 
-                        $this->redirect('dashboard');
+                        // Verificar si el usuario tiene permiso para ver dashboard
+                        if (verificarPermiso('ver_dashboard')) {
+                            $this->redirect('dashboard');
+                        } else {
+                            // Si no tiene permiso de dashboard, redirigir a monitor
+                            header('Location: ' . APP_URL . '/monitor');
+                            exit;
+                        }
                     } else {
                         // Log detallado del fallo de autenticación
                         error_log('[' . date('Y-m-d H:i:s') . '] Contraseña incorrecta para usuario: ' . $usuario['nombre'] . ' (ID: ' . $usuario['id_usuario'] . ')');
@@ -98,6 +110,13 @@ class AuthController extends Controller {
             unset($_SESSION['login_error']); // Limpiar después de mostrar
         }
 
+        // Mostrar mensaje de éxito desde registro si existe
+        if (isset($_SESSION['register_success'])) {
+            error_log('[' . date('Y-m-d H:i:s') . '] Mostrando mensaje de éxito en login: ' . $_SESSION['register_success']);
+            $this->view->setData('register_success', $_SESSION['register_success']);
+            unset($_SESSION['register_success']); // Limpiar después de mostrar
+        }
+
         $this->view->setTitle('Iniciar Sesión');
         // Para páginas de autenticación, renderizar directamente sin layout
         $this->view->setLayout(null);
@@ -106,14 +125,18 @@ class AuthController extends Controller {
 
     public function registerAction() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            error_log('[' . date('Y-m-d H:i:s') . '] Registro iniciado - Datos recibidos: ' . json_encode($_POST));
+            
             $nombre = $_POST['nombre'] ?? '';
             $email = $_POST['email'] ?? '';
+            $telefono = $_POST['telefono'] ?? '';
+            $direccion = $_POST['direccion'] ?? '';
             $password = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
 
             try {
                 // Validar datos
-                if (empty($nombre) || empty($email) || empty($password)) {
+                if (empty($nombre) || empty($email) || empty($password) || empty($telefono) || empty($direccion)) {
                     throw new Exception('Todos los campos son requeridos');
                 }
 
@@ -134,21 +157,37 @@ class AuthController extends Controller {
                 $usuarioId = $this->usuarioModel->crearUsuario([
                     'nombre' => $nombre,
                     'email' => $email,
+                    'telefono' => $telefono,
+                    'direccion' => $direccion,
                     'password' => password_hash($password, PASSWORD_DEFAULT),
-                    'rol' => 'usuario' // Rol por defecto
+                    'rol_id' => 2 // Rol por defecto (usuario)
                 ]);
 
                 if ($usuarioId) {
-                    // Iniciar sesión automáticamente
-                    $_SESSION['user_id'] = $usuarioId;
-                    $_SESSION['user_name'] = $nombre;
-                    $_SESSION['user_email'] = $email;
-                    $_SESSION['user_role'] = 'usuario';
-
-                    // Redirigir al dashboard
-                    header('Location: ' . BASE_URL . 'dashboard');
+                    // Log del éxito del registro
+                    error_log('[' . date('Y-m-d H:i:s') . '] Usuario registrado exitosamente - ID: ' . $usuarioId . ', Email: ' . $email);
+                    
+                    // Establecer permisos por defecto para usuarios nuevos (rol_id = 2)
+                    $permisosPorDefecto = [
+                        'ver_mascotas',
+                        'crear_mascotas',
+                        'editar_mascotas',
+                        'ver_dispositivos',
+                        'crear_dispositivos',
+                        'editar_dispositivos',
+                        'ver_monitor'
+                    ];
+                    
+                    // Guardar permisos en sesión temporal para el login
+                    $_SESSION['temp_permissions'] = $permisosPorDefecto;
+                    
+                    // Redirigir al login con mensaje de éxito
+                    $_SESSION['register_success'] = 'Usuario registrado exitosamente. Por favor, inicia sesión.';
+                    error_log('[' . date('Y-m-d H:i:s') . '] Redirigiendo a login con mensaje de éxito');
+                    header('Location: ' . APP_URL . '/auth/login');
                     exit;
                 } else {
+                    error_log('[' . date('Y-m-d H:i:s') . '] Error al crear usuario - Email: ' . $email);
                     throw new Exception('Error al crear el usuario');
                 }
             } catch (Exception $e) {
@@ -262,12 +301,12 @@ class AuthController extends Controller {
             
             // Generar token y guardar
             $token = bin2hex(random_bytes(32));
-            $expiresAt = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             $this->usuarioModel->createPasswordReset($user['id_usuario'], $token, $expiresAt);
             
             // Enviar correo
             $resetUrl = APP_URL . "/auth/reset-password/" . $token;
-            $subject = "Recupera tu contraseña - PetMonitoring IoT";
+            $subject = "Recupera tu contraseña - VitalPet Monitor";
             $body = "<p>Hola <b>{$user['nombre']}</b>,</p>"
                 . "<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>"
                 . "<p><a href='$resetUrl'>$resetUrl</a></p>"
