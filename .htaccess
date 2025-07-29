@@ -8,17 +8,12 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
 
-RewriteRule ^configuracion-alerta/?$ index.php?controller=configuracionAlerta&action=index [L]
-RewriteRule ^configuracion-alerta/crear/?$ index.php?controller=configuracionAlerta&action=crear [L]
-RewriteRule ^configuracion-alerta/actualizar/?$ index.php?controller=configuracionAlerta&action=actualizar [L]
-RewriteRule ^configuracion-alerta/actualizar-general/?$ index.php?controller=configuracionAlerta&action=actualizarGeneral [L]
-RewriteRule ^configuracion-alerta/eliminar/([0-9]+)/?$ index.php?controller=configuracionAlerta&action=eliminar&id=$1 [L]
-RewriteRule ^configuracion-alerta/validar/?$ index.php?controller=configuracionAlerta&action=validar [L]
+
 
 # Reglas para el dashboard
 RewriteRule ^dashboard/?$ index.php?controller=dashboard&action=indexAction [QSA,L]
 RewriteRule ^dashboard/getKPIData/?$ index.php?controller=dashboard&action=getKPIDataAction [QSA,L]
-RewriteRule ^dashboard/getAlertasPorDia/?$ index.php?controller=dashboard&action=getAlertasPorDiaAction [QSA,L]
+
 RewriteRule ^dashboard/getDistribucionEspecies/?$ index.php?controller=dashboard&action=getDistribucionEspeciesAction [QSA,L]
 RewriteRule ^dashboard/getEstadoBateria/?$ index.php?controller=dashboard&action=getEstadoBateriaAction [QSA,L]
 RewriteRule ^dashboard/getActividadReciente/?$ index.php?controller=dashboard&action=getActividadRecienteAction [QSA,L]

@@ -89,14 +89,7 @@ class Mascota extends Model {
         return $this->query($sql, [':usuario_id' => $usuario_id]);
     }
 
-    public function getMascotasConAlertas($usuario_id) {
-        $sql = "SELECT DISTINCT m.* 
-                FROM {$this->table} m 
-                JOIN dispositivos d ON m.id_mascota = d.mascota_id 
-                JOIN alertas a ON d.id = a.dispositivo_id 
-                WHERE m.usuario_id = :usuario_id AND a.leida = 0";
-        return $this->query($sql, [':usuario_id' => $usuario_id]);
-    }
+
 
     public function getMascotasPorVeterinario($veterinario_id) {
         $sql = "SELECT m.*, u.nombre as dueno_nombre 
@@ -159,29 +152,16 @@ class Mascota extends Model {
                     m.*,
                     CASE 
                         WHEN COUNT(d.id) = 0 THEN 'sin_dispositivo'
-                        WHEN COUNT(a.id) > 0 THEN 'con_alerta'
                         ELSE 'normal'
                     END as estado
                 FROM {$this->table} m 
                 LEFT JOIN dispositivos d ON m.id_mascota = d.mascota_id 
-                LEFT JOIN alertas a ON d.id = a.dispositivo_id AND a.leida = 0
                 WHERE m.usuario_id = :usuario_id
                 GROUP BY m.id_mascota";
         return $this->query($sql, [':usuario_id' => $usuario_id]);
     }
 
-    public function getMascotasPorTipoAlerta($usuario_id) {
-        $sql = "SELECT 
-                    m.*,
-                    a.tipo as tipo_alerta,
-                    COUNT(a.id) as total_alertas
-                FROM {$this->table} m 
-                JOIN dispositivos d ON m.id_mascota = d.mascota_id 
-                JOIN alertas a ON d.id = a.dispositivo_id 
-                WHERE m.usuario_id = :usuario_id AND a.leida = 0
-                GROUP BY m.id_mascota, a.tipo";
-        return $this->query($sql, [':usuario_id' => $usuario_id]);
-    }
+
 
     public function findById($id) {
         return $this->find($id);

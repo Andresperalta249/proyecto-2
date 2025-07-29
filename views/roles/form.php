@@ -9,9 +9,8 @@ $grupos = [
     'Gestión de Roles' => [],
     'Gestión de Dispositivos' => [],
     'Gestión de Usuarios' => [],
-    'Gestión de Configuración' => [],
-    'Gestión de Reportes' => [],
-    'Gestión de Alertas' => [],
+
+
     'Dashboard' => [],
     'Otros' => []
 ];
@@ -25,12 +24,8 @@ foreach ($permisos as $permiso) {
         $grupos['Gestión de Dispositivos'][] = $permiso;
     } elseif (strpos($nombre, 'usuario') !== false) {
         $grupos['Gestión de Usuarios'][] = $permiso;
-    } elseif (strpos($nombre, 'configuracion') !== false) {
-        $grupos['Gestión de Configuración'][] = $permiso;
-    } elseif (strpos($nombre, 'reporte') !== false) {
-        $grupos['Gestión de Reportes'][] = $permiso;
-    } elseif (strpos($nombre, 'alerta') !== false) {
-        $grupos['Gestión de Alertas'][] = $permiso;
+
+
     } elseif (strpos($nombre, 'dashboard') !== false) {
         $grupos['Dashboard'][] = $permiso;
     } else {

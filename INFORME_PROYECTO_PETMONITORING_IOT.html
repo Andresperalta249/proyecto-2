@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Proyecto PetMonitoring IoT</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            margin: 1in;
+            color: #333;
+        }
+        h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        h2 {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #34495e;
+            margin-top: 18px;
+            margin-bottom: 12px;
+        }
+        h3 {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+        ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        code {
+            font-family: "Courier New", monospace;
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        .method-list {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .method-list li {
+            font-family: "Courier New", monospace;
+            font-size: 11pt;
+        }
+        .characteristics {
+            background-color: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .problem {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .conclusion {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 24pt;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 14pt;
+            color: #7f8c8d;
+            margin: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>INFORME COMPLETO DEL PROYECTO</h1>
+        <h1>PETMONITORING IOT</h1>
+        <p>Sistema de Monitoreo de Mascotas mediante Dispositivos IoT</p>
+        <p>Fecha de generación: 28/07/2025 20:02:10</p>
+    </div>
+
+    <h1>INFORME COMPLETO DEL PROYECTO PETMONITORING IOT</h1>
+
+<h2>1. ARQUITECTURA GENERAL DEL SISTEMA</h2>
+
+<h3>1.1 Patrón de Diseño</h3>
+El proyecto implementa el <strong>patrón MVC (Model-View-Controller)</strong> con las siguientes características:
+
+<ul><li><strong>Modelo (M)</strong>: Maneja la lógica de negocio y acceso a datos</li>
+<li><strong>Vista (V)</strong>: Presentación de la interfaz de usuario</li>
+<li><strong>Controlador (C)</strong>: Coordina entre el modelo y la vista</li>
+
+<h3>1.2 Estructura de Directorios</h3>
+<pre><code>
+proyecto-2/
+├── app/controllers/          # Controladores específicos
+├── assets/                   # Recursos estáticos (CSS, JS, imágenes)
+├── config/                   # Configuración del sistema
+├── controllers/              # Controladores principales
+├── core/                     # Núcleo del framework
+├── logs/                     # Archivos de registro
+├── models/                   # Modelos de datos
+├── views/                    # Vistas y plantillas
+└── index.php                 # Punto de entrada
+</code></pre>
+
+<h2>2. CLASES PRINCIPALES Y HERENCIA</h2>
+
+<h3>2.1 Clase Base: Controller</h3>
+<strong>Ubicación</strong>: <code>core/Controller.php</code>
+
+<strong>Propósito</strong>: Clase base para todos los controladores del sistema.
+
+<strong>Métodos principales</strong>:
+<li><code>__construct()</code>: Inicializa la base de datos y vista</li>
+<li><code>loadModel($model)</code>: Carga dinámicamente modelos</li>
+<li><code>render($view, $data)</code>: Renderiza vistas con datos</li>
+<li><code>jsonResponse($data, $status)</code>: Responde con JSON</li>
+<li><code>validateRequest($required)</code>: Valida datos de entrada</li>
+<li><code>sanitizeInput($data)</code>: Sanitiza datos de entrada</li>
+<li><code>redirect($url)</code>: Redirige a otra URL</li>
+
+<strong>Características</strong>:
+<li>Manejo de errores centralizado</li>
+<li>Autoloading de modelos</li>
+<li>Validación de datos de entrada</li>
+<li>Respuestas JSON estandarizadas</li>
+
+<h3>2.2 Clase Base: Model</h3>
+<strong>Ubicación</strong>: <code>core/Model.php</code>
+
+<strong>Propósito</strong>: Clase base para todos los modelos de datos.
+
+<strong>Métodos principales</strong>:
+<li><code>__construct()</code>: Inicializa conexión a base de datos</li>
+<li><code>query($sql, $params)</code>: Ejecuta consultas SQL</li>
+<li><code>find($id)</code>: Busca registro por ID</li>
+<li><code>create($data)</code>: Crea nuevo registro</li>
+<li><code>update($id, $data)</code>: Actualiza registro existente</li>
+<li><code>delete($id)</code>: Elimina registro</li>
+<li><code>getLastError()</code>: Obtiene último error</li>
+
+<strong>Características</strong>:
+<li>Patrón Singleton para conexión a BD</li>
+<li>Manejo de transacciones</li>
+<li>Logging de errores</li>
+<li>Sanitización automática de datos</li>
+
+<h3>2.3 Clase: Database</h3>
+<strong>Ubicación</strong>: <code>core/Database.php</code>
+
+<strong>Propósito</strong>: Maneja la conexión a la base de datos usando patrón Singleton.
+
+<strong>Métodos principales</strong>:
+<li><code>getInstance()</code>: Obtiene instancia única</li>
+<li><code>getConnection()</code>: Obtiene conexión PDO</li>
+<li><code>beginTransaction()</code>: Inicia transacción</li>
+<li><code>commit()</code>: Confirma transacción</li>
+<li><code>rollBack()</code>: Revierte transacción</li>
+<li><code>lastInsertId()</code>: Obtiene último ID insertado</li>
+
+<strong>Características</strong>:
+<li>Patrón Singleton</li>
+<li>Configuración PDO optimizada</li>
+<li>Manejo de transacciones</li>
+<li>Prevención de clonación</li>
+
+<h3>2.4 Clase: View</h3>
+<strong>Ubicación</strong>: <code>core/View.php</code>
+
+<strong>Propósito</strong>: Maneja la renderización de vistas y layouts.
+
+<strong>Métodos principales</strong>:
+<li><code>setTitle($title)</code>: Establece título de página</li>
+<li><code>setData($key, $value)</code>: Establece datos para vista</li>
+<li><code>setLayout($layout)</code>: Establece layout</li>
+<li><code>render($view)</code>: Renderiza vista completa</li>
+<li><code>partial($view, $data)</code>: Renderiza vista parcial</li>
+<li><code>json($data)</code>: Responde con JSON</li>
+<li><code>redirect($url)</code>: Redirige a URL</li>
+
+<strong>Características</strong>:
+<li>Sistema de layouts flexible</li>
+<li>Extracción automática de datos</li>
+<li>Soporte para vistas parciales</li>
+<li>Buffer de salida</li>
+
+<h2>3. CONTROLADORES ESPECÍFICOS</h2>
+
+<h3>3.1 AuthController</h3>
+<strong>Herencia</strong>: <code>extends Controller</code>
+
+<strong>Propósito</strong>: Maneja autenticación y autorización de usuarios.
+
+<strong>Métodos principales</strong>:
+<li><code>loginAction()</code>: Procesa inicio de sesión</li>
+<li><code>registerAction()</code>: Registra nuevos usuarios</li>
+<li><code>resetPasswordAction($token)</code>: Restablece contraseña</li>
+<li><code>forgotPasswordAction()</code>: Solicita restablecimiento</li>
+<li><code>logoutAction()</code>: Cierra sesión</li>
+<li><code>getRolNombre($rolId)</code>: Obtiene nombre del rol</li>
+<li><code>validatePassword($password)</code>: Valida contraseña</li>
+
+<strong>Características</strong>:
+<li>Validación de credenciales</li>
+<li>Hashing seguro de contraseñas</li>
+<li>Manejo de tokens de recuperación</li>
+<li>Logging detallado de eventos</li>
+
+<h3>3.2 DashboardController</h3>
+<strong>Herencia</strong>: <code>extends Controller</code>
+
+<strong>Propósito</strong>: Maneja el dashboard principal del sistema.
+
+<strong>Métodos principales</strong>:
+<li><code>indexAction()</code>: Muestra dashboard principal</li>
+<li><code>getKPIDataAction()</code>: Obtiene datos KPI</li>
+<li><code>getDistribucionEspeciesAction()</code>: Obtiene distribución de especies</li>
+<li><code>getHistorialUsuariosAction()</code>: Obtiene historial de usuarios</li>
+<li><code>sendJsonResponse($data)</code>: Envía respuesta JSON</li>
+<li><code>sendJsonError($message, $code)</code>: Envía error JSON</li>
+
+<strong>Características</strong>:
+<li>Cálculo dinámico de KPIs</li>
+<li>Gráficas en tiempo real</li>
+<li>Paginación inteligente</li>
+<li>Manejo de errores robusto</li>
+
+<h3>3.3 DispositivosController</h3>
+<strong>Herencia</strong>: <code>extends Controller</code>
+
+<strong>Propósito</strong>: Gestiona dispositivos IoT del sistema.
+
+<strong>Métodos principales</strong>:
+<li><code>indexAction()</code>: Lista dispositivos</li>
+<li><code>createAction()</code>: Crea nuevo dispositivo</li>
+<li><code>editAction($id)</code>: Edita dispositivo existente</li>
+<li><code>deleteAction($id)</code>: Elimina dispositivo</li>
+<li><code>deleteAjaxAction($id)</code>: Elimina vía AJAX</li>
+<li><code>cambiarEstadoAction()</code>: Cambia estado de dispositivo</li>
+<li><code>asignarAction()</code>: Asigna dispositivo a usuario/mascota</li>
+<li><code>filtrarAction()</code>: Filtra dispositivos</li>
+<li><code>verificarMacAction()</code>: Verifica unicidad de MAC</li>
+<li><code>obtenerDetallesAction($id)</code>: Obtiene detalles de dispositivo</li>
+<li><code>updateAction()</code>: Actualiza dispositivo vía AJAX</li>
+
+<strong>Características</strong>:
+<li>Validación de formato MAC</li>
+<li>Verificación de unicidad</li>
+<li>Asignación dinámica</li>
+<li>Filtros avanzados</li>
+<li>Logging de acciones</li>
+
+<h3>3.4 MonitorController</h3>
+<strong>Herencia</strong>: <code>extends Controller</code>
+
+<strong>Propósito</strong>: Maneja el monitoreo en tiempo real de dispositivos.
+
+<strong>Métodos principales</strong>:
+<li><code>indexAction()</code>: Muestra monitor principal</li>
+<li><code>getDatosFiltradosAction()</code>: Obtiene datos filtrados</li>
+<li><code>getPropietariosAction()</code>: Obtiene lista de propietarios</li>
+<li><code>getMascotasPorPropietarioAction()</code>: Obtiene mascotas por propietario</li>
+<li><code>getDatosTablaAction()</code>: Obtiene datos para tabla</li>
+<li><code>testSimpleAction()</code>: Vista de prueba</li>
+
+<strong>Características</strong>:
+<li>Filtros en tiempo real</li>
+<li>Datos geográficos</li>
+<li>Gráficas interactivas</li>
+<li>Permisos granulares</li>
+
+<h2>4. MODELOS DE DATOS</h2>
+
+<h3>4.1 User (UsuarioModel)</h3>
+<strong>Herencia</strong>: <code>extends Model</code>
+<strong>Tabla</strong>: <code>usuarios</code>
+
+<strong>Métodos principales</strong>:
+<li><code>getAll($filtros, $pagina, $alturaPantalla)</code>: Obtiene usuarios paginados</li>
+<li><code>buscar($termino, $filtros)</code>: Busca usuarios</li>
+<li><code>findById($id)</code>: Busca por ID</li>
+<li><code>findByEmail($email)</code>: Busca por email</li>
+<li><code>crear($datos)</code>: Crea usuario</li>
+<li><code>actualizar($datos)</code>: Actualiza usuario</li>
+<li><code>cambiarEstado($id, $estado)</code>: Cambia estado</li>
+<li><code>cambiarEstadoEnCascada($id, $estado)</code>: Cambia estado en cascada</li>
+<li><code>eliminar($id)</code>: Elimina usuario</li>
+<li><code>eliminarEnCascada($id)</code>: Elimina en cascada</li>
+<li><code>getMascotasAsociadas($id)</code>: Obtiene mascotas del usuario</li>
+<li><code>getDispositivosAsociados($id)</code>: Obtiene dispositivos del usuario</li>
+<li><code>getTotalUsuariosNormales()</code>: Cuenta usuarios normales</li>
+<li><code>getActiveUsers()</code>: Obtiene usuarios activos</li>
+
+<strong>Características</strong>:
+<li>Paginación dinámica</li>
+<li>Búsqueda avanzada</li>
+<li>Operaciones en cascada</li>
+<li>Validación de datos</li>
+
+<h3>4.2 DispositivoModel</h3>
+<strong>Herencia</strong>: No hereda de Model (implementación independiente)
+<strong>Tabla</strong>: <code>dispositivos</code>
+
+<strong>Métodos principales</strong>:
+<li><code>getDispositivoById($id)</code>: Obtiene dispositivo por ID</li>
+<li><code>getDispositivosByUsuario($usuarioId)</code>: Obtiene dispositivos de usuario</li>
+<li><code>getUltimaUbicacion($dispositivoId)</code>: Obtiene última ubicación</li>
+<li><code>getUltimosDatos($dispositivoId, $horas)</code>: Obtiene datos recientes</li>
+<li><code>getRuta($dispositivoId, $horas)</code>: Obtiene ruta del dispositivo</li>
+<li><code>getTodosDispositivosConMascotas()</code>: Obtiene todos con mascotas</li>
+<li><code>getTotalDispositivos()</code>: Cuenta total de dispositivos</li>
+<li><code>getTotalConectados()</code>: Cuenta dispositivos conectados</li>
+<li><code>getDispositivosFiltrados()</code>: Obtiene con filtros</li>
+<li><code>createDispositivo($data)</code>: Crea dispositivo</li>
+<li><code>updateDispositivo($id, $data)</code>: Actualiza dispositivo</li>
+<li><code>deleteDispositivo($id)</code>: Elimina dispositivo</li>
+<li><code>existeMac($mac, $excludeId)</code>: Verifica unicidad de MAC</li>
+<li><code>getDispositivosDisponibles()</code>: Obtiene dispositivos disponibles</li>
+
+<strong>Características</strong>:
+<li>Manejo de ubicación GPS</li>
+<li>Filtros avanzados</li>
+<li>Validación de MAC</li>
+<li>Operaciones geográficas</li>
+
+<h3>4.3 Mascota</h3>
+<strong>Herencia</strong>: <code>extends Model</code>
+<strong>Tabla</strong>: <code>mascotas</code>
+
+<strong>Métodos principales</strong>:
+<li><code>getMascotasByUser($usuario_id)</code>: Obtiene mascotas de usuario</li>
+<li><code>createMascota($data)</code>: Crea mascota</li>
+<li><code>updateMascota($id, $data)</code>: Actualiza mascota</li>
+<li><code>deleteMascota($id)</code>: Elimina mascota</li>
+<li><code>getEstadisticas($usuario_id)</code>: Obtiene estadísticas</li>
+<li><code>getMascotasConDispositivos($usuario_id)</code>: Obtiene con dispositivos</li>
+<li><code>getMascotasSinDispositivos($usuario_id)</code>: Obtiene sin dispositivos</li>
+
+<li><code>getEstadisticasAvanzadas($usuario_id)</code>: Estadísticas avanzadas</li>
+<li><code>buscarMascotasPorTermino($termino, $userId, $soloPropias)</code>: Búsqueda</li>
+<li><code>getDistribucionEspecies()</code>: Distribución por especies</li>
+<li><code>getTotalRegistradas()</code>: Cuenta total de mascotas</li>
+
+<strong>Características</strong>:
+<li>Cálculo de edades</li>
+<li>Estadísticas avanzadas</li>
+<li>Filtros por especie/raza</li>
+
+
+<h3>4.4 DatosSensor</h3>
+<strong>Herencia</strong>: <code>extends Model</code>
+<strong>Tabla</strong>: <code>datos_sensores</code>
+
+<strong>Métodos principales</strong>:
+<li><code>getUltimosDatos($dispositivoId, $horas)</code>: Obtiene datos recientes</li>
+<li><code>getRuta($dispositivoId, $horas)</code>: Obtiene ruta</li>
+<li><code>getDatosGrafica($dispositivoId, $tipo, $horas)</code>: Datos para gráficas</li>
+<li><code>getEstadisticas($dispositivoId, $tipo, $horas)</code>: Estadísticas</li>
+<li><code>getUltimaUbicacion($dispositivoId)</code>: Última ubicación</li>
+<li><code>getDatosTabla($usuarioId, $dispositivoId, $limite, $pagina)</code>: Datos para tabla</li>
+<li><code>getCampoPorTipo($tipo)</code>: Mapea tipos a campos</li>
+
+<strong>Características</strong>:
+<li>Datos en tiempo real</li>
+<li>Gráficas dinámicas</li>
+<li>Estadísticas por tipo</li>
+<li>Manejo de coordenadas GPS</li>
+
+<h2>5. SISTEMA DE AUTOLOADING</h2>
+
+<h3>5.1 Autoload.php</h3>
+<strong>Ubicación</strong>: <code>core/Autoload.php</code>
+
+<strong>Funcionalidad</strong>:
+<li>Registra función de autoloading</li>
+<li>Busca clases en múltiples directorios</li>
+<li>Soporte para namespaces</li>
+<li>Logging de errores de carga</li>
+
+<strong>Directorios de búsqueda</strong>:
+<li><code>/controllers/</code></li>
+<li><code>/models/</code></li>
+<li><code>/core/</code></li>
+<li><code>/config/</code></li>
+
+<h2>6. FUNCIONES DE UTILIDAD</h2>
+
+<h3>6.1 functions.php</h3>
+<strong>Ubicación</strong>: <code>core/functions.php</code>
+
+<strong>Funciones principales</strong>:
+<li><code>verificarCualquierPermiso($permisos)</code>: Verifica al menos un permiso</li>
+<li><code>verificarTodosPermisos($permisos)</code>: Verifica todos los permisos</li>
+<li><code>obtenerRolUsuario()</code>: Obtiene nombre del rol</li>
+<li><code>obtenerRolId()</code>: Obtiene ID del rol</li>
+<li><code>esAdministrador()</code>: Verifica si es administrador</li>
+<li><code>esSuperAdministrador()</code>: Verifica si es super admin</li>
+<li><code>formatearFecha($fecha, $formato)</code>: Formatea fechas</li>
+<li><code>generarTokenCSRF()</code>: Genera token CSRF</li>
+<li><code>verificarTokenCSRF($token)</code>: Verifica token CSRF</li>
+<li><code>sanitizarTexto($texto)</code>: Sanitiza texto</li>
+<li><code>redirigir($url)</code>: Redirige a URL</li>
+<li><code>mostrarError($mensaje, $url)</code>: Muestra error</li>
+<li><code>mostrarExito($mensaje, $url)</code>: Muestra éxito</li>
+
+<h2>7. CONFIGURACIÓN DEL SISTEMA</h2>
+
+<h3>7.1 config.php</h3>
+<strong>Ubicación</strong>: <code>config/config.php</code>
+
+<strong>Configuraciones principales</strong>:
+<li><strong>Base de datos</strong>: Host, nombre, usuario, contraseña</li>
+<li><strong>Aplicación</strong>: Nombre, URL, versión, email</li>
+<li><strong>Correo</strong>: Configuración SMTP</li>
+<li><strong>Archivos</strong>: Directorios, tamaños máximos</li>
+<li><strong>Sesión</strong>: Configuración de sesiones</li>
+<li><strong>Seguridad</strong>: Costos de hash, tokens, JWT</li>
+<li><strong>Zona horaria</strong>: America/Mexico_City</li>
+
+<strong>Funciones de configuración</strong>:
+<li><code>redirect($path)</code>: Redirección</li>
+<li><code>isAuthenticated()</code>: Verifica autenticación</li>
+<li><code>requireAuth()</code>: Requiere autenticación</li>
+<li><code>getCurrentUser()</code>: Obtiene usuario actual</li>
+<li><code>checkPermission($permission)</code>: Verifica permisos</li>
+<li><code>verificarPermiso($permission)</code>: Alias para permisos</li>
+<li><code>csrf_token()</code>: Genera token CSRF</li>
+<li><code>verify_csrf_token($token)</code>: Verifica token CSRF</li>
+<li><code>validatePassword($password)</code>: Valida contraseña</li>
+
+<h2>8. PUNTO DE ENTRADA</h2>
+
+<h3>8.1 index.php</h3>
+<strong>Funcionalidades principales</strong>:
+<li>Configuración de errores y logging</li>
+<li>Routing dinámico basado en URL</li>
+<li>Middleware de autenticación</li>
+<li>Middleware de permisos</li>
+<li>Manejo de errores centralizado</li>
+<li>Conversión de rutas (kebab-case a camelCase)</li>
+
+<strong>Flujo de procesamiento</strong>:
+1. Configuración inicial
+2. Parsing de URL
+3. Determinación de controlador/acción
+4. Verificación de autenticación
+5. Verificación de permisos
+6. Carga de controlador
+7. Ejecución de acción
+8. Manejo de errores
+
+<h2>9. SISTEMA DE VISTAS</h2>
+
+<h3>9.1 Layout Principal</h3>
+<strong>Ubicación</strong>: <code>views/layouts/main.php</code>
+
+<strong>Características</strong>:
+<li>Sidebar moderno y responsive</li>
+<li>Sistema de navegación dinámico</li>
+<li>Menús basados en permisos</li>
+<li>Integración con Bootstrap 5</li>
+<li>Iconos Font Awesome</li>
+<li>Gráficas Chart.js</li>
+<li>Mapas Leaflet</li>
+<li>DataTables para tablas</li>
+<li>SweetAlert2 para modales</li>
+
+<strong>Componentes principales</strong>:
+<li>Header con información de usuario</li>
+<li>Sidebar con navegación</li>
+<li>Área de contenido principal</li>
+<li>Scripts y estilos integrados</li>
+<li>Sistema de mensajes</li>
+
+<h2>10. SEGURIDAD Y PERMISOS</h2>
+
+<h3>10.1 Sistema de Roles</h3>
+<li><strong>Super Administrador</strong>: Acceso total</li>
+<li><strong>Administrador</strong>: Gestión de usuarios y dispositivos</li>
+<li><strong>Usuario</strong>: Gestión de sus propias mascotas</li>
+
+<h3>10.2 Permisos Implementados</h3>
+<li><code>ver_dashboard</code>: Acceso al dashboard</li>
+<li><code>ver_usuarios</code>: Gestión de usuarios</li>
+<li><code>ver_roles</code>: Gestión de roles</li>
+<li><code>ver_mascotas</code>: Gestión de mascotas</li>
+<li><code>ver_dispositivos</code>: Gestión de dispositivos</li>
+<li><code>ver_monitor</code>: Acceso al monitor</li>
+<li><code>ver_todos_dispositivos</code>: Ver todos los dispositivos</li>
+<li><code>editar_dispositivos</code>: Editar dispositivos</li>
+<li><code>eliminar_dispositivos</code>: Eliminar dispositivos</li>
+
+<h2>11. CARACTERÍSTICAS TÉCNICAS</h2>
+
+<h3>11.1 Base de Datos</h3>
+<li><strong>Motor</strong>: MySQL</li>
+<li><strong>Patrón</strong>: Singleton para conexiones</li>
+<li><strong>Transacciones</strong>: Soporte completo</li>
+<li><strong>Prepared Statements</strong>: Para seguridad</li>
+<li><strong>Logging</strong>: Errores detallados</li>
+
+<h3>11.2 Frontend</h3>
+<li><strong>Framework</strong>: Bootstrap 5</li>
+<li><strong>JavaScript</strong>: jQuery + Vanilla JS</li>
+<li><strong>Gráficas</strong>: Chart.js</li>
+<li><strong>Mapas</strong>: Leaflet</li>
+<li><strong>Tablas</strong>: DataTables</li>
+<li><strong>Modales</strong>: SweetAlert2</li>
+<li><strong>Iconos</strong>: Font Awesome + Bootstrap Icons</li>
+
+<h3>11.3 Backend</h3>
+<li><strong>Lenguaje</strong>: PHP 7.4+</li>
+<li><strong>Patrón</strong>: MVC</li>
+<li><strong>Autoloading</strong>: SPL Autoloader</li>
+<li><strong>Sesiones</strong>: Configuración segura</li>
+<li><strong>Logging</strong>: Sistema completo</li>
+<li><strong>Validación</strong>: Input sanitization</li>
+<li><strong>CSRF</strong>: Protección implementada</li>
+
+<h2>12. FUNCIONALIDADES PRINCIPALES</h2>
+
+<h3>12.1 Gestión de Usuarios</h3>
+<li>Registro y autenticación</li>
+<li>Recuperación de contraseñas</li>
+<li>Gestión de roles y permisos</li>
+<li>Estados de usuario (activo/inactivo)</li>
+
+<h3>12.2 Gestión de Mascotas</h3>
+<li>Registro de mascotas</li>
+<li>Asignación de dispositivos</li>
+<li>Estadísticas por especie</li>
+<li>Historial médico</li>
+
+<h3>12.3 Gestión de Dispositivos</h3>
+<li>Registro de dispositivos IoT</li>
+<li>Validación de MAC addresses</li>
+<li>Asignación a usuarios/mascotas</li>
+<li>Monitoreo de estado</li>
+
+<h3>12.4 Monitor en Tiempo Real</h3>
+<li>Visualización de datos de sensores</li>
+<li>Gráficas dinámicas</li>
+<li>Mapas de ubicación</li>
+
+
+<h3>12.5 Dashboard</h3>
+<li>KPIs en tiempo real</li>
+<li>Gráficas de distribución</li>
+<li>Historial de actividad</li>
+<li>Estadísticas generales</li>
+
+<h2>13. LOGGING Y MONITOREO</h2>
+
+<h3>13.1 Sistema de Logs</h3>
+<li><strong>Ubicación</strong>: <code>/logs/error.log</code></li>
+<li><strong>Niveles</strong>: ERROR, WARNING, INFO, DEBUG</li>
+<li><strong>Formato</strong>: Timestamp + Nivel + Mensaje + Archivo:Línea</li>
+<li><strong>Rotación</strong>: Manual por ahora</li>
+
+<h3>13.2 Monitoreo de Errores</h3>
+<li>Error handler personalizado</li>
+<li>Shutdown function para errores fatales</li>
+<li>Logging de excepciones</li>
+<li>Stack traces detallados</li>
+
+<h2>14. OPTIMIZACIONES Y MEJORAS</h2>
+
+<h3>14.1 Rendimiento</h3>
+<li>Autoloading eficiente</li>
+<li>Prepared statements</li>
+<li>Caché de consultas (pendiente)</li>
+<li>Compresión de assets (pendiente)</li>
+
+<h3>14.2 Seguridad</h3>
+<li>Sanitización de inputs</li>
+<li>Validación de datos</li>
+<li>Protección CSRF</li>
+<li>Hashing seguro de contraseñas</li>
+<li>Control de acceso basado en roles</li>
+
+<h3>14.3 Escalabilidad</h3>
+<li>Arquitectura modular</li>
+<li>Separación de responsabilidades</li>
+<li>Configuración centralizada</li>
+<li>Sistema de plugins (pendiente)</li>
+
+<h2>15. PROBLEMAS IDENTIFICADOS</h2>
+
+<h3>15.1 Error en DispositivoModel</h3>
+<strong>Problema</strong>: Error en línea 447 de DispositivosController.php
+<pre><code>
+Call to undefined method DispositivoModel::existeMac()
+</code></pre>
+
+<strong>Causa</strong>: El método <code>existeMac()</code> no está implementado en la clase DispositivoModel.
+
+<strong>Solución</strong>: Implementar el método <code>existeMac()</code> en la clase DispositivoModel.
+
+<h3>15.2 Recomendaciones de Mejora</h3>
+1. <strong>Implementar método faltante</strong>: Agregar <code>existeMac()</code> a DispositivoModel
+2. <strong>Mejorar manejo de errores</strong>: Implementar try-catch más robustos
+3. <strong>Optimizar consultas</strong>: Agregar índices a la base de datos
+4. <strong>Implementar caché</strong>: Reducir consultas repetitivas
+5. <strong>Mejorar seguridad</strong>: Implementar rate limiting
+6. <strong>Agregar tests</strong>: Implementar pruebas unitarias
+
+<h2>16. CONCLUSIÓN</h2>
+
+El proyecto PetMonitoring IoT presenta una arquitectura sólida basada en el patrón MVC, con una separación clara de responsabilidades y un sistema de permisos bien estructurado. La implementación incluye funcionalidades avanzadas para el monitoreo de mascotas mediante dispositivos IoT, con un frontend moderno y responsive.
+
+<strong>Fortalezas del proyecto</strong>:
+<li>Arquitectura modular y escalable</li>
+<li>Sistema de permisos granular</li>
+<li>Interfaz de usuario moderna</li>
+<li>Logging detallado</li>
+<li>Manejo de errores centralizado</li>
+
+<strong>Áreas de mejora</strong>:
+<li>Implementar método faltante en DispositivoModel</li>
+<li>Agregar pruebas automatizadas</li>
+<li>Optimizar consultas de base de datos</li>
+<li>Implementar sistema de caché</li>
+<li>Mejorar documentación de código</li></ul>
+
+El proyecto demuestra un buen entendimiento de patrones de diseño y mejores prácticas de desarrollo web, proporcionando una base sólida para futuras expansiones y mejoras. 
+
+    <div class="page-break"></div>
+    
+    <div class="conclusion">
+        <h2>RESUMEN EJECUTIVO</h2>
+        <p>Este informe presenta un análisis completo del proyecto PetMonitoring IoT, un sistema web desarrollado en PHP que implementa el patrón MVC para el monitoreo de mascotas mediante dispositivos IoT.</p>
+        
+        <h3>Puntos Clave:</h3>
+        <ul>
+            <li><strong>Arquitectura:</strong> Patrón MVC con separación clara de responsabilidades</li>
+            <li><strong>Base de Datos:</strong> MySQL con patrón Singleton para conexiones</li>
+            <li><strong>Frontend:</strong> Bootstrap 5 con componentes modernos</li>
+            <li><strong>Seguridad:</strong> Sistema de roles y permisos granular</li>
+            <li><strong>Funcionalidades:</strong> Dashboard, monitor en tiempo real, gestión de dispositivos</li>
+        </ul>
+        
+        <h3>Estado del Proyecto:</h3>
+        <p>El proyecto presenta una arquitectura sólida y funcionalidades avanzadas, con un error identificado en el método <code>existeMac()</code> del modelo DispositivoModel que requiere implementación.</p>
+    </div>
+</body>
+</html>

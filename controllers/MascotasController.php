@@ -10,7 +10,7 @@ class MascotasController extends Controller {
         $this->mascotaModel = $this->loadModel('Mascota');
         $this->dispositivoModel = $this->loadModel('DispositivoModel');
         $this->logModel = $this->loadModel('Log');
-        // Removido notificacionModel ya que no existe el modelo Notificacion
+
     }
 
     public function indexAction() {
@@ -124,7 +124,7 @@ class MascotasController extends Controller {
 
             if ($this->mascotaModel->createMascota($data)) {
                 $this->logModel->crearLog($_SESSION['user_id'], 'Creación de mascota: ' . $data['nombre']);
-                // Notificación removida ya que no existe el modelo Notificacion
+
                 $this->jsonResponse([
                     'success' => true,
                     'message' => 'Mascota registrada correctamente',

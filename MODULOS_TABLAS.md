@@ -91,7 +91,7 @@ El sistema está organizado en **7 módulos principales**, cada uno con sus resp
 - Monitoreo en tiempo real
 - Gráficas de datos de sensores
 - Ubicación GPS
-- Alertas de salud
+
 - Historial de datos
 
 ---
