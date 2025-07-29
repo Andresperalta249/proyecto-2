@@ -1,55 +1,58 @@
-/* Dashboard Styles */
-.dashboard-header {
+/* Dashboard Styles - Clean Design */
+.dashboard-controls-clean {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+}
+
+.control-wrapper {
+    display: flex;
     align-items: center;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: var(--blue);
+    gap: 1rem;
+    background: white;
+    padding: 0.75rem 1.25rem;
     border-radius: 8px;
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
 }
 
-.dashboard-title h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-}
-
-.dashboard-title p {
-    margin: 0.25rem 0 0 0;
-    opacity: 0.9;
-    font-size: 0.9rem;
-}
-
-.dashboard-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.dashboard-controls label {
-    color: white;
+.control-label {
+    color: #495057;
     font-weight: 500;
-    margin: 0;
     font-size: 0.9rem;
+    margin: 0;
 }
 
-.dashboard-controls .form-select {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.clean-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.5rem 1rem;
     border-radius: 6px;
-    padding: 0.25rem 0.5rem;
-    min-width: 120px;
+    font-weight: 500;
     font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.dashboard-controls .form-select option {
-    background: #333;
+.clean-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+}
+
+.clean-btn.active {
+    background: var(--blue);
+    border-color: var(--blue);
     color: white;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
 }
 
 /* KPIs Section */
@@ -198,15 +201,23 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .dashboard-header {
+    .dashboard-controls-clean {
+        justify-content: center;
+    }
+    
+    .control-wrapper {
         flex-direction: column;
         gap: 0.75rem;
         text-align: center;
-        padding: 0.75rem;
     }
     
-    .dashboard-title h1 {
-        font-size: 1.25rem;
+    .control-buttons {
+        gap: 0.25rem;
+    }
+    
+    .clean-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
     }
     
     .dashboard-kpis {
@@ -243,12 +254,18 @@
 }
 
 @media (max-width: 480px) {
-    .dashboard-header {
-        padding: 0.5rem;
+    .control-wrapper {
+        padding: 0.5rem 1rem;
     }
     
-    .dashboard-title h1 {
-        font-size: 1.1rem;
+    .control-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .clean-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
     }
     
     .chart-header {

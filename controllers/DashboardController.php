@@ -13,7 +13,7 @@ class DashboardController extends Controller {
         
         // Verificar autenticación
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /proyecto-2/auth/login');
+            header('Location: ' . APP_URL . '/auth/login');
             exit;
         }
 
@@ -22,6 +22,13 @@ class DashboardController extends Controller {
     }
 
     public function indexAction() {
+        // Verificar si el usuario tiene permiso para ver dashboard
+        if (!verificarPermiso('ver_dashboard')) {
+            // Si no tiene permiso de dashboard, redirigir a monitor
+            header('Location: ' . APP_URL . '/monitor');
+            exit;
+        }
+        
         try {
             $totalConectados = $this->dispositivoModel->getTotalConectados();
             $totalDispositivos = $this->dispositivoModel->getTotalDispositivos();
@@ -35,7 +42,7 @@ class DashboardController extends Controller {
             ];
             $content = $this->render('dashboard/index', $data);
             $GLOBALS['content'] = $content;
-            $GLOBALS['title'] = 'Dashboard';
+            $GLOBALS['title'] = 'Dashboard - VitalPet Monitor';
             $GLOBALS['menuActivo'] = 'dashboard';
             require_once 'views/layouts/main.php';
         } catch (Exception $e) {

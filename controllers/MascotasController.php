@@ -16,7 +16,7 @@ class MascotasController extends Controller {
     public function indexAction() {
         try {
             $usuario_id = $_SESSION['user_id'];
-            $puedeVerTodos = verificarPermiso('ver_todos_mascotas');
+            $puedeVerTodos = verificarPermiso('ver_todas_mascotas');
             
             // Cargar usuarios para el select de propietarios
             $usuariosModel = $this->loadModel('User');
@@ -24,12 +24,20 @@ class MascotasController extends Controller {
             
             if ($puedeVerTodos) {
                 $mascotas = $this->mascotaModel->getMascotasConDispositivo();
+                // Asegurar que siempre sea un array
+                if ($mascotas === false || $mascotas === null) {
+                    $mascotas = [];
+                }
             } else {
-                $mascotas = $this->mascotaModel->getMascotasConDispositivo(); // Para todos, ya que el método filtra por usuario si es necesario
+                $mascotas = $this->mascotaModel->getMascotasConDispositivos($usuario_id);
+                // Asegurar que siempre sea un array
+                if ($mascotas === false || $mascotas === null) {
+                    $mascotas = [];
+                }
             }
-            error_log('Mascotas obtenidas: ' . print_r($mascotas, true));
+
             
-            $title = 'Administrador de mascotas';
+            $title = 'Administrador de mascotas - VitalPet Monitor';
             
             // Variables de permisos para la vista
             $esAdmin = in_array($_SESSION['user_role'] ?? 0, [1,2]);
@@ -59,6 +67,7 @@ class MascotasController extends Controller {
             $puedeCrear = in_array('crear_mascotas', $_SESSION['permissions'] ?? []);
             
             $content = $this->render('mascotas/index', [
+                'mascotas' => [],
                 'error' => $e->getMessage(),
                 'usuarios' => [],
                 'esAdmin' => $esAdmin,
