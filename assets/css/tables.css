@@ -641,6 +641,56 @@ div.contenedor-sistema-body {
     }
 }
 
+/* ===== ESTILOS ESPECÍFICOS PARA TABLA DE SENSORES ===== */
+#tablaDatos {
+    font-size: 0.8rem;
+}
+
+#tablaDatos .fila-dato {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#tablaDatos .fila-dato:hover {
+    background-color: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#tablaDatos .fila-seleccionada {
+    background-color: var(--primary-light) !important;
+    border-left: 3px solid var(--primary);
+}
+
+#tablaDatos .texto-truncado {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+#tablaDatos .badge-estado {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Responsive para tabla de sensores */
+@media (max-width: 768px) {
+    #tablaDatos {
+        font-size: 0.7rem;
+    }
+    
+    #tablaDatos .texto-truncado {
+        max-width: 80px;
+    }
+    
+    #tablaDatos .badge-estado {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.3rem;
+    }
+}
+
 
 
  
