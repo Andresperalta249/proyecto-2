@@ -666,12 +666,16 @@ div.contenedor-sistema-body {
 
 /* Contenedor con scroll específico para la tabla de sensores */
 .contenedor-sistema-body {
-    max-height: 60vh;
+    max-height: 300px;
+    min-height: 200px;
     overflow-y: auto;
     overflow-x: hidden;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-sm);
     background: var(--white);
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-light) var(--white);
 }
 
 #tablaDatos thead {
@@ -763,18 +767,7 @@ div.contenedor-sistema-body {
     transition: all 0.2s ease;
 }
 
-/* Forzar altura mínima para mostrar scroll */
-.contenedor-sistema-body {
-    min-height: 400px;
-}
 
-/* Asegurar que el contenedor tenga scroll */
-.contenedor-sistema-body {
-    overflow-y: auto;
-    max-height: 70vh;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-light) var(--white);
-}
 
 /* Estilos para scrollbar en WebKit (Chrome, Safari, Edge) */
 .contenedor-sistema-body::-webkit-scrollbar {
