@@ -270,12 +270,15 @@ echo '<script>window.BASE_URL = "' . BASE_URL . '";</script>';
                 Historial de Datos de Sensores
             </div>
             <div class="header-search">
-                <input type="text" class="form-control" id="busquedaGeneral" placeholder="Buscar por ID, dispositivo, mascota, propietario...">
-                <input type="date" class="form-control" id="filtroFechaInicio" style="width: 120px; margin-left: 8px;">
-                <input type="date" class="form-control" id="filtroFechaFin" style="width: 120px; margin-left: 8px;">
-                <button type="button" class="btn-accion btn-ver" id="btnExportar" title="Exportar datos" style="margin-left: 8px;">
-                    <i class="fas fa-download"></i>
-                </button>
+                <div class="search-controls">
+                    <input type="text" class="form-control search-input" id="busquedaGeneral" placeholder="Buscar...">
+                    <input type="date" class="form-control date-input" id="filtroFechaInicio" title="Fecha inicial">
+                    <input type="date" class="form-control date-input" id="filtroFechaFin" title="Fecha final">
+                    <button type="button" class="btn-exportar" id="btnExportar" title="Exportar datos">
+                        <i class="fas fa-download"></i>
+                        <span class="btn-text">Exportar</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
