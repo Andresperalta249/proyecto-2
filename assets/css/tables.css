@@ -646,6 +646,77 @@ div.contenedor-sistema-body {
     font-size: 0.8rem;
 }
 
+/* ===== ANCHOS ESPECÍFICOS PARA COLUMNAS DE SENSORES ===== */
+#tablaDatos th:nth-child(1), /* ID */
+#tablaDatos td:nth-child(1) {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+}
+
+#tablaDatos th:nth-child(2), /* Dispositivo */
+#tablaDatos td:nth-child(2) {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+}
+
+#tablaDatos th:nth-child(3), /* Mascota */
+#tablaDatos td:nth-child(3) {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+#tablaDatos th:nth-child(4), /* Propietario */
+#tablaDatos td:nth-child(4) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+#tablaDatos th:nth-child(5), /* Temperatura */
+#tablaDatos td:nth-child(5) {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+#tablaDatos th:nth-child(6), /* BPM */
+#tablaDatos td:nth-child(6) {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+}
+
+#tablaDatos th:nth-child(7), /* Latitud */
+#tablaDatos td:nth-child(7) {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+}
+
+#tablaDatos th:nth-child(8), /* Longitud */
+#tablaDatos td:nth-child(8) {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+}
+
+#tablaDatos th:nth-child(9), /* Fecha */
+#tablaDatos td:nth-child(9) {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+}
+
+#tablaDatos th:nth-child(10), /* Batería */
+#tablaDatos td:nth-child(10) {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+}
+
 #tablaDatos .fila-dato {
     cursor: pointer;
     transition: all 0.2s ease;
@@ -681,8 +752,79 @@ div.contenedor-sistema-body {
         font-size: 0.7rem;
     }
     
-    #tablaDatos .texto-truncado {
+    /* Ajustar anchos en móviles */
+    #tablaDatos th:nth-child(1), /* ID */
+    #tablaDatos td:nth-child(1) {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+    }
+    
+    #tablaDatos th:nth-child(2), /* Dispositivo */
+    #tablaDatos td:nth-child(2) {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+    }
+    
+    #tablaDatos th:nth-child(3), /* Mascota */
+    #tablaDatos td:nth-child(3) {
+        width: 80px;
+        min-width: 80px;
         max-width: 80px;
+    }
+    
+    #tablaDatos th:nth-child(4), /* Propietario */
+    #tablaDatos td:nth-child(4) {
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+    }
+    
+    #tablaDatos th:nth-child(5), /* Temperatura */
+    #tablaDatos td:nth-child(5) {
+        width: 70px;
+        min-width: 70px;
+        max-width: 70px;
+    }
+    
+    #tablaDatos th:nth-child(6), /* BPM */
+    #tablaDatos td:nth-child(6) {
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+    }
+    
+    #tablaDatos th:nth-child(7), /* Latitud */
+    #tablaDatos td:nth-child(7) {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    #tablaDatos th:nth-child(8), /* Longitud */
+    #tablaDatos td:nth-child(8) {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    #tablaDatos th:nth-child(9), /* Fecha */
+    #tablaDatos td:nth-child(9) {
+        width: 110px;
+        min-width: 110px;
+        max-width: 110px;
+    }
+    
+    #tablaDatos th:nth-child(10), /* Batería */
+    #tablaDatos td:nth-child(10) {
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+    }
+    
+    #tablaDatos .texto-truncado {
+        max-width: 60px;
     }
     
     #tablaDatos .badge-estado {
