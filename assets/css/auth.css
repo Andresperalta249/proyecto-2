@@ -9,21 +9,6 @@ body {
   font-size: var(--body-normal-size);
 }
 
-body > div:first-child {
-  margin-bottom: 12px;
-}
-body h1 {
-  font-size: var(--heading-1-size);
-  font-weight: var(--heading-1-weight);
-  margin-bottom: 0.15em;
-  letter-spacing: var(--heading-1-letter-spacing);
-}
-body p {
-  color: #4b5563;
-  margin-bottom: 0.4em;
-  font-size: var(--body-normal-size);
-}
-
 #loginForm, #forgotForm, #resetPasswordForm, #registerForm {
   background: #fff;
   border-radius: 12px;
@@ -33,15 +18,31 @@ body p {
   width: 100%;
   margin: 0 auto;
 }
+
+#registerForm {
+  max-width: 450px;
+  padding: 20px 18px 16px 18px;
+}
+
+#loginForm h1, #forgotForm h1, #registerForm h1 {
+  font-size: var(--heading-1-size);
+  font-weight: var(--heading-1-weight);
+  margin-bottom: 0.15em;
+  letter-spacing: var(--heading-1-letter-spacing);
+  color: #1f2937;
+}
+
+#loginForm p, #forgotForm p, #registerForm p {
+  color: #4b5563;
+  margin-bottom: 0.4em;
+  font-size: var(--body-normal-size);
+}
+
 #loginForm h2, #forgotForm h2, #resetPasswordForm h2, #registerForm h2 {
   font-size: var(--heading-2-size);
   font-weight: var(--heading-2-weight);
   margin-bottom: 0.4em;
-}
-#loginForm p, #forgotForm p, #resetPasswordForm p, #registerForm p {
-  color: #6b7280;
-  font-size: var(--body-small-size);
-  margin-bottom: 1em;
+  color: #1f2937;
 }
 
 .form-label {
@@ -109,15 +110,14 @@ body p {
   color: #174ea6;
 }
 
+
+
 @media (max-width: 600px) {
   #loginForm, #forgotForm, #resetPasswordForm, #registerForm {
     padding: 12px 2vw 10px 2vw;
     max-width: 98vw;
   }
-  body > div:first-child {
-    margin-bottom: 7px;
-  }
-  body h1 {
+  #loginForm h1, #forgotForm h1, #registerForm h1 {
     font-size: var(--heading-2-size);
   }
 }

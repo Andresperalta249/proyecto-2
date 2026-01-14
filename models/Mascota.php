@@ -71,7 +71,7 @@ class Mascota extends Model {
     }
 
     public function getMascotasConDispositivos($usuario_id) {
-        $sql = "SELECT m.*, COUNT(d.id) as total_dispositivos 
+        $sql = "SELECT m.*, COUNT(d.id_dispositivo) as total_dispositivos 
                 FROM {$this->table} m 
                 LEFT JOIN dispositivos d ON m.id_mascota = d.mascota_id 
                 WHERE m.usuario_id = :usuario_id 

@@ -26,7 +26,7 @@ class RolesController {
             exit;
         }
         
-        $title = 'Administrador de roles';
+        $title = 'Administrador de roles - VitalPet Monitor';
         ob_start();
         require 'views/roles/index.php';
         $GLOBALS['content'] = ob_get_clean();

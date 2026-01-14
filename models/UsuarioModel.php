@@ -19,13 +19,15 @@ class UsuarioModel extends Model {
 
     public function crearUsuario($data) {
         try {
-            $sql = "INSERT INTO {$this->table} (nombre, email, password, rol_id) 
-                    VALUES (:nombre, :email, :password, :rol_id)";
+            $sql = "INSERT INTO {$this->table} (nombre, email, telefono, direccion, password, rol_id) 
+                    VALUES (:nombre, :email, :telefono, :direccion, :password, :rol_id)";
             
             $stmt = $this->db->getConnection()->prepare($sql);
             $stmt->execute([
                 ':nombre' => $data['nombre'],
                 ':email' => $data['email'],
+                ':telefono' => $data['telefono'],
+                ':direccion' => $data['direccion'],
                 ':password' => $data['password'],
                 ':rol_id' => $data['rol_id']
             ]);
@@ -119,7 +121,9 @@ class UsuarioModel extends Model {
         try {
             $sql = "SELECT * FROM password_resets 
                     WHERE token = :token 
-                    AND expires_at > NOW()";
+                    AND expires_at > NOW()
+                    ORDER BY created_at DESC
+                    LIMIT 1";
             $result = $this->query($sql, [':token' => $token]);
             return $result ? $result[0] : null;
         } catch (Exception $e) {
@@ -130,13 +134,21 @@ class UsuarioModel extends Model {
 
     public function createPasswordReset($id_usuario, $token, $expiresAt) {
         try {
-            $sql = "INSERT INTO password_resets (user_id, token, expires_at) 
-                    VALUES (:user_id, :token, :expires_at)";
-            return $this->query($sql, [
+            $sql = "INSERT INTO password_resets (user_id, token, expires_at, created_at) 
+                    VALUES (:user_id, :token, :expires_at, NOW())";
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $result = $stmt->execute([
                 ':user_id' => $id_usuario,
                 ':token' => $token,
                 ':expires_at' => $expiresAt
             ]);
+            
+            if ($result) {
+                return $this->db->getConnection()->lastInsertId();
+            } else {
+                return false;
+            }
         } catch (Exception $e) {
             error_log("Error en createPasswordReset: " . $e->getMessage());
             return false;
